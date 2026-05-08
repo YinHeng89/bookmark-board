@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="css/font-awesome.min.css" rel="stylesheet" />
+  <link href="css/main.css" rel="stylesheet" />
+  <link href="css/sidebar.css" rel="stylesheet" />
+</head>
+<body class="sidebar-body">
+  <!-- 侧边栏头部 -->
+  <header class="sidebar-header">
+    <div class="sidebar-logo">
+      <img src="icons/logo.png" alt="书签白板" style="width: 24px; height: 24px;" />
+      <span>书签白板</span>
+    </div>
+    <div class="sidebar-actions">
+      <button id="sidebarThemeToggle" class="sidebar-icon-btn" title="切换主题">
+        <i class="fa fa-moon-o"></i>
+      </button>
+      <button id="sidebarAddBtn" class="sidebar-icon-btn" title="添加当前页面到书签">
+        <i class="fa fa-plus"></i>
+      </button>
+      <button id="closeSidebar" class="sidebar-close" title="关闭">
+        <i class="fa fa-times"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- 搜索框 -->
+  <div class="sidebar-search">
+    <input type="text" id="sidebarSearch" placeholder="搜索书签..." />
+  </div>
+
+  <!-- 书签列表 -->
+  <div id="sidebarBoard" class="sidebar-board">
+    <!-- 书签卡片动态生成 -->
+  </div>
+
+  <!-- 手动添加书签 -->
+  <div class="sidebar-manual-add">
+    <button id="sidebarManualAdd" class="sidebar-manual-btn">
+      <i class="fa fa-edit"></i>
+      <span>手动添加书签</span>
+    </button>
+  </div>
+
+  <script src="js/sidebar.js"></script>
+</body>
+</html>

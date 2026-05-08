@@ -1,0 +1,370 @@
+/* TailwindCSS 预编译文件 - Bookmark Board Chrome扩展专用 */
+/* 基于 TailwindCSS 3.4.17 配置生成，包含项目所有用到的工具类 */
+
+/* ========== Preflight ========== */
+*,::before,::after{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}
+::before,::after{--tw-content:''}
+html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji"}
+body{margin:0;line-height:inherit;overflow-y:scroll}
+hr{height:0;color:inherit;border-top-width:1px}
+abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}
+h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}
+a{color:inherit;text-decoration:inherit}
+b,strong{font-weight:bolder}
+code,kbd,samp,pre{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:1em}
+small{font-size:80%}
+sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}
+sub{bottom:-.25em}
+sup{top:-.5em}
+table{text-indent:0;border-color:inherit;border-collapse:collapse}
+button,input,optgroup,select,textarea{font-family:inherit;font-size:100%;font-weight:inherit;line-height:inherit;color:inherit;margin:0;padding:0}
+button,select{text-transform:none}
+[type='button'],[type='reset'],[type='submit'],button{-webkit-appearance:button;background-color:transparent;background-image:none}
+:-moz-focusring{outline:auto}
+:-moz-ui-invalid{box-shadow:none}
+progress{vertical-align:baseline}
+::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}
+[type='search']{-webkit-appearance:textfield;outline-offset:-2px}
+::-webkit-search-decoration{-webkit-appearance:none}
+::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}
+summary{display:list-item}
+blockquote,dl,dd,h1,h2,h3,h4,h5,h6,hr,figure,p,pre{margin:0}
+fieldset{margin:0;padding:0}
+legend{padding:0}
+ol,ul,menu{list-style:none;margin:0;padding:0}
+textarea{resize:vertical}
+input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}
+button,[role="button"]{cursor:pointer}
+:disabled{cursor:default}
+img,svg,video,canvas,audio,iframe,embed,object{display:block;vertical-align:middle}
+img,video{max-width:100%;height:auto}
+[hidden]{display:none}
+
+/* ========== 自定义颜色变量 ========== */
+:root {
+  --tw-primary: #4F46E5;
+  --tw-secondary: #10B981;
+  --tw-accent: #F59E0B;
+  --tw-dark-bg: #1E293B;
+  --tw-dark-card: #334155;
+}
+
+/* 保护Font Awesome的i元素不被Preflight覆盖 */
+i.fa{display:inline-block;font:normal normal normal 14px/1 FontAwesome}
+
+/* ========== 字体 ========== */
+/* 修复Font Awesome图标被Tailwind line-height覆盖的问题 */
+.fa{line-height:1 !important}
+.font-inter{font-family:Inter,system-ui,sans-serif}
+
+/* ========== 动画 ========== */
+@keyframes fadeIn{0%{opacity:0}100%{opacity:1}}
+@keyframes slideUp{0%{transform:translateY(10px);opacity:0}100%{transform:translateY(0);opacity:1}}
+@keyframes pulseSoft{0%,100%{opacity:1}50%{opacity:0.7}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.animate-fade-in{animation:fadeIn 0.3s ease-in-out}
+.animate-slide-up{animation:slideUp 0.3s ease-out}
+.animate-pulse-soft{animation:pulseSoft 2s infinite}
+
+/* ========== 布局 ========== */
+.container{width:100%;margin-right:auto;margin-left:auto;padding-right:1rem;padding-left:1rem}
+@media(min-width:640px){.container{max-width:640px}}
+@media(min-width:768px){.container{max-width:768px}}
+@media(min-width:1024px){.container{max-width:1024px}}
+@media(min-width:1280px){.container{max-width:1280px}}
+@media(min-width:1536px){.container{max-width:1536px}}
+
+.sticky{position:sticky}
+.relative{position:relative}
+.absolute{position:absolute}
+.fixed{position:fixed}
+.inset-0{top:0;right:0;bottom:0;left:0}
+.top-0{top:0}
+.top-2{top:0.5rem}
+.top-4{top:1rem}
+.-top-1{top:-0.25rem}
+.right-2{right:0.5rem}
+.-right-1{right:-0.25rem}
+.left-3{left:0.75rem}
+.left-7{left:1.75rem}
+.top-\[58px\]{top:58px}
+.top-1\/2{top:50%}
+.left-1\/2{left:50%}
+.-translate-x-1\/2{transform:translateX(-50%)}
+.z-50{z-index:50}
+
+/* ========== Flexbox ========== */
+.flex{display:flex}
+.grid{display:grid}
+.hidden{display:none !important}
+.flex-col{flex-direction:column}
+.flex-wrap{flex-wrap}
+.items-center{align-items:center}
+.justify-center{justify-content:center}
+.justify-between{justify-content:space-between}
+.justify-end{justify-content:flex-end}
+.gap-1{gap:0.25rem}
+.gap-2{gap:0.5rem}
+.gap-3{gap:0.75rem}
+.gap-4{gap:1rem}
+.flex-1{flex:1 1 0%}
+
+/* ========== Grid ========== */
+.grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(min-width:640px){.sm\:grid-cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:768px){.mobile-card-inner{flex-direction:row !important;align-items:center !important;justify-content:flex-start !important;gap:1rem !important}.mobile-card-icon{width:50px !important;height:50px !important;margin-bottom:0 !important}.mobile-card-icon img{width:40px !important;height:40px !important}.mobile-card-content{text-align:left !important;width:100% !important}}
+@media(min-width:768px){.md\:grid-cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(min-width:1024px){.lg\:grid-cols-5{grid-template-columns:repeat(5,minmax(0,1fr))}}
+@media(min-width:1280px){.xl\:grid-cols-6{grid-template-columns:repeat(6,minmax(0,1fr))}}
+.\32 xl\:grid-cols-8{grid-template-columns:repeat(8,minmax(0,1fr))}
+.col-span-full{grid-column:1/-1}
+
+/* ========== 间距 ========== */
+.p-2{padding:0.5rem}
+.p-3{padding:0.75rem}
+.p-4{padding:1rem}
+.p-5{padding:1.25rem}
+.px-3{padding-left:0.75rem;padding-right:0.75rem}
+.px-4{padding-left:1rem;padding-right:1rem}
+.px-8{padding-left:2rem;padding-right:2rem}
+.py-1\.5{padding-top:0.375rem;padding-bottom:0.375rem}
+.py-2{padding-top:0.5rem;padding-bottom:0.5rem}
+.py-3{padding-top:0.75rem;padding-bottom:0.75rem}
+.py-6{padding-top:1.5rem;padding-bottom:1.5rem}
+.py-16{padding-top:4rem;padding-bottom:4rem}
+.pb-3{padding-bottom:0.75rem}
+.pl-9{padding-left:2.25rem}
+.pr-4{padding-right:1rem}
+.mb-1{margin-bottom:0.25rem}
+.mb-2{margin-bottom:0.5rem}
+.mb-3{margin-bottom:0.75rem}
+.mb-4{margin-bottom:1rem}
+.mb-6{margin-bottom:1.5rem}
+.mt-3{margin-top:0.75rem}
+.mt-4{margin-top:1rem}
+.mt-10{margin-top:2.5rem}
+.ml-auto{margin-left:auto}
+.p-1\.5{padding:0.375rem}
+
+/* ========== 尺寸 ========== */
+.w-5{width:1.25rem}
+.w-20{width:5rem}
+.w-48{width:12rem}
+.w-80{width:20rem}
+.w-full{width:100%}
+.h-5{height:1.25rem}
+.h-20{height:5rem}
+.h-full{height:100%}
+.min-h-screen{min-height:100vh}
+.min-h-\[auto\]{min-height:auto}
+.w-\[60px\]{width:60px}
+.h-\[60px\]{height:60px}
+.w-\[50px\]{width:50px}
+.h-\[50px\]{height:50px}
+@media(min-width:1024px){.lg\:w-64{width:16rem}}
+
+/* ========== 排版 ========== */
+.text-xs{font-size:0.75rem;line-height:1rem}
+.text-sm{font-size:0.875rem;line-height:1.25rem}
+.text-lg{font-size:1.125rem;line-height:1.75rem}
+.text-xl{font-size:1.25rem !important;line-height:1.75rem !important}
+.text-2xl{font-size:1.5rem !important;line-height:2rem !important}
+.text-3xl{font-size:1.875rem !important;line-height:2.25rem !important}
+.font-medium{font-weight:500}
+.font-semibold{font-weight:600}
+.font-bold{font-weight:700}
+.text-center{text-align:center}
+.text-transparent{color:transparent}
+.line-clamp-2{overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+.break-all{word-break:break-all}
+.truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ========== 文字颜色 ========== */
+.text-white{color:#fff}
+.text-slate-400{color:#94a3b8}
+.text-slate-500{color:#64748b}
+.text-slate-600{color:#475569}
+.text-slate-800{color:#1e293b}
+.text-primary{color:#4F46E5}
+.bg-clip-text{-webkit-background-clip:text;background-clip:text}
+
+/* ========== 背景色 ========== */
+.bg-white{background-color:#fff}
+.bg-slate-100{background-color:#f1f5f9}
+.bg-slate-200{background-color:#e2e8f0}
+.bg-slate-800{background-color:#1e293b}
+.bg-red-500{background-color:#ef4444}
+.bg-primary{background-color:#4F46E5}
+.bg-accent{background-color:#F59E0B}
+.bg-black\/50{background-color:rgb(0 0 0/0.5)}
+.bg-white\/60{background-color:rgb(255 255 255/0.6)}
+.bg-white\/70{background-color:rgb(255 255 255/0.7)}
+.bg-white\/80{background-color:rgb(255 255 255/0.8)}
+.bg-primary\/10{background-color:rgb(79 70 229/0.1)}
+.bg-primary\/20{background-color:rgb(79 70 229/0.2)}
+.bg-slate-50{background-color:#f8fafc}
+.bg-slate-700{background-color:#334155}
+
+/* ========== 渐变 ========== */
+.bg-gradient-to-br{background-image:linear-gradient(to bottom right,var(--tw-gradient-stops))}
+.bg-gradient-to-r{background-image:linear-gradient(to right,var(--tw-gradient-stops))}
+.from-slate-50{--tw-gradient-from:#f8fafc;--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to,rgb(248 250 252/0))}
+.to-indigo-50{--tw-gradient-to:#eef2ff}
+.from-primary{--tw-gradient-from:#4F46E5;--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to,rgb(79 70 229/0))}
+.to-secondary{--tw-gradient-to:#10B981}
+.from-blue-50{--tw-gradient-from:#eff6ff;--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to,rgb(239 246 255/0))}
+.to-indigo-50{--tw-gradient-to:#eef2ff}
+.from-green-50{--tw-gradient-from:#f0fdf4;--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to,rgb(240 253 244/0))}
+.to-emerald-50{--tw-gradient-to:#ecfdf5}
+.from-purple-50{--tw-gradient-from:#faf5ff;--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to,rgb(250 245 255/0))}
+.to-pink-50{--tw-gradient-to:#fdf2f8}
+.from-amber-50{--tw-gradient-from:#fffbeb;--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to,rgb(255 251 235/0))}
+.to-orange-50{--tw-gradient-to:#fff7ed}
+.from-red-50{--tw-gradient-from:#fef2f2;--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to,rgb(254 242 242/0))}
+.to-rose-50{--tw-gradient-to:#fff1f2}
+
+/* ========== 边框 ========== */
+.border{border-width:1px}
+.border-0{border-width:0}
+.border-b{border-bottom-width:1px}
+.border-slate-200{border-color:#e2e8f0}
+.border-slate-600{border-color:#475569}
+.border-primary\/20{border-color:rgb(79 70 229/0.2)}
+.border-t{border-top-width:1px}
+
+/* ========== 圆角 ========== */
+.rounded-md{border-radius:0.375rem}
+.rounded-lg{border-radius:0.5rem}
+.rounded-xl{border-radius:0.75rem}
+.rounded-2xl{border-radius:1rem}
+.rounded-full{border-radius:9999px}
+
+/* ========== 阴影 ========== */
+.shadow-sm{box-shadow:0 1px 2px 0 rgb(0 0 0/0.05)}
+.shadow-md{box-shadow:0 4px 6px -1px rgb(0 0 0/0.1),0 2px 4px -2px rgb(0 0 0/0.1)}
+.shadow-lg{box-shadow:0 10px 15px -3px rgb(0 0 0/0.1),0 4px 6px -4px rgb(0 0 0/0.1)}
+
+/* ========== 透明度 ========== */
+.opacity-0{opacity:0}
+
+/* ========== 过渡 ========== */
+.transition-all{transition-property:all;transition-timing-function:cubic-bezier(0.4,0,0.2,1);transition-duration:150ms}
+.transition-colors{transition-property:color,background-color,border-color,text-decoration-color,fill,stroke;transition-timing-function:cubic-bezier(0.4,0,0.2,1);transition-duration:150ms}
+.transition-opacity{transition-property:opacity;transition-timing-function:cubic-bezier(0.4,0,0.2,1);transition-duration:150ms}
+.duration-300{transition-duration:300ms}
+
+/* ========== 焦点 ========== */
+.focus\:outline-none:focus{outline:2px solid transparent;outline-offset:2px}
+.focus\:ring-2:focus{--tw-ring-offset-shadow:var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);--tw-ring-shadow:var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);box-shadow:var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow,0 0 #0000)}
+.focus\:ring-primary\/50:focus{--tw-ring-color:rgb(79 70 229/0.5)}
+
+/* ========== 悬停 ========== */
+.hover\:bg-slate-100:hover{background-color:#f1f5f9}
+.hover\:bg-slate-50:hover{background-color:#f8fafc}
+.hover\:bg-slate-300:hover{background-color:#cbd5e1}
+.hover\:bg-slate-600:hover{background-color:#475569}
+.hover\:bg-slate-700:hover{background-color:#334155}
+.hover\:bg-red-600:hover{background-color:#dc2626}
+.hover\:bg-primary\/90:hover{background-color:rgb(79 70 229/0.9)}
+.hover\:bg-white:hover{background-color:#fff}
+.hover\:text-primary\/80:hover{color:rgb(79 70 229/0.8)}
+
+/* ========== 指针 ========== */
+.cursor-pointer{cursor:pointer}
+.overflow-hidden{overflow:hidden}
+
+/* ========== 对象适配 ========== */
+.object-contain{object-fit:contain}
+
+/* ========== 变换 ========== */
+.-translate-y-1\/2{--tw-translate-y:-50%;transform:translate(var(--tw-translate-x),var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}
+
+/* ========== 环 ========== */
+.ring-2{--tw-ring-offset-shadow:var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);--tw-ring-shadow:var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);box-shadow:var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow,0 0 #0000)}
+.ring-dashed{--tw-ring-style:dashed;--tw-ring-offset-width:0px}
+.ring-primary{--tw-ring-color:#4F46E5}
+
+/* ========== 毛玻璃 ========== */
+.backdrop-blur{backdrop-filter:blur(8px)}
+
+/* ========== 最大宽度 ========== */
+.max-w-md{max-width:28rem}
+
+/* ========== 响应式 - md ========== */
+@media(min-width:768px){
+  .md\:block{display:block !important}
+  .md\:hidden{display:none}
+  .md\:gap-5{gap:1.25rem}
+}
+
+/* ========== 响应式 - sm ========== */
+@media(min-width:640px){
+}
+
+/* ========== 深色模式 ========== */
+.dark .dark\:from-dark-bg{--tw-gradient-from:#1E293B;--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to,rgb(30 41 59/0))}
+.dark .dark\:to-slate-900{--tw-gradient-to:#0f172a}
+.dark .dark\:from-dark-bg\/80{--tw-gradient-from:rgb(30 41 59/0.8);--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to,rgb(30 41 59/0))}
+.dark .dark\:bg-dark-bg\/80{background-color:rgb(30 41 59/0.8)}
+.dark .dark\:bg-dark-bg\/60{background-color:rgb(30 41 59/0.6)}
+.dark .dark\:border-slate-700{border-color:#334155}
+.dark .dark\:text-slate-100{color:#f1f5f9}
+.dark .dark\:text-slate-300{color:#cbd5e1}
+.dark .dark\:text-slate-400{color:#94a3b8}
+.dark .dark\:bg-slate-700{background-color:#334155}
+.dark .dark\:bg-slate-800{background-color:#1e293b}
+.dark .dark\:bg-slate-800\/80{background-color:rgb(30 41 59/0.8)}
+.dark .dark\:border-slate-600{border-color:#475569}
+.dark .dark\:bg-slate-50{background-color:#f8fafc}
+.dark .dark\:bg-slate-700\/70{background-color:rgb(51 65 85/0.7)}
+.dark .dark\:border-t-slate-700{border-top-color:#334155}
+.dark .dark\:hover\:bg-slate-700:hover{background-color:#334155}
+.dark .dark\:hover\:bg-slate-600:hover{background-color:#475569}
+.dark .dark\:from-blue-900\/20{--tw-gradient-from:rgb(30 58 138/0.2);--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to,rgb(30 58 138/0))}
+.dark .dark\:to-indigo-900\/20{--tw-gradient-to:rgb(49 46 129/0.2)}
+.dark .dark\:from-green-900\/20{--tw-gradient-from:rgb(20 83 45/0.2);--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to,rgb(20 83 45/0))}
+.dark .dark\:to-emerald-900\/20{--tw-gradient-to:rgb(6 78 59/0.2)}
+.dark .dark\:from-purple-900\/20{--tw-gradient-from:rgb(88 28 135/0.2);--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to,rgb(88 28 135/0))}
+.dark .dark\:to-pink-900\/20{--tw-gradient-to:rgb(131 24 67/0.2)}
+.dark .dark\:from-amber-900\/20{--tw-gradient-from:rgb(120 53 15/0.2);--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to,rgb(120 53 15/0))}
+.dark .dark\:to-orange-900\/20{--tw-gradient-to:rgb(124 45 18/0.2)}
+.dark .dark\:from-red-900\/20{--tw-gradient-from:rgb(127 29 29/0.2);--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to,rgb(127 29 29/0))}
+.dark .dark\:to-rose-900\/20{--tw-gradient-to:rgb(136 19 55/0.2)}
+.dark .dark\:ring-primary{--tw-ring-color:#4F46E5}
+.dark .dark\:hidden{display:none !important}
+.dark .dark\:inline{display:inline-block !important}
+.dark .dark\:bg-primary\/20{background-color:rgb(79 70 229/0.2)}
+.dark .dark\:hover\:bg-slate-700:hover{background-color:#334155}
+.dark .dark\:hover\:bg-slate-600:hover{background-color:#475569}
+
+/* ========== 自定义工具类 ========== */
+.content-auto{content-visibility:auto}
+.card-gradient{background:linear-gradient(145deg,var(--tw-gradient-from),var(--tw-gradient-to))}
+.text-shadow{text-shadow:0 2px 4px rgba(0,0,0,0.1)}
+
+/* 搜索框样式 - 呼吸光效 */
+.search-input{
+  box-shadow:0 0 0 0 transparent;
+  transition:box-shadow 0.3s ease,background-color 0.3s ease;
+  height:38px
+}
+.search-input:focus{
+  box-shadow:0 0 0 2px rgba(79,70,229,0.3),0 0 20px rgba(79,70,229,0.2);
+  animation:searchPulse 2s ease-in-out infinite
+}
+@keyframes searchPulse{
+  0%,100%{box-shadow:0 0 0 2px rgba(79,70,229,0.3),0 0 20px rgba(79,70,229,0.2)}
+  50%{box-shadow:0 0 0 2px rgba(79,70,229,0.5),0 0 28px rgba(79,70,229,0.35)}
+}
+.dark .search-input:focus{
+  box-shadow:0 0 0 2px rgba(99,102,241,0.4),0 0 20px rgba(99,102,241,0.25);
+  animation:searchPulseDark 2s ease-in-out infinite
+}
+@keyframes searchPulseDark{
+  0%,100%{box-shadow:0 0 0 2px rgba(99,102,241,0.4),0 0 20px rgba(99,102,241,0.25)}
+  50%{box-shadow:0 0 0 2px rgba(99,102,241,0.6),0 0 28px rgba(99,102,241,0.4)}
+}
+
+/* ========== 组悬停 ========== */
+.group:hover .group-hover\:opacity-100{opacity:1}
