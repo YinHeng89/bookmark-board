@@ -217,9 +217,10 @@ function setupEventListeners() {
 
   // 模态框
   modalCancel.addEventListener('click', closeModal);
-  modal.addEventListener('click', (e) => {
-    if (e.target === modal) closeModal();
-  });
+  // 移除点击空白关闭的功能
+  // modal.addEventListener('click', (e) => {
+  //   if (e.target === modal) closeModal();
+  // });
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeModal();
@@ -511,8 +512,16 @@ function showModal({ title = '提示', message = '', input = false, defaultValue
     modalInput.classList.remove('hidden');
     modalInput.value = defaultValue || '';
     setTimeout(() => modalInput.focus(), 100);
+    
+    // 回车键确认
+    modalInput.onkeydown = (e) => {
+      if (e.key === 'Enter') {
+        modalOk.click();
+      }
+    };
   } else {
     modalInput.classList.add('hidden');
+    modalInput.onkeydown = null;
   }
 
   modal.classList.add('show');
