@@ -236,12 +236,14 @@ bookmark-board/
 ## 🐛 问题反馈
 
 如果你遇到任何问题或有改进建议：
-1. 查看 [Issues](https://github.com/yourusername/bookmark-board/issues) 是否有相同问题
+1. 查看 [Issues](https://github.com/YinHeng89/bookmark-board/issues) 是否有相同问题
 2. 创建新 Issue，提供：
    - 问题描述
    - 复现步骤
    - 浏览器版本
    - 截图（如有）
+
+📖 **使用文档**：[GUIDE.md](https://github.com/YinHeng89/bookmark-board/blob/main/GUIDE.md)
 
 ### 常见问题
 
@@ -256,6 +258,7 @@ A: 确保使用的是最新版本（v3.2.0+）
 
 ## 🌟 致谢
 
+- [书签白板 GitHub](https://github.com/YinHeng89/bookmark-board) - 项目主页
 - [Chrome Extension API](https://developer.chrome.com/docs/extensions/) - 强大的扩展能力
 - [Font Awesome](https://fontawesome.com/) - 精美的图标库
 - CSS Variables - 灵活的主题系统
