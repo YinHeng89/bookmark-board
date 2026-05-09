@@ -325,7 +325,8 @@ function addBookmark(url, title, iconUrl) {
     url: url,
     title: title || '未命名',
     icon: iconUrl || 'default-icon.png',
-    groups: []
+    groups: [],
+    createdAt: Date.now()
   };
 
   links.unshift(newLink);
@@ -588,7 +589,8 @@ function setupDragAndDrop() {
         url: cleanUrl,
         title: finalTitle,
         icon: icon,
-        groups: []
+        groups: [],
+        createdAt: Date.now()
       };
 
       links.unshift(newLink);

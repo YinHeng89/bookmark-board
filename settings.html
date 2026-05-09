@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>设置 - 书签白板</title>
+  <link href="css/font-awesome.min.css" rel="stylesheet" />
+  <link href="css/main.css" rel="stylesheet" />
+  <link href="css/settings.css" rel="stylesheet" />
+</head>
+<body>
+  <div class="settings-container">
+    <!-- 左侧导航 -->
+    <aside class="settings-sidebar">
+      <div class="settings-header">
+        <img src="icons/logo.png" alt="书签白板" class="settings-logo" />
+        <h1>设置</h1>
+      </div>
+      
+      <nav class="settings-nav">
+        <a href="#bookmark-manager" class="nav-item" data-section="bookmark-manager">
+          <i class="fa fa-bookmark"></i>
+          <span>书签管理</span>
+        </a>
+        <a href="#groups" class="nav-item" data-section="groups">
+          <i class="fa fa-folder"></i>
+          <span>分组管理</span>
+        </a>
+        <a href="#appearance" class="nav-item" data-section="appearance">
+          <i class="fa fa-paint-brush"></i>
+          <span>外观与主题</span>
+        </a>
+        <a href="#display" class="nav-item" data-section="display">
+          <i class="fa fa-desktop"></i>
+          <span>显示与排序</span>
+        </a>
+        <a href="#data" class="nav-item" data-section="data">
+          <i class="fa fa-database"></i>
+          <span>数据管理</span>
+        </a>
+        <a href="#search" class="nav-item" data-section="search">
+          <i class="fa fa-search"></i>
+          <span>搜索与筛选</span>
+        </a>
+        <a href="#privacy" class="nav-item" data-section="privacy">
+          <i class="fa fa-shield"></i>
+          <span>隐私与安全</span>
+        </a>
+        <a href="#shortcuts" class="nav-item" data-section="shortcuts">
+          <i class="fa fa-keyboard-o"></i>
+          <span>快捷操作</span>
+        </a>
+        <a href="#about" class="nav-item" data-section="about">
+          <i class="fa fa-info-circle"></i>
+          <span>关于</span>
+        </a>
+      </nav>
+      
+      <div class="settings-footer">
+        <button id="backToMain" class="back-btn">
+          <i class="fa fa-arrow-left"></i>
+          <span>返回主页</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- 右侧内容区 -->
+    <main class="settings-content">
+      <!-- 书签管理 -->
+      <section id="bookmark-manager" class="settings-section">
+        <h2>书签管理</h2>
+        <div class="section-content">
+          <!-- 工具栏 -->
+          <div class="bookmark-toolbar">
+            <div class="toolbar-left">
+              <!-- 搜索框 -->
+              <div class="settings-search">
+                <input
+                  type="text"
+                  id="settingsSearchInput"
+                  class="settings-search-input"
+                  placeholder="搜索书签..."
+                />
+              </div>
+            </div>
+            <div class="toolbar-right">
+              <!-- 批量操作按钮 -->
+              <button id="batchModeBtn" class="toolbar-btn">
+                <span>批量管理</span>
+              </button>
+            </div>
+          </div>
+          
+          <!-- 批量操作栏（默认隐藏） -->
+          <div id="batchActions" class="batch-actions">
+            <p class="batch-text"><strong id="selectedCountText">0</strong> 个书签被选中</p>
+            <div class="batch-buttons">
+              <button id="selectAllBtn" class="batch-btn">
+                <span>全选</span>
+              </button>
+              <button id="deselectAllBtn" class="batch-btn">
+                <span>取消全选</span>
+              </button>
+              <button id="groupSelectedBtn" class="batch-btn batch-btn-primary">
+                <span>添加到分组</span>
+              </button>
+              <button id="deleteSelectedBtn" class="batch-btn batch-btn-danger">
+                <span>删除</span>
+              </button>
+            </div>
+          </div>
+          
+          <!-- 书签列表 -->
+          <div id="settingsBookmarkBoard" class="bookmark-list">
+            <!-- 书签列表项将在这里渲染 -->
+          </div>
+        </div>
+      </section>
+
+      <!-- 外观与主题 -->
+      <section id="appearance" class="settings-section">
+        <h2>外观与主题</h2>
+        <div class="section-content placeholder">
+          <div class="placeholder-icon">
+            <i class="fa fa-paint-brush"></i>
+          </div>
+          <h3>即将推出</h3>
+          <p>主题切换、自定义颜色、布局设置等功能正在开发中...</p>
+        </div>
+      </section>
+
+      <!-- 显示与排序 -->
+      <section id="display" class="settings-section">
+        <h2>显示与排序</h2>
+        <div class="section-content placeholder">
+          <div class="placeholder-icon">
+            <i class="fa fa-desktop"></i>
+          </div>
+          <h3>即将推出</h3>
+          <p>排序方式、显示选项、卡片密度等功能正在开发中...</p>
+        </div>
+      </section>
+
+      <!-- 数据管理 -->
+      <section id="data" class="settings-section">
+        <h2>数据管理</h2>
+        <div class="section-content placeholder">
+          <div class="placeholder-icon">
+            <i class="fa fa-database"></i>
+          </div>
+          <h3>即将推出</h3>
+          <p>导入导出、自动备份、数据清理等功能正在开发中...</p>
+        </div>
+      </section>
+
+      <!-- 搜索与筛选 -->
+      <section id="search" class="settings-section">
+        <h2>搜索与筛选</h2>
+        <div class="section-content placeholder">
+          <div class="placeholder-icon">
+            <i class="fa fa-search"></i>
+          </div>
+          <h3>即将推出</h3>
+          <p>搜索配置、标签管理、搜索建议等功能正在开发中...</p>
+        </div>
+      </section>
+
+      <!-- 分组管理 -->
+      <section id="groups" class="settings-section">
+        <h2>分组管理</h2>
+        <div class="section-content">
+          <!-- 工具栏 -->
+          <div class="bookmark-toolbar">
+            <div class="toolbar-left">
+              <p class="batch-text">管理自定义分组（自动分组不可删除）</p>
+            </div>
+            <div class="toolbar-right">
+              <button id="addGroupBtn" class="toolbar-btn">
+                <span>新建分组</span>
+              </button>
+            </div>
+          </div>
+          
+          <!-- 分组列表 -->
+          <div id="groupsList" class="groups-list">
+            <!-- 分组列表项将在这里渲染 -->
+          </div>
+        </div>
+      </section>
+
+      <!-- 隐私与安全 -->
+      <section id="privacy" class="settings-section">
+        <h2>隐私与安全</h2>
+        <div class="section-content placeholder">
+          <div class="placeholder-icon">
+            <i class="fa fa-shield"></i>
+          </div>
+          <h3>即将推出</h3>
+          <p>加密存储、自动锁定、无痕模式等功能正在开发中...</p>
+        </div>
+      </section>
+
+      <!-- 快捷操作 -->
+      <section id="shortcuts" class="settings-section">
+        <h2>快捷操作</h2>
+        <div class="section-content placeholder">
+          <div class="placeholder-icon">
+            <i class="fa fa-keyboard-o"></i>
+          </div>
+          <h3>即将推出</h3>
+          <p>快捷键自定义、鼠标手势、批量操作等功能正在开发中...</p>
+        </div>
+      </section>
+
+      <!-- 关于 -->
+      <section id="about" class="settings-section">
+        <h2>关于</h2>
+        <div class="section-content about-content">
+          <div class="about-logo">
+            <img src="icons/logo.png" alt="书签白板" />
+            <h3>书签白板</h3>
+          </div>
+          <p class="version">版本 v3.2.0</p>
+          <p class="description">隐私优先的本地书签管理工具</p>
+          <div class="about-links">
+            <a href="#" class="about-link">
+              <i class="fa fa-github"></i>
+              <span>GitHub</span>
+            </a>
+            <a href="#" class="about-link">
+              <i class="fa fa-book"></i>
+              <span>使用文档</span>
+            </a>
+            <a href="#" class="about-link">
+              <i class="fa fa-bug"></i>
+              <span>反馈问题</span>
+            </a>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="js/settings.js"></script>
+</body>
+</html>
