@@ -55,11 +55,11 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     // 优先使用选中的文本，其次是链接文本
     const linkTitle = info.selectionText || info.linkText || '';
     
-    // 获取链接的 favicon
+    // 获取链接的 favicon（使用 Google 服务，不需要主机权限）
     let faviconUrl = '';
     try {
       const url = new URL(linkUrl);
-      faviconUrl = `https://${url.hostname}/favicon.ico`;
+      faviconUrl = `https://www.google.com/s2/favicons?domain=${url.hostname}&sz=64`;
     } catch (e) {
       console.error('URL 解析失败:', e);
     }

@@ -568,13 +568,15 @@ function setupDragAndDrop() {
         // 找到了匹配的标签页，使用其标题
         const tab = tabs[0];
         finalTitle = tab.title || '未命名';
-        icon = tab.favIconUrl || `https://${new URL(cleanUrl).hostname}/favicon.ico`;
+        // 优先使用标签页的 favicon，否则使用 Google 服务
+        icon = tab.favIconUrl || `https://www.google.com/s2/favicons?domain=${new URL(cleanUrl).hostname}&sz=64`;
       } else {
         // 没有匹配的标签页，使用域名作为标题
         try {
           const hostname = new URL(cleanUrl).hostname.replace(/^www\./, '');
           finalTitle = hostname.length > 30 ? hostname.substring(0, 30) + '...' : hostname;
-          icon = `https://${new URL(cleanUrl).hostname}/favicon.ico`;
+          // 使用 Google 服务获取 favicon
+          icon = `https://www.google.com/s2/favicons?domain=${new URL(cleanUrl).hostname}&sz=64`;
         } catch (e) {
           // 使用默认值
         }

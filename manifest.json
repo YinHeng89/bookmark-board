@@ -11,12 +11,10 @@
     "contextMenus",
     "tabs",
     "scripting",
-    "sidePanel"
+    "sidePanel",
+    "activeTab"
   ],
-  "host_permissions": [
-    "http://*/*",
-    "https://*/*"
-  ],
+  "host_permissions": [],
   "background": {
     "service_worker": "js/background.js"
   },

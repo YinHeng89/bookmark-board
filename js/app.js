@@ -780,8 +780,13 @@ function addLinkFromUrl(url, draggedTitle = null) {
       title = title.charAt(0).toUpperCase() + title.slice(1);
     }
     
-    // 尝试获取 favicon
-    icon = `https://${urlObj.hostname}/favicon.ico`;
+    // 获取 favicon 的策略：
+    // 1. 优先使用 Google Favicon API (https://www.google.com/s2/favicons)
+    // 2. 如果失败，浏览器会自动显示默认图标或 broken image 图标
+    // 3. 即使图标加载失败，书签功能完全不受影响
+    // 注意：中国用户可能无法访问 Google，但书签功能不受影响
+    const domain = urlObj.hostname;
+    icon = `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
   } catch (e) {
     title = url;
     icon = '';
