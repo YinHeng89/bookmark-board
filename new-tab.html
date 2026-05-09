@@ -41,7 +41,7 @@
             type="text"
             id="search"
             class="search-input"
-            placeholder="搜索书签..."
+            placeholder="搜索书签... 支持 #标签 @域名 !分组"
           />
         </div>
 
@@ -69,7 +69,7 @@
       <input
         type="text"
         id="mobileSearchInput"
-        placeholder="搜索书签..."
+        placeholder="搜索书签... 支持 #标签 @域名 !分组"
       />
     </div>
   </header>
@@ -77,6 +77,21 @@
   <!-- 主内容区 -->
   <main class="main">
     <div class="container">
+      <!-- 分组筛选区 -->
+      <div id="groupsFilter" class="groups-filter">
+        <div class="groups-wrapper">
+          <div class="groups-container">
+            <button class="group-tab active" data-group="all">
+              <i class="fa fa-th"></i>
+              <span>全部书签</span>
+            </button>
+            <!-- 动态生成分组标签 -->
+          </div>
+          <button id="addGroupBtn" class="add-group-btn" title="新建分组">
+            <i class="fa fa-plus"></i>
+          </button>
+        </div>
+      </div>
       <!-- 提示栏 -->
       <div id="tipBar" class="tip-bar">
         <i class="fa fa-info-circle tip-icon"></i>
@@ -96,8 +111,40 @@
         </div>
       </div>
 
-      <!-- 书签区域 -->
-      <div id="board" class="board">
+      <!-- Tab 切换和排序 -->
+      <div class="view-controls">
+        <div id="viewTabs" class="view-tabs">
+          <button class="view-tab active" data-view="all">
+            <i class="fa fa-bookmark"></i>
+            <span>所有书签</span>
+            <span id="allCount" class="tab-count">0</span>
+          </button>
+          <button class="view-tab" data-view="pinned">
+            <i class="fa fa-thumb-tack"></i>
+            <span>置顶</span>
+            <span id="pinnedCount" class="tab-count">0</span>
+          </button>
+          <button class="view-tab" data-view="recent">
+            <i class="fa fa-clock-o"></i>
+            <span>最近</span>
+            <span id="recentCount" class="tab-count">0</span>
+          </button>
+        </div>
+        
+        <div class="sort-controls">
+          <label class="sort-label">排序：</label>
+          <select id="sortSelect" class="sort-select">
+            <option value="createdAt-desc">添加时间（新→旧）</option>
+            <option value="createdAt-asc">添加时间（旧→新）</option>
+            <option value="title-asc">名称（A→Z）</option>
+            <option value="title-desc">名称（Z→A）</option>
+            <option value="clickCount-desc">使用频率（高→低）</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 书签展示区 -->
+      <div id="board" class="board section-board">
         <!-- 空状态提示 -->
         <div id="emptyState" class="empty-state hidden">
           <div class="empty-icon-wrapper">

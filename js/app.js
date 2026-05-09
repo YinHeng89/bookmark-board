@@ -31,9 +31,31 @@ const modalOk = document.getElementById('modalOk');
 
 // ========== 状态管理 ==========
 let links = [];
+let groups = [];  // 分组数据
 let selectedLinks = new Set();
 let isBatchMode = false;
 let filterText = '';
+let activeGroupFilter = 'all';  // 当前选中的分组
+let sortBy = 'createdAt-desc';  // 排序方式：createdAt-desc, createdAt-asc, title-asc, title-desc, clickCount-desc
+let currentView = 'all';  // 当前视图：all, pinned, recent
+let domainCache = new Map();  // 域名缓存，优化性能
+let autoGroupNames = {};  // 自动分组的自定义名称 {domain: customName}
+
+// 获取书签域名（带缓存）
+function getLinkDomain(link) {
+  if (domainCache.has(link.url)) {
+    return domainCache.get(link.url);
+  }
+  
+  try {
+    const domain = new URL(link.url).hostname.replace(/^www\./, '').toLowerCase();
+    domainCache.set(link.url, domain);
+    return domain;
+  } catch (e) {
+    domainCache.set(link.url, '');
+    return '';
+  }
+}
 
 // ========== 初始化 ==========
 // 先加载主题（快速）
@@ -65,7 +87,7 @@ function loadData() {
     emptyState.innerHTML = '<i class="fa fa-spinner fa-spin"></i><p>加载中...</p>';
   }
   
-  chrome.storage.local.get(['links', 'tipHidden'], (result) => {
+  chrome.storage.local.get(['links', 'groups', 'tipHidden', 'autoGroupNames'], (result) => {
 
     // 恢复提示栏状态
     if (result.tipHidden === true) {
@@ -73,8 +95,22 @@ function loadData() {
     }
 
     // 加载书签数据
-    links = result.links || [];
-    renderLinks();
+    links = (result.links || []).map(link => ({
+      ...link,
+      groups: link.groups || [],  // 兼容旧数据
+      pinned: link.pinned || false,  // 置顶标记
+      clickCount: link.clickCount || 0,  // 点击次数
+      lastAccessed: link.lastAccessed || null  // 最后访问时间
+    }));
+    
+    // 加载分组数据
+    groups = result.groups || [];
+    
+    // 加载自动分组的自定义名称
+    autoGroupNames = result.autoGroupNames || {};
+    
+    renderGroups();  // 渲染分组
+    renderLinks();   // 渲染书签
   });
 }
 
@@ -142,6 +178,15 @@ function setupEventListeners() {
     filterText = e.target.value.toLowerCase();
     renderLinks();
   });
+  
+  // 排序事件
+  const sortSelect = document.getElementById('sortSelect');
+  if (sortSelect) {
+    sortSelect.addEventListener('change', (e) => {
+      sortBy = e.target.value;
+      renderLinks();
+    });
+  }
 
   // 移动端搜索按钮
   mobileSearchBtn.addEventListener('click', () => {
@@ -234,11 +279,353 @@ function setupEventListeners() {
       loadData();
     }
   });
+  
+  // 分组筛选事件委托
+  const groupsContainer = document.querySelector('.groups-container');
+  if (groupsContainer) {
+    groupsContainer.addEventListener('click', (e) => {
+      const tab = e.target.closest('.group-tab');
+      if (tab) {
+        activeGroupFilter = tab.dataset.group;
+        renderGroups();
+        renderLinks();
+      }
+    });
+  }
+  
+  // Tab 切换事件
+  const viewTabs = document.querySelectorAll('.view-tab');
+  viewTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      // 移除所有active
+      viewTabs.forEach(t => t.classList.remove('active'));
+      // 添加active
+      tab.classList.add('active');
+      // 更新当前视图
+      currentView = tab.dataset.view;
+      // 重新渲染
+      renderSections();
+    });
+  });
+  
+  // 添加分组按钮
+  const addGroupBtn = document.getElementById('addGroupBtn');
+  if (addGroupBtn) {
+    addGroupBtn.addEventListener('click', () => {
+      showModal({
+        title: '新建分组',
+        message: '输入分组名称：',
+        input: true,
+        onConfirm: (name) => {
+          if (name && name.trim()) {
+            const newGroup = {
+              id: 'group_' + Date.now(),
+              name: name.trim(),
+              color: '#4F46E5',
+              icon: 'fa-folder',
+              createdAt: Date.now()
+            };
+            groups.push(newGroup);
+            save();
+            renderGroups();
+            showToast('分组已创建');
+          }
+        }
+      });
+    });
+  }
 }
 
 // ========== 数据操作 ==========
 function save() {
-  chrome.storage.local.set({ links });
+  chrome.storage.local.set({ links, groups });
+  // 清除域名缓存（数据变化后需要重新解析）
+  domainCache.clear();
+}
+
+function editGroup(groupId) {
+  // 查找分组（包括自动分组和自定义分组）
+  let group = groups.find(g => g.id === groupId);
+  let isAutoGroup = false;
+  
+  // 如果是自动分组，从自动分组中查找
+  if (!group && groupId.startsWith('auto_')) {
+    const autoGroups = generateAutoGroups();
+    group = autoGroups.find(g => g.id === groupId);
+    isAutoGroup = true;
+  }
+  
+  if (!group) return;
+  
+  showModal({
+    title: isAutoGroup ? '编辑分组名称' : '编辑分组',
+    message: isAutoGroup ? '修改显示名称（不影响域名筛选）：' : '修改分组名称：',
+    input: true,
+    defaultValue: group.name.replace(/ \(\d+\)$/, ''),  // 移除计数
+    onConfirm: (name) => {
+      if (name && name.trim()) {
+        if (isAutoGroup) {
+          // 自动分组：存储自定义名称
+          autoGroupNames[groupId] = name.trim();
+          // 保存到 storage
+          chrome.storage.local.set({ autoGroupNames });
+          renderGroups();
+          showToast('分组名称已更新');
+        } else {
+          // 自定义分组：正常保存
+          group.name = name.trim();
+          save();
+          renderGroups();
+          showToast('分组已更新');
+        }
+      }
+    }
+  });
+}
+
+function deleteGroup(groupId) {
+  const group = groups.find(g => g.id === groupId);
+  if (!group) return;
+  
+  showModal({
+    title: '确认删除',
+    message: `确定要删除分组 "${group.name}" 吗？\n分组内的书签不会被删除。`,
+    onConfirm: () => {
+      // 从所有书签中移除该分组
+      links.forEach(link => {
+        link.groups = link.groups.filter(gId => gId !== groupId);
+      });
+      
+      // 删除分组
+      groups = groups.filter(g => g.id !== groupId);
+      
+      // 如果当前正在查看该分组，切换回“全部”
+      if (activeGroupFilter === groupId) {
+        activeGroupFilter = 'all';
+      }
+      
+      save();
+      renderGroups();
+      renderLinks();
+      showToast('分组已删除');
+    }
+  });
+}
+
+function showGroupContextMenu(group, x, y) {
+  // 移除已存在的菜单
+  const existingMenu = document.querySelector('.group-select-menu');
+  if (existingMenu) {
+    existingMenu.remove();
+  }
+  
+  // 创建菜单
+  const menu = document.createElement('div');
+  menu.className = 'group-select-menu';
+  
+  // 标题
+  const title = document.createElement('div');
+  title.className = 'group-select-menu-title';
+  title.textContent = '分组操作';
+  menu.appendChild(title);
+  
+  // 分隔线
+  const divider1 = document.createElement('div');
+  divider1.className = 'group-select-divider';
+  menu.appendChild(divider1);
+  
+  // 编辑选项（所有分组都可以编辑）
+  const editItem = document.createElement('div');
+  editItem.className = 'group-select-item';
+  editItem.innerHTML = `
+    <i class="fa fa-pencil"></i>
+    <span>编辑名称</span>
+  `;
+  
+  editItem.addEventListener('click', () => {
+    editGroup(group.id);
+    menu.remove();
+  });
+  
+  menu.appendChild(editItem);
+  
+  // 删除选项（只有自定义分组可以删除）
+  if (!group.auto) {
+    const deleteItem = document.createElement('div');
+    deleteItem.className = 'group-select-item';
+    deleteItem.style.color = '#EF4444';
+    deleteItem.innerHTML = `
+      <i class="fa fa-trash"></i>
+      <span>删除分组</span>
+    `;
+    
+    deleteItem.addEventListener('click', () => {
+      deleteGroup(group.id);
+      menu.remove();
+    });
+    
+    menu.appendChild(deleteItem);
+  }
+  
+  // 定位菜单
+  menu.style.left = Math.min(x, window.innerWidth - 220) + 'px';
+  menu.style.top = Math.min(y, window.innerHeight - 200) + 'px';
+  
+  document.body.appendChild(menu);
+  
+  // 点击其他地方关闭菜单
+  const closeMenu = (e) => {
+    if (!menu.contains(e.target)) {
+      menu.remove();
+      document.removeEventListener('click', closeMenu);
+    }
+  };
+  
+  setTimeout(() => {
+    document.addEventListener('click', closeMenu);
+  }, 0);
+}
+
+function showBookmarkContextMenu(link, x, y) {
+  // 移除已存在的菜单
+  const existingMenu = document.querySelector('.group-select-menu');
+  if (existingMenu) {
+    existingMenu.remove();
+  }
+  
+  // 创建菜单
+  const menu = document.createElement('div');
+  menu.className = 'group-select-menu';
+  
+  // 标题
+  const title = document.createElement('div');
+  title.className = 'group-select-menu-title';
+  title.textContent = '书签操作';
+  menu.appendChild(title);
+  
+  // 分隔线
+  const divider1 = document.createElement('div');
+  divider1.className = 'group-select-divider';
+  menu.appendChild(divider1);
+  
+  // 置顶/取消置顶选项
+  const pinItem = document.createElement('div');
+  pinItem.className = 'group-select-item' + (link.pinned ? ' selected' : '');
+  pinItem.innerHTML = `
+    <i class="fa ${link.pinned ? 'fa-thumb-tack' : 'fa-thumb-tack'}"></i>
+    <span>${link.pinned ? '取消置顶' : '置顶'}</span>
+  `;
+  
+  pinItem.addEventListener('click', () => {
+    link.pinned = !link.pinned;
+    save();
+    renderLinks();
+    showToast(link.pinned ? '书签已置顶' : '已取消置顶');
+    menu.remove();
+  });
+  
+  menu.appendChild(pinItem);
+  
+  // 编辑选项
+  const editItem = document.createElement('div');
+  editItem.className = 'group-select-item';
+  editItem.innerHTML = `
+    <i class="fa fa-pencil"></i>
+    <span>编辑名称</span>
+  `;
+  
+  editItem.addEventListener('click', () => {
+    editCard(link);
+    menu.remove();
+  });
+  
+  menu.appendChild(editItem);
+  
+  // 删除选项
+  const deleteItem = document.createElement('div');
+  deleteItem.className = 'group-select-item';
+  deleteItem.style.color = '#EF4444';
+  deleteItem.innerHTML = `
+    <i class="fa fa-trash"></i>
+    <span>删除书签</span>
+  `;
+  
+  deleteItem.addEventListener('click', () => {
+    deleteCard(link);
+    menu.remove();
+  });
+  
+  menu.appendChild(deleteItem);
+  
+  // 分隔线
+  const divider2 = document.createElement('div');
+  divider2.className = 'group-select-divider';
+  menu.appendChild(divider2);
+  
+  // 分组标题
+  const groupTitle = document.createElement('div');
+  groupTitle.className = 'group-select-menu-title';
+  groupTitle.textContent = '选择分组';
+  menu.appendChild(groupTitle);
+  
+  // 分隔线
+  const divider3 = document.createElement('div');
+  divider3.className = 'group-select-divider';
+  menu.appendChild(divider3);
+  
+  // 分组选项
+  groups.forEach(group => {
+    const item = document.createElement('div');
+    item.className = 'group-select-item' + (link.groups.includes(group.id) ? ' selected' : '');
+    item.innerHTML = `
+      <i class="fa ${link.groups.includes(group.id) ? 'fa-check-circle' : 'fa-circle-o'}"></i>
+      <span>${group.name}</span>
+    `;
+    
+    item.addEventListener('click', () => {
+      // 切换分组
+      if (link.groups.includes(group.id)) {
+        link.groups = link.groups.filter(gId => gId !== group.id);
+      } else {
+        link.groups.push(group.id);
+      }
+      
+      save();
+      renderLinks();
+      showToast('分组已更新');
+      menu.remove();
+    });
+    
+    menu.appendChild(item);
+  });
+  
+  // 如果没有分组，显示提示
+  if (groups.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'group-select-item';
+    empty.style.color = 'var(--text-muted)';
+    empty.style.cursor = 'default';
+    empty.textContent = '暂无分组，请先创建';
+    menu.appendChild(empty);
+  }
+  
+  // 定位菜单
+  menu.style.left = Math.min(x, window.innerWidth - 220) + 'px';
+  menu.style.top = Math.min(y, window.innerHeight - 400) + 'px';
+  
+  document.body.appendChild(menu);
+  
+  // 点击其他地方关闭菜单
+  const closeMenu = (e) => {
+    if (!menu.contains(e.target)) {
+      menu.remove();
+      document.removeEventListener('click', closeMenu);
+    }
+  };
+  
+  setTimeout(() => {
+    document.addEventListener('click', closeMenu);
+  }, 0);
 }
 
 function addLinkFromUrl(url, draggedTitle = null) {
@@ -286,40 +673,362 @@ function addLinkFromUrl(url, draggedTitle = null) {
 
 // ========== UI 渲染 ==========
 function getFilteredLinks() {
-  if (!filterText) return links;
-  return links.filter(link => 
-    link.title.toLowerCase().includes(filterText) || 
-    link.url.toLowerCase().includes(filterText)
+  let filtered = links;
+  
+  // 按分组筛选
+  if (activeGroupFilter !== 'all') {
+    // 检查是否是自动分组
+    if (activeGroupFilter.startsWith('auto_')) {
+      // 自动分组：根据域名筛选
+      const domain = activeGroupFilter.replace('auto_', '');
+      filtered = filtered.filter(link => getLinkDomain(link) === domain);
+    } else {
+      // 自定义分组：根据groups数组筛选
+      filtered = filtered.filter(link => link.groups && link.groups.includes(activeGroupFilter));
+    }
+  }
+  
+  // 智能搜索
+  if (filterText) {
+    const searchTerms = filterText.toLowerCase().split(' ').filter(t => t.trim());
+    
+    filtered = filtered.filter(link => {
+      // 检查每个搜索词
+      return searchTerms.every(term => {
+        // #标签搜索：#工作
+        if (term.startsWith('#')) {
+          const tagName = term.substring(1);
+          return link.tags && link.tags.some(tag => 
+            tag.toLowerCase().includes(tagName)
+          );
+        }
+        
+        // @域名搜索：@github
+        if (term.startsWith('@')) {
+          const domainPart = term.substring(1);
+          return getLinkDomain(link).includes(domainPart);
+        }
+        
+        // !分组搜索：!工作
+        if (term.startsWith('!')) {
+          const groupName = term.substring(1);
+          return link.groups && link.groups.some(groupId => {
+            const group = groups.find(g => g.id === groupId);
+            return group && group.name.toLowerCase().includes(groupName);
+          });
+        }
+        
+        // 默认搜索：匹配标题、URL、域名
+        const domain = getLinkDomain(link);
+        return link.title.toLowerCase().includes(term) || 
+               link.url.toLowerCase().includes(term) ||
+               (domain && domain.includes(term));
+      });
+    });
+  }
+  
+  // 排序
+  filtered = [...filtered].sort((a, b) => {
+    // 置顶的始终在最前面
+    if (a.pinned && !b.pinned) return -1;
+    if (!a.pinned && b.pinned) return 1;
+    
+    const [field, order] = sortBy.split('-');
+    
+    if (field === 'createdAt') {
+      return order === 'desc' 
+        ? (b.createdAt || 0) - (a.createdAt || 0)
+        : (a.createdAt || 0) - (b.createdAt || 0);
+    } else if (field === 'title') {
+      const comparison = (a.title || '').localeCompare(b.title || '', 'zh-CN');
+      return order === 'desc' ? -comparison : comparison;
+    } else if (field === 'clickCount') {
+      return order === 'desc'
+        ? (b.clickCount || 0) - (a.clickCount || 0)
+        : (a.clickCount || 0) - (b.clickCount || 0);
+    }
+    
+    return 0;
+  });
+  
+  return filtered;
+}
+
+function renderGroups() {
+  const container = document.querySelector('.groups-container');
+  if (!container) return;
+  
+  // 保留“全部”标签，移除其他
+  const allTab = container.querySelector('[data-group="all"]');
+  container.innerHTML = '';
+  if (allTab) {
+    container.appendChild(allTab);
+  } else {
+    // 如果“全部”标签不存在，创建它
+    const allTabNew = document.createElement('button');
+    allTabNew.className = 'group-tab' + (activeGroupFilter === 'all' ? ' active' : '');
+    allTabNew.dataset.group = 'all';
+    allTabNew.innerHTML = '<i class="fa fa-th"></i><span>全部</span>';
+    container.appendChild(allTabNew);
+  }
+  
+  // 自动生成分组（根据域名）
+  const autoGroups = generateAutoGroups();
+  
+  // 合并自动分组和自定义分组
+  const allGroups = [...autoGroups, ...groups];
+  
+  // 添加分组
+  allGroups.forEach(group => {
+    const tab = document.createElement('button');
+    tab.className = 'group-tab' + (activeGroupFilter === group.id ? ' active' : '');
+    tab.dataset.group = group.id;
+    
+    // 分组内容
+    const iconHtml = `<i class="fa ${group.icon || 'fa-folder'}"></i>`;
+    
+    // 计算分组的书签数量
+    let count = 0;
+    if (group.auto) {
+      // 自动分组：使用已有的count
+      count = group.count || 0;
+    } else {
+      // 自定义分组：计算关联的书签数量
+      count = links.filter(link => link.groups && link.groups.includes(group.id)).length;
+    }
+    
+    // 显示名称（如果有自定义名称则使用）
+    const displayName = group.name.replace(/ \(\d+\)$/, '');  // 移除自动分组的计数
+    const nameHtml = `<span>${displayName}</span>`;
+    const countHtml = count > 0 ? `<span class="group-count">${count}</span>` : '';
+    
+    tab.innerHTML = iconHtml + nameHtml + countHtml;
+    
+    // 所有分组都添加右键菜单
+    tab.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      showGroupContextMenu(group, e.clientX, e.clientY);
+    });
+    
+    container.appendChild(tab);
+  });
+  
+  // 更新“全部”标签的激活状态
+  const currentAllTab = container.querySelector('[data-group="all"]');
+  if (currentAllTab) {
+    currentAllTab.className = 'group-tab' + (activeGroupFilter === 'all' ? ' active' : '');
+  }
+}
+
+// 自动生成分组（根据域名）
+function generateAutoGroups() {
+  const domainMap = {};
+  
+  links.forEach(link => {
+    try {
+      const domain = new URL(link.url).hostname.replace(/^www\./, '');
+      if (!domainMap[domain]) {
+        domainMap[domain] = {
+          id: 'auto_' + domain,
+          name: domain,
+          icon: 'fa-globe',
+          auto: true,  // 标记为自动分组
+          count: 0
+        };
+      }
+      domainMap[domain].count++;
+    } catch (e) {
+      // 忽略无效URL
+    }
+  });
+  
+  // 只显示有2个以上书签的域名
+  return Object.values(domainMap)
+    .filter(g => g.count >= 2)
+    .map(g => {
+      // 如果有自定义名称，使用自定义名称
+      const displayName = autoGroupNames[g.id] || g.name;
+      return {
+        ...g,
+        name: displayName  // 不再添加括号计数，由renderGroups统一处理
+      };
+    });
+}
+
+// 添加卡片到指定board
+function addCardToBoard(boardEl, link) {
+  const isSelected = selectedLinks.has(link.url);
+  const gradients = ['card-gradient-1', 'card-gradient-2', 'card-gradient-3', 'card-gradient-4', 'card-gradient-5'];
+  const randomGradient = gradients[Math.floor(Math.random() * gradients.length)];
+
+  const card = document.createElement('div');
+  card.className = `bookmark-card ${isSelected ? 'selected' : ''}`;
+  
+  const inner = document.createElement('div');
+  inner.className = `card-inner ${randomGradient}`;
+
+  // 置顶标记
+  if (link.pinned) {
+    const pinBadge = document.createElement('div');
+    pinBadge.className = 'pin-badge';
+    pinBadge.innerHTML = '<i class="fa fa-thumb-tack"></i>';
+    inner.appendChild(pinBadge);
+  }
+
+  // 分组标签（右上角）
+  if (link.groups && link.groups.length > 0) {
+    const groupsDiv = document.createElement('div');
+    groupsDiv.className = 'card-tags-container';
+    link.groups.forEach(groupId => {
+      const group = groups.find(g => g.id === groupId);
+      if (group) {
+        const tag = document.createElement('span');
+        tag.className = 'card-group-tag-corner';
+        tag.textContent = group.name;
+        groupsDiv.appendChild(tag);
+      }
+    });
+    inner.appendChild(groupsDiv);
+  }
+
+  // 批量模式选择指示器
+  if (isBatchMode) {
+    const indicator = document.createElement('div');
+    indicator.className = `select-indicator ${isSelected ? 'selected' : 'unselected'}`;
+    if (isSelected) {
+      indicator.innerHTML = '<i class="fa fa-check"></i>';
+    }
+    inner.appendChild(indicator);
+  }
+
+  // 图标
+  const iconDiv = document.createElement('div');
+  iconDiv.className = 'card-icon';
+  
+  const img = document.createElement('img');
+  img.src = link.icon || 'default-icon.png';
+  img.alt = link.title;
+  img.addEventListener('error', function() {
+    this.onerror = null;
+    this.src = 'default-icon.png';
+  });
+  iconDiv.appendChild(img);
+
+  // 内容
+  const content = document.createElement('div');
+  content.className = 'card-content';
+  
+  const h3 = document.createElement('h3');
+  h3.className = 'card-title';
+  h3.textContent = link.title;
+  
+  const domain = document.createElement('p');
+  domain.className = 'card-domain';
+  try {
+    domain.textContent = new URL(link.url).hostname.replace(/^www\./, '');
+  } catch (e) {
+    domain.textContent = '';
+  }
+  
+  content.appendChild(h3);
+  content.appendChild(domain);
+  
+  // 显示点击统计（始终显示）
+  const statsDiv = document.createElement('div');
+  statsDiv.className = 'card-stats';
+  const clickCount = link.clickCount || 0;
+  const lastAccessText = link.lastAccessed ? formatTimeAgo(link.lastAccessed) : '从未查看';
+  statsDiv.innerHTML = `
+    <span class="stat-item">
+      <i class="fa fa-eye"></i> ${clickCount}次
+    </span>
+    <span class="stat-item">
+      <i class="fa fa-clock-o"></i> ${lastAccessText}
+    </span>
+  `;
+  content.appendChild(statsDiv);
+
+  inner.appendChild(iconDiv);
+  inner.appendChild(content);
+  card.appendChild(inner);
+
+  // 点击事件
+  if (!isBatchMode) {
+    inner.addEventListener('click', () => {
+      // 记录点击统计
+      link.clickCount = (link.clickCount || 0) + 1;
+      link.lastAccessed = Date.now();
+      save();
+      
+      window.open(link.url, '_blank');
+    });
+    
+    // 右键菜单 - 选择分组和置顶
+    inner.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      showBookmarkContextMenu(link, e.clientX, e.clientY);
+    });
+  } else {
+    inner.addEventListener('click', () => {
+      toggleSelection(link.url);
+    });
+  }
+
+  boardEl.appendChild(card);
+}
+
+function renderSections() {
+  const filteredLinks = getFilteredLinks();
+  
+  // 统计
+  const pinnedLinks = filteredLinks.filter(link => link.pinned);
+  const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+  const recentLinks = filteredLinks.filter(link => 
+    !link.pinned && link.createdAt && link.createdAt > sevenDaysAgo
   );
+  
+  // 更新计数
+  const allCount = document.getElementById('allCount');
+  const pinnedCount = document.getElementById('pinnedCount');
+  const recentCount = document.getElementById('recentCount');
+  
+  if (allCount) allCount.textContent = filteredLinks.length;
+  if (pinnedCount) pinnedCount.textContent = pinnedLinks.length;
+  if (recentCount) recentCount.textContent = recentLinks.length;
+  
+  // 根据当前视图过滤
+  let displayLinks = filteredLinks;
+  if (currentView === 'pinned') {
+    displayLinks = pinnedLinks;
+  } else if (currentView === 'recent') {
+    displayLinks = recentLinks;
+  }
+  
+  // 渲染书签
+  const board = document.getElementById('board');
+  if (board) {
+    // 清空现有卡片（保留空状态）
+    Array.from(board.children).forEach(child => {
+      if (child !== emptyState) child.remove();
+    });
+    
+    // 显示/隐藏空状态
+    emptyState.classList.toggle('hidden', displayLinks.length > 0);
+    
+    // 添加卡片
+    displayLinks.forEach(link => addCardToBoard(board, link));
+    
+    // 添加“手动添加”卡片
+    if (displayLinks.length > 0 && !filterText && activeGroupFilter === 'all') {
+      addAddCard();
+    }
+  }
 }
 
 function renderLinks() {
-  const filteredLinks = getFilteredLinks();
-
-  // 清空现有卡片（保留空状态）
-  Array.from(board.children).forEach(child => {
-    if (child !== emptyState) child.remove();
-  });
-
-  // 显示/隐藏空状态
-  emptyState.classList.toggle('hidden', filteredLinks.length > 0);
-
-  // 添加卡片
-  filteredLinks.forEach(link => {
-    addCard(link);
-  });
-
-  // 只在有书签时才显示"添加书签"卡片
-  if (filteredLinks.length > 0) {
-    addAddCard();
-  }
-
-  // 更新批量操作计数
-  if (isBatchMode) {
-    batchCount.textContent = selectedLinks.size;
-    selectedCount.textContent = selectedLinks.size;
-    selectedCount.classList.toggle('show', selectedLinks.size > 0);
-  }
+  // 更新分区展示
+  renderSections();
 }
 
 function addCard(link) {
@@ -332,6 +1041,14 @@ function addCard(link) {
   
   const inner = document.createElement('div');
   inner.className = `card-inner ${randomGradient}`;
+
+  // 置顶标记
+  if (link.pinned) {
+    const pinBadge = document.createElement('div');
+    pinBadge.className = 'pin-badge';
+    pinBadge.innerHTML = '<i class="fa fa-thumb-tack"></i>';
+    inner.appendChild(pinBadge);
+  }
 
   // 批量模式选择指示器
   if (isBatchMode) {
@@ -398,6 +1115,21 @@ function addCard(link) {
   
   content.appendChild(h3);
   content.appendChild(domain);
+  
+  // 显示点击统计（始终显示）
+  const statsDiv = document.createElement('div');
+  statsDiv.className = 'card-stats';
+  const clickCount = link.clickCount || 0;
+  const lastAccessText = link.lastAccessed ? formatTimeAgo(link.lastAccessed) : '从未查看';
+  statsDiv.innerHTML = `
+    <span class="stat-item">
+      <i class="fa fa-eye"></i> ${clickCount}次
+    </span>
+    <span class="stat-item">
+      <i class="fa fa-clock-o"></i> ${lastAccessText}
+    </span>
+  `;
+  content.appendChild(statsDiv);
 
   inner.appendChild(iconDiv);
   inner.appendChild(content);
@@ -406,7 +1138,18 @@ function addCard(link) {
   // 点击事件
   if (!isBatchMode) {
     inner.addEventListener('click', () => {
+      // 记录点击统计
+      link.clickCount = (link.clickCount || 0) + 1;
+      link.lastAccessed = Date.now();
+      save();
+      
       window.open(link.url, '_blank');
+    });
+    
+    // 右键菜单 - 选择分组和置顶
+    inner.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      showBookmarkContextMenu(link, e.clientX, e.clientY);
     });
   } else {
     inner.addEventListener('click', () => {
@@ -481,6 +1224,26 @@ function deleteCard(link) {
 }
 
 // ========== 工具函数 ==========
+// ========== 辅助函数 ==========
+function formatTimeAgo(timestamp) {
+  const now = Date.now();
+  const diff = now - timestamp;
+  
+  const seconds = Math.floor(diff / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+  const months = Math.floor(days / 30);
+  const years = Math.floor(days / 365);
+  
+  if (years > 0) return `${years}年前`;
+  if (months > 0) return `${months}月前`;
+  if (days > 0) return `${days}天前`;
+  if (hours > 0) return `${hours}小时前`;
+  if (minutes > 0) return `${minutes}分钟前`;
+  return '刚刚';
+}
+
 function showToast(message) {
   // 移除已存在的 toast
   const existing = document.querySelector('.toast');

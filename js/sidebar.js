@@ -4,6 +4,7 @@
 
 let links = [];
 let filterText = '';
+const SIDEBAR_DISPLAY_LIMIT = 50;  // 侧边栏最多显示50个书签
 
 // 初始化
 document.addEventListener('DOMContentLoaded', () => {
@@ -14,6 +15,12 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function loadData() {
+  // 显示加载状态
+  const container = document.getElementById('linkList');
+  if (container) {
+    container.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text-muted);">加载中...</div>';
+  }
+  
   chrome.storage.local.get(['links'], (result) => {
     links = result.links || [];
     renderLinks();
@@ -147,10 +154,38 @@ function renderLinks() {
     return;
   }
   
-  filtered.forEach(link => {
-    const card = createBookmarkCard(link);
-    board.appendChild(card);
-  });
+  // 限制显示数量，提高性能
+  const displayLinks = filtered.slice(0, SIDEBAR_DISPLAY_LIMIT);
+  
+  // 分批渲染，避免卡顿
+  let index = 0;
+  const batchSize = 10;
+  
+  function renderBatch() {
+    const fragment = document.createDocumentFragment();
+    const end = Math.min(index + batchSize, displayLinks.length);
+    
+    for (let i = index; i < end; i++) {
+      const card = createBookmarkCard(displayLinks[i]);
+      fragment.appendChild(card);
+    }
+    
+    board.appendChild(fragment);
+    index = end;
+    
+    if (index < displayLinks.length) {
+      requestAnimationFrame(renderBatch);
+    } else if (filtered.length > SIDEBAR_DISPLAY_LIMIT) {
+      // 显示提示
+      const hint = document.createElement('div');
+      hint.className = 'sidebar-hint';
+      hint.style.cssText = 'text-align: center; padding: 1rem; color: var(--text-muted); font-size: 0.875rem;';
+      hint.textContent = `显示 ${SIDEBAR_DISPLAY_LIMIT}/${filtered.length} 个书签，请使用搜索筛选`;
+      board.appendChild(hint);
+    }
+  }
+  
+  requestAnimationFrame(renderBatch);
 }
 
 function getFilteredLinks() {
