@@ -117,6 +117,18 @@ body {
   line-height: 1.2;
 }
 
+.logo-version {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.25rem 0.625rem;
+  background: rgba(79, 70, 229, 0.12);
+  color: var(--primary);
+  border-radius: 9999px;
+  vertical-align: middle;
+  margin-left: 0.5rem;
+}
+
 .logo-subtitle {
   font-size: 0.75rem;
   color: var(--text-secondary);
@@ -397,7 +409,7 @@ body {
 
 /* ========== 主内容区 ========== */
 .main {
-  padding: 1.5rem 0;
+  padding: 0.8rem 0;
 }
 
 /* 提示栏 */
