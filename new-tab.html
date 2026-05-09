@@ -50,12 +50,6 @@
           <i class="fa fa-search"></i>
         </button>
 
-        <!-- 批量操作按钮 -->
-        <button id="batchBtn" class="icon-btn">
-          <i class="fa fa-cog"></i>
-          <span id="selectedCount" class="badge">0</span>
-        </button>
-
         <!-- 主题切换按钮 -->
         <button id="themeToggle" class="icon-btn">
           <i class="fa fa-moon-o"></i>
@@ -106,16 +100,6 @@
         </button>
       </div>
 
-      <!-- 批量操作栏 -->
-      <div id="batchActions" class="batch-bar">
-        <p class="batch-text"><span id="batchCount">0</span> 个书签被选中</p>
-        <div class="batch-actions">
-          <button id="selectAll" class="btn btn-default">全选</button>
-          <button id="deselectAll" class="btn btn-default">取消选择</button>
-          <button id="deleteSelected" class="btn btn-danger">删除所选</button>
-        </div>
-      </div>
-
       <!-- Tab 切换和排序 -->
       <div class="view-controls">
         <div id="viewTabs" class="view-tabs">
@@ -153,14 +137,39 @@
         <!-- 空状态提示 -->
         <div id="emptyState" class="empty-state hidden">
           <div class="empty-icon-wrapper">
-            <i class="fa fa-link empty-icon"></i>
+            <i class="fa fa-bookmark empty-icon"></i>
           </div>
           <h3 class="empty-title">暂无书签</h3>
           <p class="empty-text">将网页链接拖拽到这里保存，或点击下方按钮手动添加</p>
-          <button id="addManualBtn" class="btn btn-primary">
-            <i class="fa fa-plus"></i>
-            <span>手动添加</span>
-          </button>
+          <div class="empty-actions">
+            <button id="addManualBtn" class="btn btn-primary">
+              <i class="fa fa-plus"></i>
+              <span>手动添加</span>
+            </button>
+            <button id="importEmptyBtn" class="btn btn-secondary">
+              <i class="fa fa-upload"></i>
+              <span>导入数据</span>
+            </button>
+          </div>
+          <input type="file" id="importEmptyFileInput" accept=".json" style="display: none;" />
+        </div>
+        
+        <!-- 置顶分区空状态 -->
+        <div id="emptyStatePinned" class="empty-state empty-state-info hidden">
+          <div class="empty-icon-wrapper">
+            <i class="fa fa-thumb-tack empty-icon"></i>
+          </div>
+          <h3 class="empty-title">暂无置顶书签</h3>
+          <p class="empty-text">右键点击书签卡片，选择“置顶此书签”即可在这里看到</p>
+        </div>
+        
+        <!-- 最近添加分区空状态 -->
+        <div id="emptyStateRecent" class="empty-state empty-state-info hidden">
+          <div class="empty-icon-wrapper">
+            <i class="fa fa-clock-o empty-icon"></i>
+          </div>
+          <h3 class="empty-title">暂无最近添加</h3>
+          <p class="empty-text">最近 7 天内添加的书签会显示在这里</p>
         </div>
       </div>
     </div>

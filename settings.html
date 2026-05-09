@@ -144,12 +144,46 @@
       <!-- 数据管理 -->
       <section id="data" class="settings-section">
         <h2>数据管理</h2>
-        <div class="section-content placeholder">
-          <div class="placeholder-icon">
-            <i class="fa fa-database"></i>
+        <div class="section-content">
+          <!-- 导出数据 -->
+          <div class="data-section">
+            <h3>导出数据</h3>
+            <p class="data-desc">导出所有书签数据（包括书签、分组、访问次数、配置等），数据将加密保存。</p>
+            <button id="exportDataBtn" class="data-btn data-btn-primary">
+              <i class="fa fa-download"></i>
+              <span>导出数据</span>
+            </button>
           </div>
-          <h3>即将推出</h3>
-          <p>导入导出、自动备份、数据清理等功能正在开发中...</p>
+          
+          <!-- 导入数据 -->
+          <div class="data-section">
+            <h3>导入数据</h3>
+            <p class="data-desc">导入加密的备份文件，将覆盖当前所有数据。请谨慎操作！</p>
+            <button id="importDataBtn" class="data-btn data-btn-warning">
+              <i class="fa fa-upload"></i>
+              <span>导入数据</span>
+            </button>
+            <input type="file" id="importFileInput" accept=".json" style="display: none;" />
+          </div>
+          
+          <!-- 数据统计 -->
+          <div class="data-section">
+            <h3>数据统计</h3>
+            <div class="data-stats">
+              <div class="stat-item">
+                <div class="stat-value" id="totalBookmarks">0</div>
+                <div class="stat-label">书签总数</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value" id="totalGroups">0</div>
+                <div class="stat-label">分组总数</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value" id="totalClicks">0</div>
+                <div class="stat-label">总访问次数</div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

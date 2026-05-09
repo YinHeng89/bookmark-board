@@ -9,6 +9,9 @@ let themeToggle = null;
 let backToMainBtn = null;
 let groupsList = null;
 let addGroupBtn = null;
+let exportDataBtn = null;
+let importDataBtn = null;
+let importFileInput = null;
 
 // ========== 状态管理 ==========
 let links = [];
@@ -32,6 +35,9 @@ document.addEventListener('DOMContentLoaded', () => {
   backToMainBtn = document.getElementById('backToMain');
   groupsList = document.getElementById('groupsList');
   addGroupBtn = document.getElementById('addGroupBtn');
+  exportDataBtn = document.getElementById('exportDataBtn');
+  importDataBtn = document.getElementById('importDataBtn');
+  importFileInput = document.getElementById('importFileInput');
   
   // 加载主题
   loadTheme();
@@ -53,6 +59,9 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // 设置分组管理
   setupGroupManagement();
+  
+  // 设置数据管理
+  setupDataManagement();
 });
 
 // 初始化菜单状态
@@ -137,6 +146,9 @@ function refreshSectionData(sectionId) {
       break;
     case 'groups':
       renderGroups();
+      break;
+    case 'data':
+      updateDataStats();
       break;
     // 其他section可以在这里添加
   }
@@ -984,5 +996,220 @@ function showToast(message) {
   setTimeout(() => {
     toast.classList.remove('show');
     setTimeout(() => toast.remove(), 300);
-  }, 2000);
+  }, 3000);
+}
+
+// ========== 数据管理功能 ==========
+function setupDataManagement() {
+  // 导出数据
+  if (exportDataBtn) {
+    exportDataBtn.addEventListener('click', exportData);
+  }
+  
+  // 导入数据
+  if (importDataBtn) {
+    importDataBtn.addEventListener('click', () => {
+      importFileInput.click();
+    });
+  }
+  
+  // 文件选择
+  if (importFileInput) {
+    importFileInput.addEventListener('change', handleImportFile);
+  }
+}
+
+// 更新数据统计
+function updateDataStats() {
+  const totalBookmarks = document.getElementById('totalBookmarks');
+  const totalGroups = document.getElementById('totalGroups');
+  const totalClicks = document.getElementById('totalClicks');
+  
+  if (totalBookmarks) totalBookmarks.textContent = links.length;
+  if (totalGroups) totalGroups.textContent = groups.length;
+  if (totalClicks) {
+    const clicks = links.reduce((sum, link) => sum + (link.clickCount || 0), 0);
+    totalClicks.textContent = clicks;
+  }
+}
+
+// 导出数据
+async function exportData() {
+  try {
+    showToast('正在准备导出数据...');
+    
+    // 收集所有数据
+    const exportObj = {
+      version: '3.2.0',
+      exportDate: new Date().toISOString(),
+      links: links,
+      groups: groups,
+      autoGroupNames: autoGroupNames || {},
+      settings: {
+        darkMode: document.documentElement.classList.contains('dark'),
+        sortBy: sortBy
+      }
+    };
+    
+    // 转换为JSON
+    const jsonData = JSON.stringify(exportObj, null, 2);
+    
+    // 加密数据
+    const encryptedData = await encryptData(jsonData);
+    
+    // 创建下载
+    const blob = new Blob([encryptedData], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `bookmark-board-backup-${new Date().getTime()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    showToast('数据导出成功！');
+  } catch (error) {
+    console.error('导出数据失败:', error);
+    showToast('导出数据失败: ' + error.message);
+  }
+}
+
+// 导入数据
+async function handleImportFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  try {
+    showToast('正在读取文件...');
+    
+    // 读取文件
+    const text = await file.text();
+    
+    // 解密数据
+    const decryptedData = await decryptData(text);
+    
+    // 解析JSON
+    const importObj = JSON.parse(decryptedData);
+    
+    // 验证数据
+    if (!importObj.links || !importObj.groups) {
+      throw new Error('数据格式不正确');
+    }
+    
+    // 确认导入
+    showConfirmModal(
+      '确认导入',
+      `导入将覆盖当前所有数据！\n书签: ${importObj.links.length} 个\n分组: ${importObj.groups.length} 个\n\n确定要继续吗？`,
+      async () => {
+        try {
+          showToast('正在导入数据...');
+          
+          // 导入数据
+          links = importObj.links || [];
+          groups = importObj.groups || [];
+          autoGroupNames = importObj.autoGroupNames || {};
+          
+          // 导入设置
+          if (importObj.settings) {
+            if (importObj.settings.darkMode !== undefined) {
+              chrome.storage.local.set({ darkMode: importObj.settings.darkMode });
+            }
+            if (importObj.settings.sortBy) {
+              sortBy = importObj.settings.sortBy;
+            }
+          }
+          
+          // 保存到本地
+          chrome.storage.local.set({ 
+            links, 
+            groups, 
+            autoGroupNames 
+          }, () => {
+            showToast('数据导入成功！');
+            
+            // 刷新当前视图
+            const activeSection = document.querySelector('.settings-section.active');
+            if (activeSection) {
+              refreshSectionData(activeSection.id);
+            }
+          });
+        } catch (error) {
+          console.error('导入数据失败:', error);
+          showToast('导入数据失败: ' + error.message);
+        }
+      }
+    );
+  } catch (error) {
+    console.error('导入失败:', error);
+    showToast('导入失败: ' + (error.message || '文件格式错误或数据已损坏'));
+  }
+  
+  // 清空input，允许重复导入同一文件
+  event.target.value = '';
+}
+
+// 加密数据（UTF-8 + Base64 + XOR + Base64）
+async function encryptData(data) {
+  const key = 'bookmark-board-2026';
+  
+  // 1. UTF-8 编码
+  const utf8Bytes = new TextEncoder().encode(data);
+  const latin1Str = Array.from(utf8Bytes, byte => String.fromCharCode(byte)).join('');
+  
+  // 2. Base64 编码
+  const base64Str = btoa(latin1Str);
+  
+  // 3. XOR 密钥混淆
+  const xorResult = base64Str.split('').map((char, i) => {
+    return String.fromCharCode(char.charCodeAt(0) ^ key.charCodeAt(i % key.length));
+  }).join('');
+  
+  // 4. 再次 Base64 编码（确保输出可打印字符）
+  const xorLatin1 = Array.from(new TextEncoder().encode(xorResult), byte => String.fromCharCode(byte)).join('');
+  const finalBase64 = btoa(xorLatin1);
+  
+  return JSON.stringify({
+    v: 1,
+    d: finalBase64
+  });
+}
+
+// 解密数据
+async function decryptData(encryptedText) {
+  try {
+    const encrypted = JSON.parse(encryptedText);
+    if (!encrypted.v || !encrypted.d) {
+      throw new Error('无效的加密数据');
+    }
+    
+    const key = 'bookmark-board-2026';
+    
+    // 1. Base64 解码（还原 XOR 结果）
+    const xorLatin1 = atob(encrypted.d);
+    const xorBytes = new Uint8Array(xorLatin1.length);
+    for (let i = 0; i < xorLatin1.length; i++) {
+      xorBytes[i] = xorLatin1.charCodeAt(i);
+    }
+    const xorResult = new TextDecoder().decode(xorBytes);
+    
+    // 2. XOR 密钥还原
+    const base64Str = xorResult.split('').map((char, i) => {
+      return String.fromCharCode(char.charCodeAt(0) ^ key.charCodeAt(i % key.length));
+    }).join('');
+    
+    // 3. Base64 解码
+    const latin1Str = atob(base64Str);
+    
+    // 4. Latin1 → UTF-8
+    const utf8Bytes = new Uint8Array(latin1Str.length);
+    for (let i = 0; i < latin1Str.length; i++) {
+      utf8Bytes[i] = latin1Str.charCodeAt(i);
+    }
+    
+    // 5. UTF-8 解码
+    return new TextDecoder().decode(utf8Bytes);
+  } catch (error) {
+    throw new Error('解密失败，文件可能已损坏或格式不正确');
+  }
 }

@@ -15,13 +15,6 @@ const hideTipBtn = document.getElementById('hideTip');
 const tipBar = document.getElementById('tipBar');
 const footer = document.getElementById('footer');
 const addManualBtn = document.getElementById('addManualBtn');
-const batchBtn = document.getElementById('batchBtn');
-const batchActions = document.getElementById('batchActions');
-const batchCount = document.getElementById('batchCount');
-const selectAllBtn = document.getElementById('selectAll');
-const deselectAllBtn = document.getElementById('deselectAll');
-const deleteSelectedBtn = document.getElementById('deleteSelected');
-const selectedCount = document.getElementById('selectedCount');
 const modal = document.getElementById('modal');
 const modalTitle = document.getElementById('modalTitle');
 const modalMessage = document.getElementById('modalMessage');
@@ -32,8 +25,6 @@ const modalOk = document.getElementById('modalOk');
 // ========== 状态管理 ==========
 let links = [];
 let groups = [];  // 分组数据
-let selectedLinks = new Set();
-let isBatchMode = false;
 let filterText = '';
 let activeGroupFilter = 'all';  // 当前选中的分组
 let sortBy = 'createdAt-desc';  // 排序方式：createdAt-desc, createdAt-asc, title-asc, title-desc, clickCount-desc
@@ -210,39 +201,6 @@ function setupEventListeners() {
     chrome.storage.local.set({ tipHidden: true });
   });
 
-  // 批量操作
-  batchBtn.addEventListener('click', () => {
-    isBatchMode = !isBatchMode;
-    batchActions.classList.toggle('show', isBatchMode);
-    renderLinks();
-  });
-
-  selectAllBtn.addEventListener('click', () => {
-    links.forEach(link => selectedLinks.add(link.url));
-    renderLinks();
-  });
-
-  deselectAllBtn.addEventListener('click', () => {
-    selectedLinks.clear();
-    renderLinks();
-  });
-
-  deleteSelectedBtn.addEventListener('click', () => {
-    if (selectedLinks.size === 0) return;
-    
-    showModal({
-      title: '确认删除',
-      message: `确定要删除选中的 ${selectedLinks.size} 个书签吗？`,
-      onConfirm: () => {
-        links = links.filter(link => !selectedLinks.has(link.url));
-        selectedLinks.clear();
-        save();
-        renderLinks();
-        showToast('已删除所选书签');
-      }
-    });
-  });
-
   // 手动添加
   addManualBtn.addEventListener('click', () => {
     showModal({
@@ -259,6 +217,84 @@ function setupEventListeners() {
       }
     });
   });
+  
+  // 空状态导入按钮
+  const importEmptyBtn = document.getElementById('importEmptyBtn');
+  const importEmptyFileInput = document.getElementById('importEmptyFileInput');
+  
+  if (importEmptyBtn && importEmptyFileInput) {
+    importEmptyBtn.addEventListener('click', () => {
+      importEmptyFileInput.click();
+    });
+    
+    importEmptyFileInput.addEventListener('change', async (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      try {
+        showToast('正在读取文件...');
+        
+        // 读取文件
+        const text = await file.text();
+        
+        // 解密数据
+        const decryptedData = await decryptImportData(text);
+        
+        // 解析JSON
+        const importObj = JSON.parse(decryptedData);
+        
+        // 验证数据
+        if (!importObj.links || !importObj.groups) {
+          throw new Error('数据格式不正确');
+        }
+        
+        // 确认导入
+        showModal({
+          title: '确认导入',
+          message: `导入将覆盖当前所有数据！\n书签: ${importObj.links.length} 个\n分组: ${importObj.groups.length} 个\n\n确定要继续吗？`,
+          onConfirm: async () => {
+            try {
+              showToast('正在导入数据...');
+              
+              // 导入数据
+              links = importObj.links || [];
+              groups = importObj.groups || [];
+              autoGroupNames = importObj.autoGroupNames || {};
+              
+              // 导入设置
+              if (importObj.settings) {
+                if (importObj.settings.darkMode !== undefined) {
+                  chrome.storage.local.set({ darkMode: importObj.settings.darkMode });
+                }
+                if (importObj.settings.sortBy) {
+                  sortBy = importObj.settings.sortBy;
+                }
+              }
+              
+              // 保存到本地
+              chrome.storage.local.set({ 
+                links, 
+                groups, 
+                autoGroupNames 
+              }, () => {
+                showToast('数据导入成功！');
+                renderLinks();
+              });
+            } catch (error) {
+              console.error('导入数据失败:', error);
+              showToast('导入数据失败: ' + error.message);
+            }
+          }
+        });
+      } catch (error) {
+        console.error('导入失败:', error);
+        showToast('导入失败: ' + (error.message || '文件格式错误或数据已损坏'));
+      }
+      
+      // 清空input
+      event.target.value = '';
+    });
+  }
 
   // 模态框
   modalCancel.addEventListener('click', closeModal);
@@ -332,6 +368,99 @@ function setupEventListeners() {
           }
         }
       });
+    });
+  }
+}
+
+// 绑定空状态按钮事件
+function bindEmptyStateEvents() {
+  const addManualBtn = document.getElementById('addManualBtn');
+  const importEmptyBtn = document.getElementById('importEmptyBtn');
+  const importEmptyFileInput = document.getElementById('importEmptyFileInput');
+  
+  if (addManualBtn) {
+    // 移除旧的事件监听（如果有）
+    const newAddBtn = addManualBtn.cloneNode(true);
+    addManualBtn.parentNode.replaceChild(newAddBtn, addManualBtn);
+    
+    // 手动添加
+    newAddBtn.addEventListener('click', () => {
+      showModal({
+        title: '添加书签',
+        message: '请输入网址：',
+        input: true,
+        defaultValue: 'https://',
+        onConfirm: (url) => {
+          if (url && /^https?:\/\//.test(url)) {
+            addLinkFromUrl(url);
+          } else {
+            showToast('请输入有效的网址');
+          }
+        }
+      });
+    });
+  }
+  
+  if (importEmptyBtn && importEmptyFileInput) {
+    // 移除旧的事件监听
+    const newImportBtn = importEmptyBtn.cloneNode(true);
+    const newImportInput = importEmptyFileInput.cloneNode(true);
+    importEmptyBtn.parentNode.replaceChild(newImportBtn, importEmptyBtn);
+    importEmptyFileInput.parentNode.replaceChild(newImportInput, importEmptyFileInput);
+    
+    newImportBtn.addEventListener('click', () => {
+      newImportInput.click();
+    });
+    
+    newImportInput.addEventListener('change', async (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      try {
+        showToast('正在读取文件...');
+        const text = await file.text();
+        const decryptedData = await decryptImportData(text);
+        const importObj = JSON.parse(decryptedData);
+        
+        if (!importObj.links || !importObj.groups) {
+          throw new Error('数据格式不正确');
+        }
+        
+        showModal({
+          title: '确认导入',
+          message: `导入将覆盖当前所有数据！\n书签: ${importObj.links.length} 个\n分组: ${importObj.groups.length} 个\n\n确定要继续吗？`,
+          onConfirm: async () => {
+            try {
+              showToast('正在导入数据...');
+              links = importObj.links || [];
+              groups = importObj.groups || [];
+              autoGroupNames = importObj.autoGroupNames || {};
+              
+              if (importObj.settings) {
+                if (importObj.settings.darkMode !== undefined) {
+                  chrome.storage.local.set({ darkMode: importObj.settings.darkMode });
+                }
+                if (importObj.settings.sortBy) {
+                  sortBy = importObj.settings.sortBy;
+                }
+              }
+              
+              chrome.storage.local.set({ links, groups, autoGroupNames }, () => {
+                showToast('数据导入成功！');
+                renderLinks();
+              });
+            } catch (error) {
+              console.error('导入数据失败:', error);
+              showToast('导入数据失败: ' + error.message);
+            }
+          }
+        });
+      } catch (error) {
+        console.error('导入失败:', error);
+        showToast('导入失败: ' + (error.message || '文件格式错误或数据已损坏'));
+      }
+      
+      event.target.value = '';
     });
   }
 }
@@ -858,12 +987,11 @@ function generateAutoGroups() {
 
 // 添加卡片到指定board
 function addCardToBoard(boardEl, link) {
-  const isSelected = selectedLinks.has(link.url);
   const gradients = ['card-gradient-1', 'card-gradient-2', 'card-gradient-3', 'card-gradient-4', 'card-gradient-5'];
   const randomGradient = gradients[Math.floor(Math.random() * gradients.length)];
 
   const card = document.createElement('div');
-  card.className = `bookmark-card ${isSelected ? 'selected' : ''}`;
+  card.className = 'bookmark-card';
   
   const inner = document.createElement('div');
   inner.className = `card-inner ${randomGradient}`;
@@ -890,16 +1018,6 @@ function addCardToBoard(boardEl, link) {
       }
     });
     inner.appendChild(groupsDiv);
-  }
-
-  // 批量模式选择指示器
-  if (isBatchMode) {
-    const indicator = document.createElement('div');
-    indicator.className = `select-indicator ${isSelected ? 'selected' : 'unselected'}`;
-    if (isSelected) {
-      indicator.innerHTML = '<i class="fa fa-check"></i>';
-    }
-    inner.appendChild(indicator);
   }
 
   // 图标
@@ -954,26 +1072,20 @@ function addCardToBoard(boardEl, link) {
   card.appendChild(inner);
 
   // 点击事件
-  if (!isBatchMode) {
-    inner.addEventListener('click', () => {
-      // 记录点击统计
-      link.clickCount = (link.clickCount || 0) + 1;
-      link.lastAccessed = Date.now();
-      save();
-      
-      window.open(link.url, '_blank');
-    });
+  inner.addEventListener('click', () => {
+    // 记录点击统计
+    link.clickCount = (link.clickCount || 0) + 1;
+    link.lastAccessed = Date.now();
+    save();
     
-    // 右键菜单 - 选择分组和置顶
-    inner.addEventListener('contextmenu', (e) => {
-      e.preventDefault();
-      showBookmarkContextMenu(link, e.clientX, e.clientY);
-    });
-  } else {
-    inner.addEventListener('click', () => {
-      toggleSelection(link.url);
-    });
-  }
+    window.open(link.url, '_blank');
+  });
+  
+  // 右键菜单 - 选择分组和置顶
+  inner.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    showBookmarkContextMenu(link, e.clientX, e.clientY);
+  });
 
   boardEl.appendChild(card);
 }
@@ -1006,20 +1118,65 @@ function renderSections() {
   }
   
   // 渲染书签
-  const board = document.getElementById('board');
-  if (board) {
-    // 清空现有卡片（保留空状态）
-    Array.from(board.children).forEach(child => {
-      if (child !== emptyState) child.remove();
+  const boardElement = document.getElementById('board');
+  if (boardElement) {
+    // 获取其他空状态元素（emptyState已在全局定义）
+    const emptyStatePinned = document.getElementById('emptyStatePinned');
+    const emptyStateRecent = document.getElementById('emptyStateRecent');
+    
+    // 恢复emptyState的原始内容（如果被加载状态覆盖）
+    if (!emptyState.querySelector('.empty-icon-wrapper')) {
+      emptyState.innerHTML = `
+        <div class="empty-icon-wrapper">
+          <i class="fa fa-bookmark empty-icon"></i>
+        </div>
+        <h3 class="empty-title">暂无书签</h3>
+        <p class="empty-text">将网页链接拖拽到这里保存，或点击下方按钮手动添加</p>
+        <div class="empty-actions">
+          <button id="addManualBtn" class="btn btn-primary">
+            <i class="fa fa-plus"></i>
+            <span>手动添加</span>
+          </button>
+          <button id="importEmptyBtn" class="btn btn-secondary">
+            <i class="fa fa-upload"></i>
+            <span>导入数据</span>
+          </button>
+        </div>
+        <input type="file" id="importEmptyFileInput" accept=".json" style="display: none;" />
+      `;
+      // 重新绑定事件
+      bindEmptyStateEvents();
+    }
+    
+    // 清空现有卡片（保留所有空状态）
+    Array.from(boardElement.children).forEach(child => {
+      if (child !== emptyState && child !== emptyStatePinned && child !== emptyStateRecent) {
+        child.remove();
+      }
     });
     
-    // 显示/隐藏空状态
-    emptyState.classList.toggle('hidden', displayLinks.length > 0);
+    // 根据当前视图显示/隐藏对应的空状态
+    if (currentView === 'pinned') {
+      // 置顶视图
+      emptyState.classList.add('hidden');
+      emptyStateRecent.classList.add('hidden');
+      emptyStatePinned.classList.toggle('hidden', displayLinks.length > 0);
+    } else if (currentView === 'recent') {
+      // 最近添加视图
+      emptyState.classList.add('hidden');
+      emptyStatePinned.classList.add('hidden');
+      emptyStateRecent.classList.toggle('hidden', displayLinks.length > 0);
+    } else {
+      // 所有书签视图
+      emptyStatePinned.classList.add('hidden');
+      emptyStateRecent.classList.add('hidden');
+      emptyState.classList.toggle('hidden', displayLinks.length > 0);
+    }
     
     // 添加卡片
-    displayLinks.forEach(link => addCardToBoard(board, link));
+    displayLinks.forEach(link => addCardToBoard(boardElement, link));
     
-    // 添加“手动添加”卡片
+    // 添加"手动添加"卡片
     if (displayLinks.length > 0 && !filterText && activeGroupFilter === 'all') {
       addAddCard();
     }
@@ -1032,12 +1189,11 @@ function renderLinks() {
 }
 
 function addCard(link) {
-  const isSelected = selectedLinks.has(link.url);
   const gradients = ['card-gradient-1', 'card-gradient-2', 'card-gradient-3', 'card-gradient-4', 'card-gradient-5'];
   const randomGradient = gradients[Math.floor(Math.random() * gradients.length)];
 
   const card = document.createElement('div');
-  card.className = `bookmark-card ${isSelected ? 'selected' : ''}`;
+  card.className = 'bookmark-card';
   
   const inner = document.createElement('div');
   inner.className = `card-inner ${randomGradient}`;
@@ -1183,15 +1339,6 @@ function addAddCard() {
   board.appendChild(card);
 }
 
-function toggleSelection(url) {
-  if (selectedLinks.has(url)) {
-    selectedLinks.delete(url);
-  } else {
-    selectedLinks.add(url);
-  }
-  renderLinks();
-}
-
 function editCard(link) {
   showModal({
     title: '编辑书签',
@@ -1215,10 +1362,13 @@ function deleteCard(link) {
     message: `确定要删除书签 "${link.title}" 吗？`,
     onConfirm: () => {
       links = links.filter(l => l.url !== link.url);
-      selectedLinks.delete(link.url);
-      save();
-      renderLinks();
-      showToast('书签已删除');
+      chrome.storage.local.set({ links, groups }, () => {
+        // 清除域名缓存
+        domainCache.clear();
+        // 保存完成后再渲染
+        renderLinks();
+        showToast('书签已删除');
+      });
     }
   });
 }
@@ -1265,6 +1415,45 @@ function showToast(message) {
     toast.style.transition = 'opacity 0.3s ease';
     setTimeout(() => toast.remove(), 300);
   }, 3000);
+}
+
+// 解密导入数据（与settings.js相同的逻辑）
+async function decryptImportData(encryptedText) {
+  try {
+    const encrypted = JSON.parse(encryptedText);
+    if (!encrypted.v || !encrypted.d) {
+      throw new Error('无效的加密数据');
+    }
+    
+    const key = 'bookmark-board-2026';
+    
+    // 1. Base64 解码（还原 XOR 结果）
+    const xorLatin1 = atob(encrypted.d);
+    const xorBytes = new Uint8Array(xorLatin1.length);
+    for (let i = 0; i < xorLatin1.length; i++) {
+      xorBytes[i] = xorLatin1.charCodeAt(i);
+    }
+    const xorResult = new TextDecoder().decode(xorBytes);
+    
+    // 2. XOR 密钥还原
+    const base64Str = xorResult.split('').map((char, i) => {
+      return String.fromCharCode(char.charCodeAt(0) ^ key.charCodeAt(i % key.length));
+    }).join('');
+    
+    // 3. Base64 解码
+    const latin1Str = atob(base64Str);
+    
+    // 4. Latin1 → UTF-8
+    const utf8Bytes = new Uint8Array(latin1Str.length);
+    for (let i = 0; i < latin1Str.length; i++) {
+      utf8Bytes[i] = latin1Str.charCodeAt(i);
+    }
+    
+    // 5. UTF-8 解码
+    return new TextDecoder().decode(utf8Bytes);
+  } catch (error) {
+    throw new Error('解密失败，文件可能已损坏或格式不正确');
+  }
 }
 
 function showModal({ title = '提示', message = '', input = false, defaultValue = '', onConfirm, onCancel }) {

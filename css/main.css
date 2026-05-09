@@ -554,7 +554,7 @@ body {
 }
 
 .section-board {
-  min-height: auto;
+  min-height: 400px;
 }
 
 .batch-bar.show {
@@ -1153,6 +1153,31 @@ body {
   color: var(--text-secondary);
   max-width: 28rem;
   margin-bottom: 1rem;
+}
+
+.empty-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+/* 信息类型空状态（无按钮） */
+.empty-state-info .empty-icon-wrapper {
+  margin-bottom: 1.5rem;
+}
+
+.empty-state-info .empty-title {
+  margin-bottom: 0.75rem;
+}
+
+.empty-state-info .empty-text {
+  margin-bottom: 0;
+}
+
+/* 信息类型空状态（无按钮） */
+.empty-state-info .empty-actions {
+  display: none;
 }
 
 /* ========== 模态框 ========== */
