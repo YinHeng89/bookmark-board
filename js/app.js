@@ -709,8 +709,8 @@ function getFilteredLinks() {
           return getLinkDomain(link).includes(domainPart);
         }
         
-        // !分组搜索：!工作
-        if (term.startsWith('!')) {
+        // !分组搜索：!工作 或 ！工作（兼容中英文）
+        if (term.startsWith('!') || term.startsWith('\uff01')) {
           const groupName = term.substring(1);
           return link.groups && link.groups.some(groupId => {
             const group = groups.find(g => g.id === groupId);

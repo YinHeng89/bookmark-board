@@ -3,7 +3,7 @@
  * 处理右键菜单功能
  */
 
-// 扩展安装时创建右键菜单
+// 扩展安装时创建右键菜单并启用侧边栏
 chrome.runtime.onInstalled.addListener(() => {
   // 页面右键菜单 - 添加当前页面
   chrome.contextMenus.create({
@@ -27,6 +27,12 @@ chrome.runtime.onInstalled.addListener(() => {
     title: '打开书签白板侧边栏',
     contexts: ['page'],
     documentUrlPatterns: ['http://*/*', 'https://*/*']
+  });
+  
+  // 启用侧边栏
+  chrome.sidePanel.setOptions({
+    enabled: true,
+    path: 'sidebar.html'
   });
 });
 
@@ -161,6 +167,7 @@ function showNotification(tabId, message, type = 'success') {
 }
 
 // 点击扩展图标打开侧边栏
+// Chrome 会自动处理：如果已打开则忽略，侧边栏通过自身按钮关闭
 chrome.action.onClicked.addListener((tab) => {
   chrome.sidePanel.open({ tabId: tab.id });
 });

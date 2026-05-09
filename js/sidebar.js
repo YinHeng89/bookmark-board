@@ -12,7 +12,20 @@ document.addEventListener('DOMContentLoaded', () => {
   setupEventListeners();
   loadTheme();
   setupStorageListener();
+  setupCloseListener();
 });
+
+// 监听关闭侧边栏的消息
+function setupCloseListener() {
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.action === 'toggleSidebar') {
+      // 收到关闭指令，关闭侧边栏窗口
+      window.close();
+      sendResponse({ success: true });
+    }
+    return true;
+  });
+}
 
 function loadData() {
   // 显示加载状态
