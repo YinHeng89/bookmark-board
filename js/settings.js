@@ -13,6 +13,23 @@ let exportDataBtn = null;
 let importDataBtn = null;
 let importFileInput = null;
 
+// AI 相关 DOM 元素
+let aiProvider = null;
+let aiApiUrl = null;
+let aiApiKey = null;
+let aiModel = null;
+let aiModelSelect = null;
+let aiFetchModelsBtn = null;
+let aiOptimizeTitle = null;
+let aiSuggestCategory = null;
+let aiGenerateTags = null;
+let aiGenerateSummary = null;
+let aiSmartSearch = null;
+let aiDetectDuplicates = null;
+let aiTestBtn = null;
+let aiSaveBtn = null;
+let aiStatus = null;
+
 // ========== 状态管理 ==========
 let links = [];
 let groups = [];
@@ -39,6 +56,23 @@ document.addEventListener('DOMContentLoaded', () => {
   importDataBtn = document.getElementById('importDataBtn');
   importFileInput = document.getElementById('importFileInput');
   
+  // 初始化 AI DOM 元素
+  aiProvider = document.getElementById('aiProvider');
+  aiApiUrl = document.getElementById('aiApiUrl');
+  aiApiKey = document.getElementById('aiApiKey');
+  aiModel = document.getElementById('aiModel');
+  aiModelSelect = document.getElementById('aiModelSelect');
+  aiFetchModelsBtn = document.getElementById('aiFetchModelsBtn');
+  aiOptimizeTitle = document.getElementById('aiOptimizeTitle');
+  aiSuggestCategory = document.getElementById('aiSuggestCategory');
+  aiGenerateTags = document.getElementById('aiGenerateTags');
+  aiGenerateSummary = document.getElementById('aiGenerateSummary');
+  aiSmartSearch = document.getElementById('aiSmartSearch');
+  aiDetectDuplicates = document.getElementById('aiDetectDuplicates');
+  aiTestBtn = document.getElementById('aiTestBtn');
+  aiSaveBtn = document.getElementById('aiSaveBtn');
+  aiStatus = document.getElementById('aiStatus');
+  
   // 加载主题
   loadTheme();
   
@@ -62,6 +96,9 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // 设置数据管理
   setupDataManagement();
+  
+  // 设置 AI 助手
+  setupAISettings();
 });
 
 // 初始化菜单状态
@@ -1218,4 +1255,406 @@ async function decryptData(encryptedText) {
   } catch (error) {
     throw new Error('解密失败，文件可能已损坏或格式不正确');
   }
+}
+
+// ========== AI 助手功能 ==========
+
+/**
+ * 设置 AI 助手
+ */
+function setupAISettings() {
+  // 加载 AI 设置
+  loadAISettings();
+  
+  // 测试连接按钮
+  if (aiTestBtn) {
+    aiTestBtn.addEventListener('click', testAIConnection);
+  }
+  
+  // 保存设置按钮
+  if (aiSaveBtn) {
+    aiSaveBtn.addEventListener('click', saveAISettings);
+  }
+  
+  // 供应商切换时自动填充默认值
+  if (aiProvider) {
+    aiProvider.addEventListener('change', onProviderChange);
+  }
+  
+  // 获取模型列表按钮
+  if (aiFetchModelsBtn) {
+    aiFetchModelsBtn.addEventListener('click', fetchModelsList);
+  }
+  
+  // 模型选择变化时同步到输入框
+  if (aiModelSelect) {
+    aiModelSelect.addEventListener('change', () => {
+      if (aiModel) {
+        // 如果选择“自定义”，显示输入框
+        if (aiModelSelect.value === 'custom') {
+          aiModel.style.display = 'block';
+          aiModel.focus();
+        } else {
+          aiModel.style.display = 'none';
+          aiModel.value = aiModelSelect.value;
+        }
+      }
+    });
+  }
+}
+
+/**
+ * 加载 AI 设置
+ */
+function loadAISettings() {
+  chrome.storage.local.get(['aiSettings', 'aiProviderConfigs'], (result) => {
+    const settings = result.aiSettings || getDefaultAISettings();
+    const providerConfigs = result.aiProviderConfigs || {};  // 各供应商的独立配置
+    
+    // 填充供应商选择
+    if (aiProvider) aiProvider.value = settings.provider || 'custom';
+    
+    // 加载当前供应商的配置
+    const currentProvider = settings.provider || 'custom';
+    const providerConfig = providerConfigs[currentProvider] || {};
+    
+    // 填充表单（优先使用供应商独立配置）
+    if (aiApiUrl) aiApiUrl.value = providerConfig.apiUrl || settings.config?.apiUrl || '';
+    if (aiApiKey) aiApiKey.value = providerConfig.apiKey || settings.config?.apiKey || '';
+    if (aiModel) aiModel.value = providerConfig.model || settings.config?.model || '';
+    
+    // 同步更新下拉框显示
+    if (aiModelSelect) {
+      const savedModel = providerConfig.model || settings.config?.model || '';
+      
+      if (savedModel) {
+        // 有保存的模型：不显示"自动获取"提示
+        aiModelSelect.innerHTML = '<option value="custom">自定义（手动输入）</option>';
+        
+        // 检查下拉框中是否已有该选项
+        const existingOption = Array.from(aiModelSelect.options).find(opt => opt.value === savedModel);
+        if (!existingOption) {
+          // 如果没有，创建新选项并插入到"自定义"之前
+          const customOption = aiModelSelect.querySelector('option[value="custom"]');
+          const newOption = document.createElement('option');
+          newOption.value = savedModel;
+          newOption.textContent = savedModel;
+          newOption.selected = true;
+          
+          if (customOption) {
+            aiModelSelect.insertBefore(newOption, customOption);
+          } else {
+            aiModelSelect.appendChild(newOption);
+          }
+        } else {
+          // 直接选中已有选项
+          aiModelSelect.value = savedModel;
+        }
+      } else {
+        // 没有保存的模型：显示"自动获取"提示
+        aiModelSelect.innerHTML = '<option value="">-- 自动获取模型 --</option><option value="custom">自定义（手动输入）</option>';
+        aiModelSelect.value = '';
+      }
+    }
+    
+    // 填充功能开关（全局共享）
+    if (aiOptimizeTitle) aiOptimizeTitle.checked = settings.features?.optimizeTitle || false;
+    if (aiSuggestCategory) aiSuggestCategory.checked = settings.features?.suggestCategory || false;
+    if (aiGenerateTags) aiGenerateTags.checked = settings.features?.generateTags || false;
+    if (aiGenerateSummary) aiGenerateSummary.checked = settings.features?.generateSummary || false;
+    if (aiSmartSearch) aiSmartSearch.checked = settings.features?.smartSearch || false;
+    if (aiDetectDuplicates) aiDetectDuplicates.checked = settings.features?.detectDuplicates || false;
+  });
+}
+function saveAISettings() {
+  const currentProvider = aiProvider?.value || 'custom';
+  
+  // 获取当前供应商的默认配置
+  const providerConfig = (typeof AI_PROVIDERS !== 'undefined') ? AI_PROVIDERS[currentProvider] : null;
+  
+  // 如果用户没有填写 API 地址，使用 placeholder 中的默认值
+  let apiUrl = aiApiUrl?.value || '';
+  if (!apiUrl && aiApiUrl?.placeholder) {
+    apiUrl = aiApiUrl.placeholder;  // 使用 placeholder 中的默认地址
+  }
+  
+  const settings = {
+    provider: currentProvider,
+    config: {
+      apiUrl: apiUrl,
+      apiKey: aiApiKey?.value || '',
+      model: aiModel?.value || ''
+    },
+    features: {
+      optimizeTitle: aiOptimizeTitle?.checked || false,
+      suggestCategory: aiSuggestCategory?.checked || false,
+      generateTags: aiGenerateTags?.checked || false,
+      generateSummary: aiGenerateSummary?.checked || false,
+      smartSearch: aiSmartSearch?.checked || false,
+      detectDuplicates: aiDetectDuplicates?.checked || false
+    }
+  };
+  
+  // 验证必填项
+  if (!settings.config.apiUrl) {
+    showAISstatus('error', '请填写 API 地址');
+    return;
+  }
+  
+  // 获取现有供应商配置
+  chrome.storage.local.get(['aiProviderConfigs'], (result) => {
+    const providerConfigs = result.aiProviderConfigs || {};
+    
+    // 保存当前供应商的配置
+    providerConfigs[currentProvider] = {
+      apiUrl: settings.config.apiUrl,
+      apiKey: settings.config.apiKey,
+      model: settings.config.model
+    };
+    
+    // 同时保存全局设置
+    chrome.storage.local.set({ 
+      aiSettings: settings,
+      aiProviderConfigs: providerConfigs
+    }, () => {
+      if (chrome.runtime.lastError) {
+        showAISstatus('error', '保存失败: ' + chrome.runtime.lastError.message);
+        return;
+      }
+      
+      showAISstatus('success', '设置已保存！');
+      
+      // 3秒后隐藏状态
+      setTimeout(() => {
+        if (aiStatus) aiStatus.style.display = 'none';
+      }, 3000);
+    });
+  });
+}
+
+/**
+ * 测试 AI 连接
+ */
+async function testAIConnection() {
+  // 如果用户没有填写 API 地址，使用 placeholder 中的默认值
+  let apiUrl = aiApiUrl?.value || '';
+  if (!apiUrl && aiApiUrl?.placeholder) {
+    apiUrl = aiApiUrl.placeholder;
+  }
+  
+  if (!apiUrl) {
+    showAISstatus('error', '请先填写 API 地址');
+    return;
+  }
+  
+  showAISstatus('loading', '正在测试连接...');
+  
+  try {
+    // 创建 AI 服务实例
+    const settings = {
+      provider: aiProvider?.value || 'custom',
+      config: {
+        apiUrl: apiUrl,
+        apiKey: aiApiKey?.value || '',
+        model: aiModel?.value || ''
+      }
+    };
+    
+    const aiService = new AIService(settings);
+    const result = await aiService.testConnection();
+    
+    if (result.success) {
+      showAISstatus('success', result.message);
+    } else {
+      showAISstatus('error', result.message);
+    }
+  } catch (error) {
+    showAISstatus('error', '测试失败: ' + error.message);
+  }
+}
+
+/**
+ * 供应商切换事件
+ */
+function onProviderChange() {
+  const provider = aiProvider?.value || 'custom';
+  
+  // 安全检查 AI_PROVIDERS 是否存在
+  if (typeof AI_PROVIDERS === 'undefined') {
+    console.warn('AI_PROVIDERS 未定义，跳过自动填充');
+    return;
+  }
+  
+  const providerConfig = AI_PROVIDERS[provider];
+  
+  if (!providerConfig) return;
+  
+  // 获取所有供应商配置
+  chrome.storage.local.get(['aiProviderConfigs'], (result) => {
+    const providerConfigs = result.aiProviderConfigs || {};
+    const currentConfig = providerConfigs[provider] || {};
+    
+    // 如果有保存的配置，加载它
+    if (currentConfig.apiUrl) {
+      if (aiApiUrl) aiApiUrl.value = currentConfig.apiUrl;
+      if (aiApiKey) aiApiKey.value = currentConfig.apiKey || '';
+      if (aiModel) aiModel.value = currentConfig.model || '';
+      
+      // 同步更新下拉框显示（有保存的模型，不显示"自动获取"提示）
+      if (aiModelSelect) {
+        aiModelSelect.innerHTML = '<option value="custom">自定义（手动输入）</option>';
+        
+        if (currentConfig.model) {
+          // 添加已保存的模型选项
+          const customOption = aiModelSelect.querySelector('option[value="custom"]');
+          const savedOption = document.createElement('option');
+          savedOption.value = currentConfig.model;
+          savedOption.textContent = currentConfig.model;
+          savedOption.selected = true;
+          
+          if (customOption) {
+            aiModelSelect.insertBefore(savedOption, customOption);
+          } else {
+            aiModelSelect.appendChild(savedOption);
+          }
+        }
+      }
+    } else {
+      // 没有保存的配置，清空输入框，显示 placeholder 提示
+      if (aiApiUrl) {
+        aiApiUrl.value = '';  // 不填充默认值
+        aiApiUrl.placeholder = providerConfig.defaultUrl || 'https://api.example.com/v1';  // 显示为提示
+      }
+      
+      if (aiApiKey) {
+        aiApiKey.value = '';
+        aiApiKey.placeholder = providerConfig.needApiKey ? 'sk-...' : '可选';
+      }
+      
+      if (aiModel) {
+        aiModel.value = '';
+      }
+      
+      // 重置下拉框（显示"自动获取"提示）
+      if (aiModelSelect) {
+        aiModelSelect.innerHTML = '<option value="">-- 自动获取模型 --</option><option value="custom">自定义（手动输入）</option>';
+      }
+    }
+    
+    // 隐藏自定义输入框（切换供应商时重置）
+    if (aiModel) {
+      aiModel.style.display = 'none';
+    }
+  });
+}
+
+/**
+ * 获取模型列表
+ */
+async function fetchModelsList() {
+  // 如果用户没有填写 API 地址，使用 placeholder 中的默认值
+  let apiUrl = aiApiUrl?.value || '';
+  if (!apiUrl && aiApiUrl?.placeholder) {
+    apiUrl = aiApiUrl.placeholder;
+  }
+  
+  if (!apiUrl) {
+    showAISstatus('error', '请先填写 API 地址');
+    return;
+  }
+  
+  showAISstatus('loading', '正在获取模型列表...');
+  
+  try {
+    // 创建 AI 服务实例
+    const settings = {
+      provider: aiProvider?.value || 'custom',
+      config: {
+        apiUrl: apiUrl,
+        apiKey: aiApiKey?.value || '',
+        model: aiModel?.value || ''
+      }
+    };
+    
+    const aiService = new AIService(settings);
+    const models = await aiService.fetchModels();
+    
+    if (models && models.length > 0) {
+      // 清空下拉框
+      aiModelSelect.innerHTML = '';
+      
+      // 添加模型选项（第一个模型默认选中）
+      models.forEach((model, index) => {
+        const option = document.createElement('option');
+        option.value = model;
+        option.textContent = model;
+        if (index === 0) {
+          option.selected = true;  // 默认选中第一个
+          aiModel.value = model;   // 同步到隐藏输入框
+        }
+        aiModelSelect.appendChild(option);
+      });
+      
+      // 添加分隔线（可选）
+      const divider = document.createElement('option');
+      divider.disabled = true;
+      divider.textContent = '──────────';
+      aiModelSelect.appendChild(divider);
+      
+      // 添加“自定义”选项（放在最后）
+      const customOption = document.createElement('option');
+      customOption.value = 'custom';
+      customOption.textContent = '自定义（手动输入）';
+      aiModelSelect.appendChild(customOption);
+      
+      // 隐藏自定义输入框（加载成功后重置）
+      if (aiModel) {
+        aiModel.style.display = 'none';
+      }
+      
+      showAISstatus('success', `获取到 ${models.length} 个模型`);
+      
+      // 显示 Toast 通知
+      if (typeof showToast === 'function') {
+        showToast(`成功加载 ${models.length} 个模型`, 'success');
+      }
+    } else {
+      showAISstatus('error', '未获取到模型列表');
+    }
+  } catch (error) {
+    showAISstatus('error', '获取模型失败: ' + error.message);
+  }
+}
+
+/**
+ * 显示 AI 状态
+ */
+function showAISstatus(type, message) {
+  if (!aiStatus) return;
+  
+  aiStatus.className = `ai-status ${type}`;
+  aiStatus.querySelector('.ai-status-text').textContent = message;
+  aiStatus.style.display = 'flex';
+}
+
+/**
+ * 获取默认 AI 设置
+ */
+function getDefaultAISettings() {
+  return {
+    provider: 'lmstudio',
+    config: {
+      apiUrl: '',  // 不预设默认值，由 placeholder 提供提示
+      apiKey: '',
+      model: ''
+    },
+    features: {
+      optimizeTitle: true,
+      suggestCategory: true,
+      generateTags: false,
+      generateSummary: false,
+      smartSearch: false,
+      detectDuplicates: false
+    }
+  };
 }

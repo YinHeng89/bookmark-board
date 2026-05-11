@@ -237,22 +237,16 @@ body {
 .groups-wrapper {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
   flex: 1;
+  flex-wrap: wrap;  /* 允许换行 */
 }
 
 .groups-container {
   display: flex;
-  gap: 0.5rem;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  flex-wrap: wrap;  /* 允许换行 */
+  gap: 0.5rem;  /* 统一间距 */
   padding-bottom: 0.25rem;
-  max-width: 70vw;
-}
-
-.groups-container::-webkit-scrollbar {
-  display: none;
+  align-items: center;
 }
 
 .group-tab {
@@ -1039,6 +1033,21 @@ body {
   background: var(--bg-card);
 }
 
+/* AI 操作按钮特殊样式 */
+.ai-action-btn:hover {
+  background: white;
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: scale(1.15);
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+}
+
+.dark .ai-action-btn:hover {
+  background: var(--bg-card);
+  color: #818cf8;
+  border-color: #818cf8;
+}
+
 /* 批量选择指示器 */
 .select-indicator {
   position: absolute;
@@ -1383,15 +1392,13 @@ body {
   }
   
   .groups-wrapper {
-    overflow: hidden;  /* 防止溢出 */
+    overflow: visible;  /* 允许换行显示 */
   }
   
   .groups-container {
-    max-width: calc(100% - 3rem);  /* 留出添加按钮的空间 */
+    max-width: 100%;  /* 使用全部宽度 */
     padding: 0;
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
+    overflow: visible;  /* 允许换行 */
   }
   
   .group-tab {
@@ -1521,19 +1528,6 @@ body {
   .bookmark-card {
     touch-action: manipulation;
   }
-  
-  /* 防止页面横向滚动 */
-  body,
-  .container {
-    overflow-x: hidden;
-    max-width: 100vw;
-  }
-  
-  /* 横向滚动优化 */
-  .groups-container {
-    -webkit-overflow-scrolling: touch;
-    scroll-behavior: smooth;
-  }
 }
 
 /* ========== 工具类 ========== */
@@ -1551,4 +1545,28 @@ body {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border-width: 0;
+}
+
+/* AI 徽章样式 */
+.ai-badge {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  background: rgba(79, 70, 229, 0.9);
+  color: white;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+  z-index: 10;
+  white-space: nowrap;
+}
+
+.ai-badge i {
+  font-size: 0.75rem;
 }

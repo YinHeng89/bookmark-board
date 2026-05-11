@@ -344,30 +344,33 @@ function setupEventListeners() {
     });
   });
   
-  // 添加分组按钮
-  const addGroupBtn = document.getElementById('addGroupBtn');
-  if (addGroupBtn) {
-    addGroupBtn.addEventListener('click', () => {
-      showModal({
-        title: '新建分组',
-        message: '输入分组名称：',
-        input: true,
-        onConfirm: (name) => {
-          if (name && name.trim()) {
-            const newGroup = {
-              id: 'group_' + Date.now(),
-              name: name.trim(),
-              color: '#4F46E5',
-              icon: 'fa-folder',
-              createdAt: Date.now()
-            };
-            groups.push(newGroup);
-            save();
-            renderGroups();
-            showToast('分组已创建');
+  // 添加分组按钮（使用事件委托）
+  const addGroupContainer = document.querySelector('.groups-container');
+  if (addGroupContainer) {
+    addGroupContainer.addEventListener('click', (e) => {
+      // 检查是否点击了添加按钮
+      if (e.target.closest('#addGroupBtn') || e.target.closest('.add-group-btn')) {
+        showModal({
+          title: '新建分组',
+          message: '输入分组名称：',
+          input: true,
+          onConfirm: (name) => {
+            if (name && name.trim()) {
+              const newGroup = {
+                id: 'group_' + Date.now(),
+                name: name.trim(),
+                color: '#4F46E5',
+                icon: 'fa-folder',
+                createdAt: Date.now()
+              };
+              groups.push(newGroup);
+              save();
+              renderGroups();
+              showToast('分组已创建');
+            }
           }
-        }
-      });
+        });
+      }
     });
   }
 }
@@ -670,6 +673,21 @@ function showBookmarkContextMenu(link, x, y) {
   
   menu.appendChild(editItem);
   
+  // AI 优化选项
+  const aiItem = document.createElement('div');
+  aiItem.className = 'group-select-item';
+  aiItem.innerHTML = `
+    <i class="fa fa-magic"></i>
+    <span>AI 优化</span>
+  `;
+  
+  aiItem.addEventListener('click', async () => {
+    menu.remove();
+    await aiOptimizeBookmark(link);
+  });
+  
+  menu.appendChild(aiItem);
+  
   // 删除选项
   const deleteItem = document.createElement('div');
   deleteItem.className = 'group-select-item';
@@ -757,7 +775,7 @@ function showBookmarkContextMenu(link, x, y) {
   }, 0);
 }
 
-function addLinkFromUrl(url, draggedTitle = null) {
+async function addLinkFromUrl(url, draggedTitle = null) {
   // 检查是否已存在
   if (links.some(link => link.url === url)) {
     showToast('该链接已存在');
@@ -798,6 +816,15 @@ function addLinkFromUrl(url, draggedTitle = null) {
     icon,
     createdAt: Date.now()
   };
+
+  // 如果开启了 AI 功能，异步调用 AI 优化
+  const aiSettings = await getAISettings();
+  if (aiSettings && aiSettings.features) {
+    // 异步执行，不阻塞添加流程
+    optimizeLinkWithAI(newLink, aiSettings).catch(err => {
+      console.error('AI 优化失败:', err);
+    });
+  }
 
   links.unshift(newLink);
   save();
@@ -892,13 +919,13 @@ function renderGroups() {
   const container = document.querySelector('.groups-container');
   if (!container) return;
   
-  // 保留“全部”标签，移除其他
+  // 保留"全部"标签，移除其他
   const allTab = container.querySelector('[data-group="all"]');
   container.innerHTML = '';
   if (allTab) {
     container.appendChild(allTab);
   } else {
-    // 如果“全部”标签不存在，创建它
+    // 如果"全部"标签不存在，创建它
     const allTabNew = document.createElement('button');
     allTabNew.className = 'group-tab' + (activeGroupFilter === 'all' ? ' active' : '');
     allTabNew.dataset.group = 'all';
@@ -932,7 +959,7 @@ function renderGroups() {
     }
     
     // 显示名称（如果有自定义名称则使用）
-    const displayName = group.name.replace(/ \(\d+\)$/, '');  // 移除自动分组的计数
+    const displayName = (group.name || '未命名').replace(/ \(\d+\)$/, '');  // 移除自动分组的计数
     const nameHtml = `<span>${displayName}</span>`;
     const countHtml = count > 0 ? `<span class="group-count">${count}</span>` : '';
     
@@ -948,7 +975,15 @@ function renderGroups() {
     container.appendChild(tab);
   });
   
-  // 更新“全部”标签的激活状态
+  // 添加"+"按钮
+  const addGroupBtn = document.createElement('button');
+  addGroupBtn.id = 'addGroupBtn';
+  addGroupBtn.className = 'add-group-btn';
+  addGroupBtn.title = '新建分组';
+  addGroupBtn.innerHTML = '<i class="fa fa-plus"></i>';
+  container.appendChild(addGroupBtn);
+  
+  // 更新"全部"标签的激活状态
   const currentAllTab = container.querySelector('[data-group="all"]');
   if (currentAllTab) {
     currentAllTab.className = 'group-tab' + (activeGroupFilter === 'all' ? ' active' : '');
@@ -1219,30 +1254,6 @@ function addCard(link) {
       indicator.innerHTML = '<i class="fa fa-check"></i>';
     }
     inner.appendChild(indicator);
-  } else {
-    // 操作按钮
-    const actions = document.createElement('div');
-    actions.className = 'card-actions';
-    
-    const editBtn = document.createElement('button');
-    editBtn.className = 'card-action-btn';
-    editBtn.innerHTML = '<i class="fa fa-pencil"></i>';
-    editBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      editCard(link);
-    });
-    
-    const deleteBtn = document.createElement('button');
-    deleteBtn.className = 'card-action-btn';
-    deleteBtn.innerHTML = '<i class="fa fa-trash-o"></i>';
-    deleteBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      deleteCard(link);
-    });
-    
-    actions.appendChild(editBtn);
-    actions.appendChild(deleteBtn);
-    inner.appendChild(actions);
   }
 
   // 图标
@@ -1514,5 +1525,205 @@ function updateThemeIcon(isDark) {
   } else {
     moonIcon.style.display = '';
     sunIcon.style.display = 'none';
+  }
+}
+
+// ========== AI 功能集成 ==========
+
+/**
+ * 获取 AI 设置
+ */
+async function getAISettings() {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(['aiSettings'], (result) => {
+      resolve(result.aiSettings || null);
+    });
+  });
+}
+
+/**
+ * 使用 AI 优化书签
+ */
+async function optimizeLinkWithAI(link, aiSettings) {
+  // 检查 AI 服务是否加载
+  if (typeof AIService === 'undefined') {
+    console.warn('AIService 未定义，跳过 AI 优化');
+    return;
+  }
+  
+  // 检查 AI 是否启用
+  if (!aiSettings || !aiSettings.provider || !aiSettings.config?.apiUrl) {
+    return;
+  }
+
+  // 创建 AI 服务实例
+  const aiService = new AIService(aiSettings);
+
+  // 并行执行多个 AI 任务
+  const tasks = [];
+
+  // 1. 智能标题优化
+  if (aiSettings.features?.optimizeTitle) {
+    tasks.push(
+      aiService.optimizeTitle(link.title, link.url)
+        .then(optimizedTitle => {
+          if (optimizedTitle && optimizedTitle !== link.title) {
+            link.title = optimizedTitle;
+            showAILoading(link, '标题已优化');
+          }
+        })
+        .catch(err => console.error('标题优化失败:', err))
+    );
+  }
+
+  // 2. 智能分类建议
+  if (aiSettings.features?.suggestCategory) {
+    // 提取分组名称列表
+    const groupNames = groups.map(g => g.name || g).filter(Boolean);
+    
+    tasks.push(
+      aiService.suggestCategory(link.url, link.title, groupNames)
+        .then(suggestedGroup => {
+          // 严格检查：必须是有效字符串，且不是 "undefined"、"null" 等
+          if (suggestedGroup && 
+              suggestedGroup !== 'undefined' && 
+              suggestedGroup !== 'null' &&
+              suggestedGroup !== '无重复' &&
+              suggestedGroup.trim() !== '') {
+            
+            suggestedGroup = suggestedGroup.trim();
+            
+            // 查找或创建分组
+            let targetGroup = groups.find(g => g.name === suggestedGroup);
+            
+            if (!targetGroup) {
+              // 分组不存在，创建新分组
+              targetGroup = {
+                id: 'group_' + Date.now(),
+                name: suggestedGroup
+              };
+              groups.push(targetGroup);
+            }
+            
+            // 添加书签到分组（使用分组 ID，而不是名称）
+            if (!link.groups) link.groups = [];
+            if (!link.groups.includes(targetGroup.id)) {
+              link.groups.push(targetGroup.id);
+            }
+            
+            showAILoading(link, `已分类到: ${suggestedGroup}`);
+          }
+        })
+        .catch(err => console.error('分类建议失败:', err))
+    );
+  }
+
+  // 3. 智能标签生成（暂缓实现）
+  // if (aiSettings.features?.generateTags) { ... }
+
+  // 等待所有任务完成
+  await Promise.allSettled(tasks);
+
+  // 保存并重新渲染
+  save();
+  renderLinks();
+}
+
+/**
+ * 显示 AI 加载状态
+ */
+function showAILoading(link, message) {
+  // 在书签卡片上显示 AI 优化提示
+  const card = document.querySelector(`[data-url="${link.url}"]`);
+  if (card) {
+    // 创建 AI 提示标签
+    const aiBadge = document.createElement('div');
+    aiBadge.className = 'ai-badge';
+    aiBadge.innerHTML = `<i class="fa fa-magic"></i> ${message}`;
+    
+    // 添加到卡片
+    const cardInner = card.querySelector('.card-inner');
+    if (cardInner) {
+      cardInner.appendChild(aiBadge);
+      
+      // 3秒后自动消失
+      setTimeout(() => {
+        aiBadge.style.opacity = '0';
+        setTimeout(() => aiBadge.remove(), 300);
+      }, 3000);
+    }
+  }
+}
+
+/**
+ * 手动 AI 优化书签
+ */
+async function aiOptimizeBookmark(link) {
+  // 检查 AI 服务是否加载
+  if (typeof AIService === 'undefined') {
+    showToast('AI 服务未加载，请刷新页面');
+    return;
+  }
+  
+  const aiSettings = await getAISettings();
+  
+  if (!aiSettings || !aiSettings.provider || !aiSettings.config?.apiUrl) {
+    showToast('请先在设置中配置 AI');
+    return;
+  }
+
+  showToast('正在 AI 优化...（请勿刷新页面）');
+
+  try {
+    const aiService = new AIService(aiSettings);
+    
+    // 优化标题
+    if (aiSettings.features?.optimizeTitle) {
+      const optimizedTitle = await aiService.optimizeTitle(link.title, link.url);
+      if (optimizedTitle && optimizedTitle !== link.title) {
+        link.title = optimizedTitle;
+      }
+    }
+    
+    // 分类建议
+    if (aiSettings.features?.suggestCategory) {
+      // 提取分组名称列表
+      const groupNames = groups.map(g => g.name || g).filter(Boolean);
+      
+      const suggestedGroup = await aiService.suggestCategory(link.url, link.title, groupNames);
+      
+      // 严格检查
+      if (suggestedGroup && 
+          suggestedGroup !== 'undefined' && 
+          suggestedGroup !== 'null' &&
+          suggestedGroup !== '无重复' &&
+          suggestedGroup.trim() !== '') {
+        
+        const trimmedGroup = suggestedGroup.trim();
+        
+        // 查找或创建分组
+        let targetGroup = groups.find(g => g.name === trimmedGroup);
+        
+        if (!targetGroup) {
+          targetGroup = {
+            id: 'group_' + Date.now(),
+            name: trimmedGroup
+          };
+          groups.push(targetGroup);
+        }
+        
+        // 添加书签到分组（使用分组 ID）
+        if (!link.groups) link.groups = [];
+        if (!link.groups.includes(targetGroup.id)) {
+          link.groups.push(targetGroup.id);
+        }
+      }
+    }
+    
+    save();
+    renderLinks();
+    showToast('AI 优化完成！');
+  } catch (error) {
+    showToast('AI 优化失败: ' + error.message);
   }
 }

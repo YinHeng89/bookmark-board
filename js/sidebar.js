@@ -312,7 +312,7 @@ function saveData() {
   chrome.storage.local.set({ links });
 }
 
-function addBookmark(url, title, iconUrl) {
+async function addBookmark(url, title, iconUrl) {
   // 检查是否已存在
   const exists = links.find(l => l.url === url);
   if (exists) {
@@ -332,6 +332,11 @@ function addBookmark(url, title, iconUrl) {
   links.unshift(newLink);
   saveData();
   showSidebarToast('书签已添加！', 'success');
+  
+  // 异步调用 AI 优化（不阻塞 UI）
+  optimizeSidebarBookmark(newLink).catch(err => {
+    console.error('侧边栏 AI 优化失败:', err);
+  });
 }
 
 function showSidebarToast(message, type = 'success') {
@@ -603,4 +608,104 @@ function setupDragAndDrop() {
       showSidebarToast('书签已添加！', 'success');
     });
   });
+}
+
+// ========== AI 功能集成 ==========
+
+/**
+ * 获取 AI 设置
+ */
+function getSidebarAISettings() {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(['aiSettings'], (result) => {
+      resolve(result.aiSettings || null);
+    });
+  });
+}
+
+/**
+ * 侧边栏书签 AI 优化
+ */
+async function optimizeSidebarBookmark(link) {
+  // 检查 AI 服务是否加载
+  if (typeof AIService === 'undefined') {
+    console.warn('AIService 未定义，跳过 AI 优化');
+    return;
+  }
+  
+  const aiSettings = await getSidebarAISettings();
+  
+  // 检查 AI 是否启用
+  if (!aiSettings || !aiSettings.provider || !aiSettings.config?.apiUrl) {
+    return;
+  }
+  
+  // 检查是否有开启任何 AI 功能
+  const hasAnyFeature = aiSettings.features && (
+    aiSettings.features.optimizeTitle || 
+    aiSettings.features.suggestCategory
+  );
+  
+  if (!hasAnyFeature) {
+    return;
+  }
+  
+  try {
+    // 创建 AI 服务实例
+    const aiService = new AIService(aiSettings);
+    
+    // 获取当前分组列表
+    const groupNames = links
+      .flatMap(l => l.groups || [])
+      .filter((v, i, a) => a.indexOf(v) === i);
+    
+    // 并行执行 AI 任务
+    const tasks = [];
+    
+    // 1. 智能标题优化
+    if (aiSettings.features?.optimizeTitle) {
+      tasks.push(
+        aiService.optimizeTitle(link.title, link.url)
+          .then(optimizedTitle => {
+            if (optimizedTitle && optimizedTitle !== link.title) {
+              link.title = optimizedTitle;
+              showSidebarToast('AI 已优化标题', 'success');
+            }
+          })
+          .catch(err => console.error('标题优化失败:', err))
+      );
+    }
+    
+    // 2. 智能分类建议
+    if (aiSettings.features?.suggestCategory) {
+      tasks.push(
+        aiService.suggestCategory(link.url, link.title, groupNames)
+          .then(suggestedGroup => {
+            if (suggestedGroup && suggestedGroup !== '无重复') {
+              // 如果分组不存在，创建新分组
+              if (!groupNames.includes(suggestedGroup)) {
+                groupNames.push(suggestedGroup);
+              }
+              
+              // 添加书签到分组
+              if (!link.groups) link.groups = [];
+              if (!link.groups.includes(suggestedGroup)) {
+                link.groups.push(suggestedGroup);
+              }
+              
+              showSidebarToast(`AI 已分类到: ${suggestedGroup}`, 'success');
+            }
+          })
+          .catch(err => console.error('分类建议失败:', err))
+      );
+    }
+    
+    // 等待所有任务完成
+    await Promise.allSettled(tasks);
+    
+    // 保存更新
+    saveData();
+  } catch (error) {
+    console.error('AI 优化失败:', error);
+  }
 }
