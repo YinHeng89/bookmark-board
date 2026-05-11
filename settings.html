@@ -274,51 +274,108 @@
               </div>
             </div>
             <div class="ai-card-body">
-              <div class="ai-features-grid">
-                <label class="ai-feature-card">
-                  <input type="checkbox" id="aiOptimizeTitle" class="ai-checkbox" />
-                  <div class="ai-feature-card-content">
-                    <span class="ai-feature-icon">✨</span>
-                    <div class="ai-feature-info">
-                      <span class="ai-feature-name">智能标题优化</span>
-                      <span class="ai-feature-desc">自动优化书签标题，使其更简洁清晰</span>
+              <!-- 自动优化区域 -->
+              <div class="ai-feature-section">
+                <div class="ai-section-title">
+                  <i class="fa fa-magic"></i>
+                  <span>自动优化（添加书签时）</span>
+                </div>
+                <div class="ai-features-grid">
+                  <label class="ai-feature-card">
+                    <input type="checkbox" id="aiAutoOptimizeTitle" class="ai-checkbox" />
+                    <div class="ai-feature-card-content">
+                      <span class="ai-feature-icon">✨</span>
+                      <div class="ai-feature-info">
+                        <span class="ai-feature-name">自动优化标题</span>
+                        <span class="ai-feature-desc">添加时自动优化书签标题</span>
+                      </div>
                     </div>
-                  </div>
-                  <div class="ai-toggle-switch"></div>
-                </label>
-                <label class="ai-feature-card">
-                  <input type="checkbox" id="aiSuggestCategory" class="ai-checkbox" />
-                  <div class="ai-feature-card-content">
-                    <span class="ai-feature-icon">📂</span>
-                    <div class="ai-feature-info">
-                      <span class="ai-feature-name">智能分类建议</span>
-                      <span class="ai-feature-desc">根据内容智能推荐分组</span>
+                    <button type="button" class="ai-edit-prompt-btn" data-prompt="autoOptimizeTitle" title="编辑提示词">
+                      <i class="fa fa-pencil"></i>
+                    </button>
+                    <div class="ai-toggle-switch"></div>
+                  </label>
+                  <label class="ai-feature-card">
+                    <input type="checkbox" id="aiAutoSuggestCategory" class="ai-checkbox" />
+                    <div class="ai-feature-card-content">
+                      <span class="ai-feature-icon">📂</span>
+                      <div class="ai-feature-info">
+                        <span class="ai-feature-name">自动智能分类</span>
+                        <span class="ai-feature-desc">添加时自动推荐分组</span>
+                      </div>
                     </div>
-                  </div>
-                  <div class="ai-toggle-switch"></div>
-                </label>
-                <label class="ai-feature-card">
-                  <input type="checkbox" id="aiGenerateSummary" class="ai-checkbox" />
-                  <div class="ai-feature-card-content">
-                    <span class="ai-feature-icon">📝</span>
-                    <div class="ai-feature-info">
-                      <span class="ai-feature-name">书签摘要生成</span>
-                      <span class="ai-feature-desc">生成书签内容摘要</span>
+                    <button type="button" class="ai-edit-prompt-btn" data-prompt="autoSuggestCategory" title="编辑提示词">
+                      <i class="fa fa-pencil"></i>
+                    </button>
+                    <div class="ai-toggle-switch"></div>
+                  </label>
+                </div>
+              </div>
+
+              <!-- 手动优化区域 -->
+              <div class="ai-feature-section">
+                <div class="ai-section-title">
+                  <i class="fa fa-mouse-pointer"></i>
+                  <span>手动优化（右键菜单）</span>
+                </div>
+                <div class="ai-features-grid">
+                  <label class="ai-feature-card">
+                    <input type="checkbox" id="aiOptimizeTitle" class="ai-checkbox" />
+                    <div class="ai-feature-card-content">
+                      <span class="ai-feature-icon">✨</span>
+                      <div class="ai-feature-info">
+                        <span class="ai-feature-name">智能标题优化</span>
+                        <span class="ai-feature-desc">手动优化书签标题，使其更简洁清晰</span>
+                      </div>
                     </div>
-                  </div>
-                  <div class="ai-toggle-switch"></div>
-                </label>
-                <label class="ai-feature-card">
-                  <input type="checkbox" id="aiSmartSearch" class="ai-checkbox" />
-                  <div class="ai-feature-card-content">
-                    <span class="ai-feature-icon">🔍</span>
-                    <div class="ai-feature-info">
-                      <span class="ai-feature-name">智能搜索增强</span>
-                      <span class="ai-feature-desc">理解搜索意图，返回更精准结果</span>
+                    <button type="button" class="ai-edit-prompt-btn" data-prompt="optimizeTitle" title="编辑提示词">
+                      <i class="fa fa-pencil"></i>
+                    </button>
+                    <div class="ai-toggle-switch"></div>
+                  </label>
+                  <label class="ai-feature-card">
+                    <input type="checkbox" id="aiSuggestCategory" class="ai-checkbox" />
+                    <div class="ai-feature-card-content">
+                      <span class="ai-feature-icon"></span>
+                      <div class="ai-feature-info">
+                        <span class="ai-feature-name">智能分类建议</span>
+                        <span class="ai-feature-desc">根据内容智能推荐分组</span>
+                      </div>
                     </div>
-                  </div>
-                  <div class="ai-toggle-switch"></div>
-                </label>
+                    <button type="button" class="ai-edit-prompt-btn" data-prompt="suggestCategory" title="编辑提示词">
+                      <i class="fa fa-pencil"></i>
+                    </button>
+                    <div class="ai-toggle-switch"></div>
+                  </label>
+                  <label class="ai-feature-card">
+                    <input type="checkbox" id="aiGenerateSummary" class="ai-checkbox" />
+                    <div class="ai-feature-card-content">
+                      <span class="ai-feature-icon">📝</span>
+                      <div class="ai-feature-info">
+                        <span class="ai-feature-name">书签摘要生成</span>
+                        <span class="ai-feature-desc">生成书签内容摘要</span>
+                      </div>
+                    </div>
+                    <button type="button" class="ai-edit-prompt-btn" data-prompt="generateSummary" title="编辑提示词">
+                      <i class="fa fa-pencil"></i>
+                    </button>
+                    <div class="ai-toggle-switch"></div>
+                  </label>
+                  <label class="ai-feature-card">
+                    <input type="checkbox" id="aiSmartSearch" class="ai-checkbox" />
+                    <div class="ai-feature-card-content">
+                      <span class="ai-feature-icon">🔍</span>
+                      <div class="ai-feature-info">
+                        <span class="ai-feature-name">智能搜索增强</span>
+                        <span class="ai-feature-desc">理解搜索意图，返回更精准结果</span>
+                      </div>
+                    </div>
+                    <button type="button" class="ai-edit-prompt-btn" data-prompt="smartSearch" title="编辑提示词">
+                      <i class="fa fa-pencil"></i>
+                    </button>
+                    <div class="ai-toggle-switch"></div>
+                  </label>
+                </div>
               </div>
             </div>
           </div>
@@ -392,7 +449,7 @@
             <img src="icons/logo.png" alt="书签白板" />
             <h3>书签白板</h3>
           </div>
-          <p class="version">版本 v3.2.0</p>
+          <p class="version">版本 v3.2.1</p>
           <p class="description">隐私优先的本地书签管理工具</p>
           <div class="about-links">
             <a href="https://github.com/YinHeng89/bookmark-board" target="_blank" class="about-link">
@@ -411,6 +468,28 @@
         </div>
       </section>
     </main>
+  </div>
+
+  <!-- 提示词编辑弹窗 -->
+  <div class="modal-overlay" id="promptModal">
+    <div class="modal-container modal-small">
+      <div class="modal-header">
+        <h3 class="modal-title">编辑提示词</h3>
+        <button class="modal-close" id="closePromptModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="prompt-edit-info">
+          <p class="prompt-edit-function" id="promptFunctionName"></p>
+          <p class="prompt-edit-warning">⚠️ 修改提示词可能影响 AI 输出质量，建议谨慎修改</p>
+        </div>
+        <textarea class="prompt-textarea" id="promptTextarea" rows="10" placeholder="输入提示词..."></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="resetPromptBtn">恢复默认</button>
+        <button class="btn" id="cancelPromptBtn">取消</button>
+        <button class="btn btn-primary" id="savePromptBtn">保存</button>
+      </div>
+    </div>
   </div>
 
   <script src="js/ai-service.js"></script>

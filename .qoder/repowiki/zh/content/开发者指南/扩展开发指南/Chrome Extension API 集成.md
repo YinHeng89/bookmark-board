@@ -312,7 +312,7 @@ SB --> TAB
 - 右键菜单不显示
   - 重新安装扩展（移除后重新加载），确保 Context Menus 权限生效
 - 侧边栏不自动刷新
-  - 确认使用最新版本（v3.2.0+），检查 chrome.storage.onChanged 是否触发
+  - 确认使用最新版本（v3.2.1+），检查 chrome.storage.onChanged 是否触发
 - 书签丢失
   - 数据存储在 chrome.storage.local，清除浏览器数据会导致丢失；建议定期导出备份
 - 无法注入脚本显示通知

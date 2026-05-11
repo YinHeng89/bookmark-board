@@ -314,6 +314,11 @@ function setupEventListeners() {
       // 刷新书签列表
       loadData();
     }
+    
+    // 监听 background.js 发送的刷新消息
+    if (message.action === 'refreshData') {
+      loadData();
+    }
   });
   
   // 分组筛选事件委托
@@ -817,19 +822,88 @@ async function addLinkFromUrl(url, draggedTitle = null) {
     createdAt: Date.now()
   };
 
-  // 如果开启了 AI 功能，异步调用 AI 优化
+  // 如果开启了 AI 自动优化功能，异步调用 AI 优化
   const aiSettings = await getAISettings();
-  if (aiSettings && aiSettings.features) {
-    // 异步执行，不阻塞添加流程
-    optimizeLinkWithAI(newLink, aiSettings).catch(err => {
-      console.error('AI 优化失败:', err);
-    });
+  let shouldWaitForAI = false;
+  
+  if (aiSettings && aiSettings.features && aiSettings.provider && aiSettings.config?.apiUrl) {
+    // 检查 AI 服务是否加载
+    if (typeof AIService !== 'undefined') {
+      const aiService = new AIService(aiSettings);
+      const autoTasks = [];
+      
+      // 自动标题优化
+      if (aiSettings.features.autoOptimizeTitle) {
+        shouldWaitForAI = true;
+        autoTasks.push(
+          aiService.optimizeTitle(newLink.title, newLink.url)
+            .then(optimizedTitle => {
+              if (optimizedTitle && optimizedTitle !== newLink.title) {
+                newLink.title = optimizedTitle;
+                console.log('✅ 自动标题优化成功:', optimizedTitle);
+              }
+            })
+            .catch(err => console.error('自动标题优化失败:', err))
+        );
+      }
+      
+      // 自动分类建议
+      if (aiSettings.features.autoSuggestCategory) {
+        shouldWaitForAI = true;
+        const groupNames = groups.map(g => g.name || g).filter(Boolean);
+        autoTasks.push(
+          aiService.suggestCategory(newLink.url, newLink.title, groupNames)
+            .then(suggestedGroup => {
+              if (suggestedGroup && 
+                  suggestedGroup !== 'undefined' && 
+                  suggestedGroup !== 'null' &&
+                  suggestedGroup !== '无重复' &&
+                  suggestedGroup.trim() !== '') {
+                
+                suggestedGroup = suggestedGroup.trim();
+                
+                // 查找或创建分组
+                let targetGroup = groups.find(g => g.name === suggestedGroup);
+                
+                if (!targetGroup) {
+                  targetGroup = {
+                    id: 'group_' + Date.now(),
+                    name: suggestedGroup
+                  };
+                  groups.push(targetGroup);
+                  console.log('✅ 创建新分组:', suggestedGroup);
+                }
+                
+                // 添加书签到分组
+                if (!newLink.groups) newLink.groups = [];
+                if (!newLink.groups.includes(targetGroup.id)) {
+                  newLink.groups.push(targetGroup.id);
+                  console.log('✅ 自动分类成功:', suggestedGroup);
+                }
+              }
+            })
+            .catch(err => console.error('自动分类建议失败:', err))
+        );
+      }
+      
+      // 如果有自动优化任务，等待完成后再保存
+      if (autoTasks.length > 0) {
+        await Promise.allSettled(autoTasks);
+        console.log('✅ AI 自动优化完成');
+      }
+    }
   }
 
+  // 添加书签并保存
   links.unshift(newLink);
   save();
   renderLinks();
-  showToast(`已添加书签: ${title}`);
+  
+  if (shouldWaitForAI) {
+    showToast(`已添加书签: ${newLink.title} (AI 优化)`);
+  } else {
+    showToast(`已添加书签: ${title}`);
+  }
 }
 
 // ========== UI 渲染 ==========

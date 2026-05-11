@@ -73,6 +73,16 @@ document.addEventListener('DOMContentLoaded', () => {
   aiSaveBtn = document.getElementById('aiSaveBtn');
   aiStatus = document.getElementById('aiStatus');
   
+  // 提示词编辑相关
+  promptModal = document.getElementById('promptModal');
+  promptFunctionName = document.getElementById('promptFunctionName');
+  promptTextarea = document.getElementById('promptTextarea');
+  closePromptModal = document.getElementById('closePromptModal');
+  savePromptBtn = document.getElementById('savePromptBtn');
+  cancelPromptBtn = document.getElementById('cancelPromptBtn');
+  resetPromptBtn = document.getElementById('resetPromptBtn');
+  currentPromptKey = null;
+  
   // 加载主题
   loadTheme();
   
@@ -1083,7 +1093,7 @@ async function exportData() {
     
     // 收集所有数据
     const exportObj = {
-      version: '3.2.0',
+      version: '3.2.1',
       exportDate: new Date().toISOString(),
       links: links,
       groups: groups,
@@ -1257,6 +1267,115 @@ async function decryptData(encryptedText) {
   }
 }
 
+// 默认提示词配置
+const DEFAULT_PROMPTS = {
+  autoOptimizeTitle: `你是一个专业的书签管理助手。请优化以下书签标题，使其更简洁、更有意义。
+
+原始标题：{title}
+网址：{url}
+
+要求：
+1. 保持核心含义不变
+2. 去除冗余信息（如"官网"、"首页"、"| 网站名"、"- 网站名"、促销信息等）
+3. 控制在 15-25 个字符
+4. 使用中文
+5. 格式规范：主要关键词 - 次要描述
+
+**重要：直接返回优化后的标题，不要解释、不要分析、不要思考过程。**
+
+只返回标题文字本身，例如：Parallels Desktop 26 - Mac虚拟机升级
+
+优化后的标题：`,
+  
+  autoSuggestCategory: `你是一个智能分类专家。请为以下书签推荐最合适的分组。
+
+标题：{title}
+网址：{url}
+域名：{domain}
+
+{groupsText}
+
+要求：
+1. 如果有匹配的现有分组，直接返回该分组名称
+2. 如果没有匹配的，推荐一个新分组名称
+3. 使用中文
+4. 分组名称要简洁明确（2-6个字）
+5. 只返回分组名称，不要任何其他内容
+
+分组名称：`,
+  
+  optimizeTitle: `你是一个专业的书签管理助手。请优化以下书签标题，使其更简洁、更有意义。
+
+原始标题：{title}
+网址：{url}
+
+要求：
+1. 保持核心含义不变
+2. 去除冗余信息（如"官网"、"首页"、"| 网站名"、"- 网站名"、促销信息等）
+3. 控制在 15-25 个字符
+4. 使用中文
+5. 格式规范：主要关键词 - 次要描述
+
+**重要：直接返回优化后的标题，不要解释、不要分析、不要思考过程。**
+
+只返回标题文字本身，例如：Parallels Desktop 26 - Mac虚拟机升级
+
+优化后的标题：`,
+  
+  suggestCategory: `你是一个智能分类专家。请为以下书签推荐最合适的分组。
+
+标题：{title}
+网址：{url}
+域名：{domain}
+
+{groupsText}
+
+要求：
+1. 如果有匹配的现有分组，直接返回该分组名称
+2. 如果没有匹配的，推荐一个新分组名称
+3. 使用中文
+4. 分组名称要简洁明确（2-6个字）
+5. 只返回分组名称，不要任何其他内容
+
+分组名称：`,
+  
+  generateSummary: `请为以下网页生成一个简洁的内容摘要。
+
+标题：{title}
+网址：{url}
+
+要求：
+1. 摘要控制在50-100字
+2. 突出网页的核心内容和价值
+3. 使用中文
+4. 只返回摘要内容，不要其他说明
+
+摘要：`,
+  
+  smartSearch: `你是一个搜索优化助手。请理解用户的搜索意图，并返回更精准的搜索结果。
+
+用户搜索：{query}
+
+要求：
+1. 理解搜索的真正意图
+2. 提取关键搜索词
+3. 返回优化后的搜索关键词
+4. 只返回搜索关键词，用空格分隔
+
+优化后的搜索：`
+};
+
+/**
+ * 获取 AI 设置
+ */
+async function getAISettings() {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(['aiSettings'], (result) => {
+      resolve(result.aiSettings || {});
+    });
+  });
+}
+
 // ========== AI 助手功能 ==========
 
 /**
@@ -1286,6 +1405,52 @@ function setupAISettings() {
     aiFetchModelsBtn.addEventListener('click', fetchModelsList);
   }
   
+  // 提示词编辑按钮事件绑定
+  document.querySelectorAll('.ai-edit-prompt-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault(); // 阻止默认行为
+      e.stopPropagation(); // 阻止事件冒泡到 label
+      const promptKey = e.currentTarget.dataset.prompt;
+      openPromptEditor(promptKey);
+    });
+  });
+  
+  // 弹窗关闭按钮
+  if (closePromptModal) {
+    closePromptModal.addEventListener('click', closePromptEditor);
+  }
+  
+  // 取消按钮
+  if (cancelPromptBtn) {
+    cancelPromptBtn.addEventListener('click', closePromptEditor);
+  }
+  
+  // 保存按钮
+  if (savePromptBtn) {
+    savePromptBtn.addEventListener('click', saveCurrentPrompt);
+  }
+  
+  // 恢复默认按钮
+  if (resetPromptBtn) {
+    resetPromptBtn.addEventListener('click', resetToDefaultPrompt);
+  }
+  
+  // 点击遮罩层关闭
+  if (promptModal) {
+    promptModal.addEventListener('click', (e) => {
+      if (e.target === promptModal) {
+        closePromptEditor();
+      }
+    });
+  }
+  
+  // ESC 键关闭弹窗
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && promptModal && promptModal.classList.contains('show')) {
+      closePromptEditor();
+    }
+  });
+  
   // 模型选择变化时同步到输入框
   if (aiModelSelect) {
     aiModelSelect.addEventListener('change', () => {
@@ -1304,6 +1469,8 @@ function setupAISettings() {
   
   // AI 功能开关变化时自动保存
   const featureCheckboxes = [
+    aiAutoOptimizeTitle,
+    aiAutoSuggestCategory,
     aiOptimizeTitle,
     aiSuggestCategory,
     aiGenerateSummary,
@@ -1450,6 +1617,8 @@ function loadAISettings() {
     }
     
     // 填充功能开关（全局共享）
+    if (aiAutoOptimizeTitle) aiAutoOptimizeTitle.checked = settings.features?.autoOptimizeTitle || false;
+    if (aiAutoSuggestCategory) aiAutoSuggestCategory.checked = settings.features?.autoSuggestCategory || false;
     if (aiOptimizeTitle) aiOptimizeTitle.checked = settings.features?.optimizeTitle || false;
     if (aiSuggestCategory) aiSuggestCategory.checked = settings.features?.suggestCategory || false;
     if (aiGenerateSummary) aiGenerateSummary.checked = settings.features?.generateSummary || false;
@@ -1477,6 +1646,136 @@ function loadAISettings() {
     }
   });
 }
+
+/**
+ * 打开提示词编辑器
+ */
+function openPromptEditor(promptKey) {
+  currentPromptKey = promptKey;
+  
+  // 获取功能名称
+  const functionNames = {
+    autoOptimizeTitle: '自动优化标题',
+    autoSuggestCategory: '自动智能分类',
+    optimizeTitle: '智能标题优化',
+    suggestCategory: '智能分类建议',
+    generateSummary: '书签摘要生成',
+    smartSearch: '智能搜索增强'
+  };
+  
+  if (promptFunctionName) {
+    promptFunctionName.textContent = `功能：${functionNames[promptKey] || promptKey}`;
+  }
+  
+  // 加载当前提示词（优先使用自定义，否则使用默认）
+  loadPromptContent(promptKey);
+  
+  // 显示弹窗
+  if (promptModal) {
+    promptModal.classList.add('show');
+  }
+}
+
+/**
+ * 关闭提示词编辑器
+ */
+function closePromptEditor() {
+  if (promptModal) {
+    promptModal.classList.remove('show');
+  }
+  currentPromptKey = null;
+}
+
+/**
+ * 加载提示词内容
+ */
+function loadPromptContent(promptKey) {
+  if (!promptTextarea || !promptKey) return;
+  
+  // 获取当前 AI 设置
+  const aiSettings = window.currentAISettings || {};
+  const customPrompts = aiSettings.prompts || {};
+  
+  // 优先使用自定义提示词，否则使用默认
+  const currentPrompt = customPrompts[promptKey] || DEFAULT_PROMPTS[promptKey] || '';
+  
+  promptTextarea.value = currentPrompt;
+}
+
+/**
+ * 保存当前提示词
+ */
+async function saveCurrentPrompt() {
+  if (!currentPromptKey || !promptTextarea) return;
+  
+  const newPrompt = promptTextarea.value.trim();
+  
+  if (!newPrompt) {
+    showToast('提示词不能为空', 'warning');
+    return;
+  }
+  
+  try {
+    // 获取当前 AI 设置
+    const aiSettings = await getAISettings();
+    
+    // 确保 prompts 对象存在
+    if (!aiSettings.prompts) {
+      aiSettings.prompts = {};
+    }
+    
+    // 保存自定义提示词
+    aiSettings.prompts[currentPromptKey] = newPrompt;
+    
+    // 保存到 storage
+    await chrome.storage.local.set({ aiSettings });
+    
+    // 更新全局缓存
+    window.currentAISettings = aiSettings;
+    
+    showToast('提示词已保存', 'success');
+    closePromptEditor();
+  } catch (error) {
+    console.error('保存提示词失败:', error);
+    showToast('保存失败: ' + error.message, 'error');
+  }
+}
+
+/**
+ * 恢复默认提示词
+ */
+async function resetToDefaultPrompt() {
+  if (!currentPromptKey) return;
+  
+  if (!confirm('确定要恢复默认提示词吗？这将丢弃您的自定义修改。')) {
+    return;
+  }
+  
+  try {
+    // 获取当前 AI 设置
+    const aiSettings = await getAISettings();
+    
+    // 删除自定义提示词
+    if (aiSettings.prompts && aiSettings.prompts[currentPromptKey]) {
+      delete aiSettings.prompts[currentPromptKey];
+      
+      // 保存到 storage
+      await chrome.storage.local.set({ aiSettings });
+      
+      // 更新全局缓存
+      window.currentAISettings = aiSettings;
+    }
+    
+    // 重新加载默认提示词
+    loadPromptContent(currentPromptKey);
+    
+    showToast('已恢复默认提示词', 'success');
+  } catch (error) {
+    console.error('恢复默认提示词失败:', error);
+    showToast('恢复失败: ' + error.message, 'error');
+  }
+}
+
 function saveAISettings() {
   const currentProvider = aiProvider?.value || 'custom';
   
@@ -1497,6 +1796,8 @@ function saveAISettings() {
       model: aiModel?.value || ''
     },
     features: {
+      autoOptimizeTitle: aiAutoOptimizeTitle?.checked || false,
+      autoSuggestCategory: aiAutoSuggestCategory?.checked || false,
       optimizeTitle: aiOptimizeTitle?.checked || false,
       suggestCategory: aiSuggestCategory?.checked || false,
       generateSummary: aiGenerateSummary?.checked || false,
@@ -1774,6 +2075,8 @@ function getDefaultAISettings() {
       model: ''
     },
     features: {
+      autoOptimizeTitle: true,
+      autoSuggestCategory: true,
       optimizeTitle: true,
       suggestCategory: true,
       generateSummary: false,

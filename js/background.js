@@ -45,17 +45,16 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   }
   
   if (info.menuItemId === 'addToBookmarkBoard') {
-    // 添加当前页面
-    addBookmark(tab.url, tab.title, tab.favIconUrl, tab.id);
+    // 添加当前页面 - 直接在 background.js 中处理 AI 优化
+    addBookmarkWithAI(tab.url, tab.title, tab.favIconUrl, tab.id);
   }
   
   if (info.menuItemId === 'addLinkToBookmarkBoard') {
-    // 添加链接
+    // 添加链接 - 直接在 background.js 中处理 AI 优化
     const linkUrl = info.linkUrl;
-    // 优先使用选中的文本，其次是链接文本
     const linkTitle = info.selectionText || info.linkText || '';
     
-    // 获取链接的 favicon（使用 Google 服务，不需要主机权限）
+    // 获取链接的 favicon
     let faviconUrl = '';
     try {
       const url = new URL(linkUrl);
@@ -64,11 +63,265 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
       console.error('URL 解析失败:', e);
     }
     
-    addBookmark(linkUrl, linkTitle, faviconUrl, tab.id);
+    addBookmarkWithAI(linkUrl, linkTitle, faviconUrl, tab.id);
   }
 });
 
-// 添加书签的通用函数
+// 添加书签（带 AI 优化）
+async function addBookmarkWithAI(url, title, icon, tabId) {
+  // 如果没有标题，从 URL 提取域名
+  if (!title) {
+    try {
+      const urlObj = new URL(url);
+      title = urlObj.hostname.replace(/^www\./, '');
+    } catch (e) {
+      title = '未命名';
+    }
+  }
+  
+  const link = {
+    url: url,
+    title: title,
+    icon: icon || 'default-icon.png',
+    groups: [],
+    createdAt: Date.now()
+  };
+
+  // 读取 AI 设置
+  const aiSettings = await new Promise((resolve) => {
+    chrome.storage.local.get(['aiSettings'], (result) => {
+      resolve(result.aiSettings);
+    });
+  });
+
+  // 如果开启了 AI 自动优化，调用 AI 服务
+  if (aiSettings && aiSettings.features && aiSettings.provider && aiSettings.config?.apiUrl) {
+    try {
+      // 直接在 background.js 中调用 AI API
+      const AI_CONFIG = {
+        custom: {
+          name: '自定义 API',
+          defaultUrl: 'http://localhost:8000',
+          chatEndpoint: '/v1/chat/completions'
+        },
+        lmstudio: {
+          name: 'LM Studio',
+          defaultUrl: 'http://localhost:1234',
+          chatEndpoint: '/v1/chat/completions'
+        },
+        openai: {
+          name: 'OpenAI',
+          defaultUrl: 'https://api.openai.com/v1',
+          chatEndpoint: '/chat/completions'
+        },
+        anthropic: {
+          name: 'Anthropic',
+          defaultUrl: 'https://api.anthropic.com',
+          chatEndpoint: '/v1/messages'
+        },
+        aliyun: {
+          name: '阿里云',
+          defaultUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+          chatEndpoint: '/chat/completions'
+        },
+        zhipu: {
+          name: '智谱',
+          defaultUrl: 'https://open.bigmodel.cn/api/paas/v4',
+          chatEndpoint: '/chat/completions'
+        }
+      };
+      
+      const provider = AI_CONFIG[aiSettings.provider] || AI_CONFIG.custom;
+      const baseUrl = aiSettings.config.apiUrl || provider.defaultUrl;
+      const cleanBaseUrl = baseUrl.replace(/\/$/, '');
+      const apiUrl = `${cleanBaseUrl}${provider.chatEndpoint}`;
+      
+      const headers = {
+        'Content-Type': 'application/json'
+      };
+      
+      if (aiSettings.config.apiKey) {
+        headers['Authorization'] = `Bearer ${aiSettings.config.apiKey}`;
+      }
+      
+      const autoTasks = [];
+      
+      // 自动标题优化
+      if (aiSettings.features.autoOptimizeTitle) {
+        // 使用配置的提示词或默认提示词
+        let titlePrompt = aiSettings.prompts?.autoOptimizeTitle || 
+          `你是一个专业的书签管理助手。请优化以下书签标题，使其更简洁、更有意义。
+
+原始标题：{title}
+网址：{url}
+
+要求：
+1. 保持核心含义不变
+2. 去除冗余信息（如"官网"、"首页"、"| 网站名"、"- 网站名"、促销信息等）
+3. 控制在 15-25 个字符
+4. 使用中文
+5. 格式规范：主要关键词 - 次要描述
+
+**重要：直接返回优化后的标题，不要解释、不要分析、不要思考过程。**
+
+只返回标题文字本身，例如：Parallels Desktop 26 - Mac虚拟机升级
+
+优化后的标题：`;
+        
+        // 替换模板变量
+        titlePrompt = titlePrompt
+          .replace(/{title}/g, link.title)
+          .replace(/{url}/g, link.url)
+          .replace(/{domain}/g, new URL(link.url).hostname)
+          .replace(/{groupsText}/g, '');
+        
+        autoTasks.push(
+          fetch(apiUrl, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({
+              model: aiSettings.config.model,
+              messages: [{ role: 'user', content: titlePrompt }],
+              stream: false,
+              max_tokens: 50,
+              temperature: 0.3
+            })
+          })
+          .then(res => res.json())
+          .then(data => {
+            const optimizedTitle = data.choices?.[0]?.message?.content?.trim();
+            if (optimizedTitle && optimizedTitle !== link.title) {
+              link.title = optimizedTitle;
+              console.log('✅ 自动标题优化成功:', optimizedTitle);
+            }
+          })
+          .catch(err => console.error('自动标题优化失败:', err))
+        );
+      }
+      
+      // 自动分类建议
+      if (aiSettings.features.autoSuggestCategory) {
+        // 读取现有分组
+        const groups = await new Promise((resolve) => {
+          chrome.storage.local.get(['groups'], (result) => {
+            resolve(result.groups || []);
+          });
+        });
+        
+        const groupNames = groups.map(g => g.name || g).filter(Boolean);
+        const groupsText = groupNames.length > 0 ? `现有分组：${groupNames.join('、')}` : '当前没有分组，请推荐一个新的分组名称。';
+        
+        // 使用配置的提示词或默认提示词
+        let categoryPrompt = aiSettings.prompts?.autoSuggestCategory || 
+          `你是一个智能分类专家。请为以下书签推荐最合适的分组。
+
+标题：{title}
+网址：{url}
+域名：{domain}
+
+{groupsText}
+
+要求：
+1. 如果有匹配的现有分组，直接返回该分组名称
+2. 如果没有匹配的，推荐一个新分组名称
+3. 使用中文
+4. 分组名称要简洁明确（2-6个字）
+5. 只返回分组名称，不要任何其他内容
+
+分组名称：`;
+        
+        // 替换模板变量
+        categoryPrompt = categoryPrompt
+          .replace(/{title}/g, link.title)
+          .replace(/{url}/g, link.url)
+          .replace(/{domain}/g, new URL(link.url).hostname)
+          .replace(/{groupsText}/g, groupsText);
+        
+        autoTasks.push(
+          fetch(apiUrl, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({
+              model: aiSettings.config.model,
+              messages: [{ role: 'user', content: categoryPrompt }],
+              stream: false,
+              max_tokens: 30,
+              temperature: 0.3
+            })
+          })
+          .then(res => res.json())
+          .then(data => {
+            const suggestedGroup = data.choices?.[0]?.message?.content?.trim();
+            if (suggestedGroup && 
+                suggestedGroup !== 'undefined' && 
+                suggestedGroup !== 'null' &&
+                suggestedGroup !== '无重复' &&
+                suggestedGroup.trim() !== '') {
+              
+              const groupName = suggestedGroup.trim();
+              
+              // 查找或创建分组
+              let targetGroup = groups.find(g => g.name === groupName);
+              
+              if (!targetGroup) {
+                targetGroup = {
+                  id: 'group_' + Date.now(),
+                  name: groupName
+                };
+                groups.push(targetGroup);
+                console.log('✅ 创建新分组:', groupName);
+                
+                // 保存分组
+                chrome.storage.local.set({ groups });
+              }
+              
+              // 添加书签到分组
+              if (!link.groups) link.groups = [];
+              if (!link.groups.includes(targetGroup.id)) {
+                link.groups.push(targetGroup.id);
+                console.log('✅ 自动分类成功:', groupName);
+              }
+            }
+          })
+          .catch(err => console.error('自动分类建议失败:', err))
+        );
+      }
+      
+      // 等待 AI 优化完成
+      if (autoTasks.length > 0) {
+        await Promise.allSettled(autoTasks);
+        console.log('✅ AI 自动优化完成');
+      }
+    } catch (err) {
+      console.error('AI 服务调用失败:', err);
+    }
+  }
+
+  // 存储到 chrome.storage.local
+  chrome.storage.local.get(['links'], (result) => {
+    const links = result.links || [];
+    
+    // 检查是否已存在
+    if (links.some(l => l.url === link.url)) {
+      // 在当前页面显示通知
+      showNotification(tabId, '该链接已存在', 'warning');
+      return;
+    }
+    
+    // 添加新书签
+    links.unshift(link);
+    chrome.storage.local.set({ links }, () => {
+      // 通知书签白板页面刷新
+      chrome.runtime.sendMessage({ action: 'refreshData' });
+      
+      // 在当前页面显示成功通知
+      const aiTag = (aiSettings && aiSettings.features && (aiSettings.features.autoOptimizeTitle || aiSettings.features.autoSuggestCategory)) ? ' (AI 优化)' : '';
+      showNotification(tabId, `已添加书签: ${link.title}${aiTag}`, 'success');
+    });
+  });
+}
+
+// 添加书签的通用函数（不带 AI）
 function addBookmark(url, title, icon, tabId) {
   // 如果没有标题，从 URL 提取域名
   if (!title) {

@@ -2,7 +2,7 @@
 
 **隐私优先的本地书签管理工具** - 快速整理你的网络资源，告别浏览器书签栏的混乱！
 
-[![Chrome Extension](https://img.shields.io/badge/Chrome%20Extension-v3.2.0-blue?logo=google-chrome)](https://chrome.google.com/webstore)
+[![Chrome Extension](https://img.shields.io/badge/Chrome%20Extension-v3.2.1-blue?logo=google-chrome)](https://chrome.google.com/webstore)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Manifest V3](https://img.shields.io/badge/Manifest-V3-orange?logo=google-chrome)](https://developer.chrome.com/docs/extensions/mv3/)
 
@@ -203,7 +203,7 @@ bookmark-board/
 5. 开启 Pull Request
 
 ### 版本历史
-- **v3.2.0** (当前版本)
+- **v3.2.1** (当前版本)
   - ✅ 侧边栏功能（移动端样式）
   - ✅ 右键菜单支持链接添加
   - ✅ 自动跟随系统主题
@@ -254,7 +254,7 @@ A: 需要完全重新安装扩展（移除后重新加载）
 A: 书签数据存储在浏览器本地，清除浏览器数据会导致丢失
 
 **Q: 侧边栏不自动刷新？**
-A: 确保使用的是最新版本（v3.2.0+）
+A: 确保使用的是最新版本（v3.2.1+）
 
 ## 🌟 致谢
 

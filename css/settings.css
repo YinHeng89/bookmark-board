@@ -146,6 +146,7 @@
   display: none;
   max-width: 900px;
   margin: 0 auto;
+  padding-top: 0.5rem;  /* 顶部留白，防止按钮被裁剪 */
 }
 
 .settings-section.active {
@@ -195,6 +196,7 @@
   align-items: center;
   gap: 1rem;
   margin-bottom: 1rem;
+  padding-top: 1rem;  /* 增加顶部留白，防止按钮hover被裁剪 */
   flex-wrap: nowrap;  /* 不换行 */
 }
 
@@ -216,7 +218,7 @@
   position: relative;
   flex-shrink: 0;  /* 防止被压缩 */
   overflow-x: auto;  /* 横向滚动 */
-  overflow-y: hidden;
+  overflow-y: visible;  /* 纵向可见，防止按钮hover效果被裁剪 */
   scrollbar-width: thin;  /* Firefox 细滚动条 */
   scrollbar-color: var(--border-color) transparent;  /* Firefox 滚动条颜色 */
 }
@@ -253,6 +255,7 @@
   background: var(--bg-card);
   color: var(--text-primary);
   border-color: var(--border-color);
+  margin-top: 0.25rem;  /* 顶部留出空间，防止 hover 时被裁剪 */
 }
 
 .toolbar-btn:hover {
@@ -867,6 +870,13 @@
 .group-list {
   max-height: 300px;
   overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+/* 小弹窗宽度 */
+.modal-small {
+  width: 420px;
+  max-width: 90vw;
 }
 
 .group-option {
@@ -1306,11 +1316,36 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.ai-feature-card input[type="checkbox"]:checked + .ai-feature-card-content + .ai-toggle-switch {
+/* 编辑按钮 */
+.ai-edit-prompt-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: var(--text-tertiary);
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.ai-edit-prompt-btn:hover {
+  background: var(--bg-secondary);
+  color: var(--primary);
+}
+
+.ai-edit-prompt-btn i {
+  font-size: 14px;
+}
+
+.ai-feature-card input[type="checkbox"]:checked ~ .ai-toggle-switch {
   background: var(--primary);
 }
 
-.ai-feature-card input[type="checkbox"]:checked + .ai-feature-card-content + .ai-toggle-switch::after {
+.ai-feature-card input[type="checkbox"]:checked ~ .ai-toggle-switch::after {
   left: 22px;
 }
 
@@ -1321,6 +1356,32 @@
 .ai-feature-card:has(input[type="checkbox"]:checked) {
   border-color: var(--primary);
   background: rgba(79, 70, 229, 0.05);
+}
+
+/* 功能分区标题 */
+.ai-feature-section {
+  margin-bottom: 2rem;
+}
+
+.ai-feature-section:last-child {
+  margin-bottom: 0;
+}
+
+.ai-section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.ai-section-title i {
+  font-size: 1rem;
+  color: var(--primary);
 }
 
 .ai-desc {
@@ -1602,4 +1663,133 @@
 /* 深色模式适配 */
 [data-theme="dark"] .ai-feature-item:hover {
   background: rgba(79, 70, 229, 0.15);
+}
+
+/* 提示词编辑弹窗 */
+#promptModal.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999 !important;
+}
+
+#promptModal.modal-overlay.show {
+  display: flex;
+}
+
+#promptModal .modal-container {
+  background: var(--bg-primary);
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+#promptModal .modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+#promptModal .modal-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+#promptModal .modal-close {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 1.5rem;
+  cursor: pointer;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+#promptModal .modal-close:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+#promptModal .modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+#promptModal .modal-footer {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.prompt-edit-info {
+  margin-bottom: 1rem;
+}
+
+.prompt-edit-function {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.prompt-edit-warning {
+  font-size: 0.75rem;
+  color: var(--warning-color, #F59E0B);
+  background: rgba(245, 158, 11, 0.1);
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  margin: 0;
+}
+
+.prompt-textarea {
+  width: 100%;
+  min-height: 200px;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  resize: vertical;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  transition: border-color 0.2s;
+}
+
+.prompt-textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+#resetPromptBtn {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+#resetPromptBtn:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
 }

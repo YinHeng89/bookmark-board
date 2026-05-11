@@ -456,14 +456,16 @@ class AIService {
    * 智能标题优化
    */
   async optimizeTitle(title, url) {
-    const prompt = `你是一个专业的书签管理助手。请优化以下书签标题，使其更简洁、更有意义。
+    // 使用配置的提示词或默认提示词
+    let prompt = this.settings.prompts?.optimizeTitle || 
+      `你是一个专业的书签管理助手。请优化以下书签标题，使其更简洁、更有意义。
 
-原始标题：${title}
-网址：${url}
+原始标题：{title}
+网址：{url}
 
 要求：
 1. 保持核心含义不变
-2. 去除冗余信息（如“官网”、“首页”、“| 网站名”、“- 网站名”、促销信息等）
+2. 去除冗余信息（如"官网"、"首页"、"| 网站名"、"- 网站名"、促销信息等）
 3. 控制在 15-25 个字符
 4. 使用中文
 5. 格式规范：主要关键词 - 次要描述
@@ -473,6 +475,13 @@ class AIService {
 只返回标题文字本身，例如：Parallels Desktop 26 - Mac虚拟机升级
 
 优化后的标题：`;
+    
+    // 替换模板变量
+    prompt = prompt
+      .replace(/{title}/g, title)
+      .replace(/{url}/g, url)
+      .replace(/{domain}/g, new URL(url).hostname)
+      .replace(/{groupsText}/g, '');
 
     const response = await this.callAPI(prompt);
     return response.content.trim();
@@ -487,13 +496,15 @@ class AIService {
       ? `现有分组：${existingGroups.join('、')}`
       : '当前没有分组，请推荐一个新的分组名称。';
     
-    const prompt = `你是一个智能分类专家。请为以下书签推荐最合适的分组。
+    // 使用配置的提示词或默认提示词
+    let prompt = this.settings.prompts?.suggestCategory ||
+      `你是一个智能分类专家。请为以下书签推荐最合适的分组。
 
-标题：${title}
-网址：${url}
-域名：${domain}
+标题：{title}
+网址：{url}
+域名：{domain}
 
-${groupsText}
+{groupsText}
 
 要求：
 1. 如果有匹配的现有分组，直接返回该分组名称
@@ -502,13 +513,15 @@ ${groupsText}
 4. 分组名称要简洁明确（2-6个字）
 5. 只返回分组名称，不要任何其他内容
 
-示例：
-- 前端开发
-- 设计工具
-- 学习资料
-- 社交媒体
-- 技术博客`;
-
+分组名称：`;
+    
+    // 替换模板变量
+    prompt = prompt
+      .replace(/{title}/g, title)
+      .replace(/{url}/g, url)
+      .replace(/{domain}/g, domain)
+      .replace(/{groupsText}/g, groupsText);
+    
     const response = await this.callAPI(prompt);
     return response.content.trim();
   }
