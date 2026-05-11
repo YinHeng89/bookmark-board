@@ -1306,10 +1306,8 @@ function setupAISettings() {
   const featureCheckboxes = [
     aiOptimizeTitle,
     aiSuggestCategory,
-    aiGenerateTags,
     aiGenerateSummary,
-    aiSmartSearch,
-    aiDetectDuplicates
+    aiSmartSearch
   ].filter(Boolean);
   
   featureCheckboxes.forEach(checkbox => {
@@ -1454,10 +1452,8 @@ function loadAISettings() {
     // 填充功能开关（全局共享）
     if (aiOptimizeTitle) aiOptimizeTitle.checked = settings.features?.optimizeTitle || false;
     if (aiSuggestCategory) aiSuggestCategory.checked = settings.features?.suggestCategory || false;
-    if (aiGenerateTags) aiGenerateTags.checked = settings.features?.generateTags || false;
     if (aiGenerateSummary) aiGenerateSummary.checked = settings.features?.generateSummary || false;
     if (aiSmartSearch) aiSmartSearch.checked = settings.features?.smartSearch || false;
-    if (aiDetectDuplicates) aiDetectDuplicates.checked = settings.features?.detectDuplicates || false;
     
     // 更新配置摘要
     updateAIConfigSummary(settings.provider, providerConfig);
@@ -1503,10 +1499,8 @@ function saveAISettings() {
     features: {
       optimizeTitle: aiOptimizeTitle?.checked || false,
       suggestCategory: aiSuggestCategory?.checked || false,
-      generateTags: aiGenerateTags?.checked || false,
       generateSummary: aiGenerateSummary?.checked || false,
-      smartSearch: aiSmartSearch?.checked || false,
-      detectDuplicates: aiDetectDuplicates?.checked || false
+      smartSearch: aiSmartSearch?.checked || false
     }
   };
   
@@ -1782,10 +1776,8 @@ function getDefaultAISettings() {
     features: {
       optimizeTitle: true,
       suggestCategory: true,
-      generateTags: false,
       generateSummary: false,
-      smartSearch: false,
-      detectDuplicates: false
+      smartSearch: false
     }
   };
 }

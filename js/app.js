@@ -1065,22 +1065,13 @@ function addCardToBoard(boardEl, link) {
   iconDiv.className = 'card-icon';
   
   const img = document.createElement('img');
+  img.src = link.icon || 'default-icon.png';
   img.alt = link.title;
-  
-  // 如果有自定义图标，尝试加载；否则直接显示默认 SVG
-  if (link.icon && link.icon !== 'default-icon.png') {
-    img.src = link.icon;
-    img.addEventListener('error', function() {
-      this.onerror = null;
-      // 加载失败时显示默认 SVG 图标
-      showDefaultIcon(iconDiv, link.title);
-      this.remove();
-    });
-    iconDiv.appendChild(img);
-  } else {
-    // 直接显示默认 SVG 图标
-    showDefaultIcon(iconDiv, link.title);
-  }
+  img.addEventListener('error', function() {
+    this.onerror = null;
+    this.src = 'default-icon.png';
+  });
+  iconDiv.appendChild(img);
 
   // 内容
   const content = document.createElement('div');
@@ -1270,22 +1261,13 @@ function addCard(link) {
   iconDiv.className = 'card-icon';
   
   const img = document.createElement('img');
+  img.src = link.icon || 'default-icon.png';
   img.alt = link.title;
-  
-  // 如果有自定义图标，尝试加载；否则直接显示默认 SVG
-  if (link.icon && link.icon !== 'default-icon.png') {
-    img.src = link.icon;
-    img.addEventListener('error', function() {
-      this.onerror = null;
-      // 加载失败时显示默认 SVG 图标
-      showDefaultIcon(iconDiv, link.title);
-      this.remove();
-    });
-    iconDiv.appendChild(img);
-  } else {
-    // 直接显示默认 SVG 图标
-    showDefaultIcon(iconDiv, link.title);
-  }
+  img.addEventListener('error', function() {
+    this.onerror = null;
+    this.src = 'default-icon.png';
+  });
+  iconDiv.appendChild(img);
 
   // 内容
   const content = document.createElement('div');
@@ -1635,9 +1617,6 @@ async function optimizeLinkWithAI(link, aiSettings) {
         .catch(err => console.error('分类建议失败:', err))
     );
   }
-
-  // 3. 智能标签生成（暂缓实现）
-  // if (aiSettings.features?.generateTags) { ... }
 
   // 等待所有任务完成
   await Promise.allSettled(tasks);
