@@ -84,28 +84,28 @@
               </div>
             </div>
             <div class="toolbar-right">
+              <!-- 批量操作栏（默认隐藏，从右侧滑出） -->
+              <div id="batchActions" class="batch-actions-inline">
+                <p class="batch-text"><strong id="selectedCountText">0</strong>&nbsp;个书签被选中</p>
+                <div class="batch-buttons">
+                  <button id="selectAllBtn" class="batch-btn">
+                    <span>全选</span>
+                  </button>
+                  <button id="deselectAllBtn" class="batch-btn">
+                    <span>取消全选</span>
+                  </button>
+                  <button id="groupSelectedBtn" class="batch-btn batch-btn-primary">
+                    <span>分组</span>
+                  </button>
+                  <button id="deleteSelectedBtn" class="batch-btn batch-btn-danger">
+                    <span>删除</span>
+                  </button>
+                </div>
+              </div>
+              
               <!-- 批量操作按钮 -->
               <button id="batchModeBtn" class="toolbar-btn">
                 <span>批量管理</span>
-              </button>
-            </div>
-          </div>
-          
-          <!-- 批量操作栏（默认隐藏） -->
-          <div id="batchActions" class="batch-actions">
-            <p class="batch-text"><strong id="selectedCountText">0</strong> 个书签被选中</p>
-            <div class="batch-buttons">
-              <button id="selectAllBtn" class="batch-btn">
-                <span>全选</span>
-              </button>
-              <button id="deselectAllBtn" class="batch-btn">
-                <span>取消全选</span>
-              </button>
-              <button id="groupSelectedBtn" class="batch-btn batch-btn-primary">
-                <span>添加到分组</span>
-              </button>
-              <button id="deleteSelectedBtn" class="batch-btn batch-btn-danger">
-                <span>删除</span>
               </button>
             </div>
           </div>

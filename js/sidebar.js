@@ -400,7 +400,7 @@ function showManualAddDialog() {
       <label style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-secondary);">
         网站地址 *
       </label>
-      <input type="url" id="manualUrl" placeholder="https://example.com" required
+      <input type="url" id="manualUrl" value="https://" placeholder="https://example.com" required
         style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 0.5rem; background: var(--bg-secondary); color: var(--text-primary); font-size: 0.875rem; box-sizing: border-box;" />
     </div>
     <div style="margin-bottom: 1.5rem;">
@@ -423,9 +423,12 @@ function showManualAddDialog() {
   overlay.appendChild(dialog);
   document.body.appendChild(overlay);
 
-  // 自动聚焦
+  // 自动聚焦，并将光标定位到 https:// 后面
   setTimeout(() => {
-    document.getElementById('manualUrl').focus();
+    const urlInput = document.getElementById('manualUrl');
+    urlInput.focus();
+    // 将光标移动到 https:// 后面（第8个字符）
+    urlInput.setSelectionRange(8, 8);
   }, 100);
 
   // 取消按钮

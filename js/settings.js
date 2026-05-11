@@ -429,6 +429,12 @@ function setupBatchMode() {
       batchModeBtn.classList.toggle('active', isBatchMode);
       batchActions.classList.toggle('show', isBatchMode);
       
+      // 控制搜索框宽度
+      const toolbarLeft = document.querySelector('.toolbar-left');
+      if (toolbarLeft) {
+        toolbarLeft.classList.toggle('batch-mode', isBatchMode);
+      }
+      
       // 退出批量模式时清空选择
       if (!isBatchMode) {
         selectedLinks.clear();
