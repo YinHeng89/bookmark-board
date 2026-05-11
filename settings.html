@@ -195,127 +195,154 @@
       <section id="ai-assistant" class="settings-section">
         <h2>AI 助手</h2>
         <div class="section-content">
-          <!-- AI 供应商配置 -->
-          <div class="ai-section">
-            <h3>AI 供应商</h3>
-            <p class="ai-desc">选择 AI 服务提供商，支持自建服务和主流供应商。</p>
-            <div class="ai-form-group">
-              <select id="aiProvider" class="ai-select">
-                <option value="lmstudio">LM Studio（推荐）</option>
-                <option value="custom">自定义 API</option>
-                <option value="openai">OpenAI (GPT)</option>
-                <option value="anthropic">Anthropic (Claude)</option>
-                <option value="aliyun">阿里云 (通义千问)</option>
-                <option value="zhipu">智谱 AI (ChatGLM)</option>
-                <option value="baidu">百度文心一言</option>
-                <option value="tencent">腾讯混元</option>
-                <option value="moonshot">月之暗面 (Kimi)</option>
-                <option value="google">Google Gemini</option>
-              </select>
+          <!-- API 配置区（可折叠） -->
+          <div class="ai-card ai-card-config">
+            <div class="ai-card-header" id="aiConfigToggle">
+              <div class="ai-card-title">
+                <i class="fa fa-cog"></i>
+                <span>API 配置</span>
+              </div>
+              <div class="ai-card-status">
+                <span id="aiConfigSummary" class="ai-config-summary">未配置</span>
+                <i class="fa fa-chevron-down ai-toggle-icon"></i>
+              </div>
             </div>
-          </div>
-
-          <!-- API 配置 -->
-          <div class="ai-section">
-            <h3>API 配置</h3>
-            <div class="ai-form-group">
-              <label class="ai-label">API 地址 *</label>
-              <input type="text" id="aiApiUrl" class="ai-input" placeholder="http://localhost:8000" />
-              <span class="ai-hint">自建服务或其他 API 的完整地址</span>
-            </div>
-            <div class="ai-form-group">
-              <label class="ai-label">API Key（可选）</label>
-              <input type="password" id="aiApiKey" class="ai-input" placeholder="sk-..." />
-              <span class="ai-hint">部分供应商需要 API Key</span>
-            </div>
-            <div class="ai-form-group">
-              <label class="ai-label">模型名称</label>
-              <div class="ai-model-selector">
-                <select id="aiModelSelect" class="ai-select" style="flex: 1; margin-top: 0;">
-                  <option value="custom">自定义（手动输入）</option>
+            <div class="ai-card-body" id="aiConfigBody">
+              <div class="ai-form-group">
+                <label class="ai-label">AI 供应商</label>
+                <select id="aiProvider" class="ai-select">
+                  <option value="lmstudio">LM Studio（推荐）</option>
+                  <option value="custom">自定义 API</option>
+                  <option value="openai">OpenAI (GPT)</option>
+                  <option value="anthropic">Anthropic (Claude)</option>
+                  <option value="aliyun">阿里云 (通义千问)</option>
+                  <option value="zhipu">智谱 AI (ChatGLM)</option>
+                  <option value="baidu">百度文心一言</option>
+                  <option value="tencent">腾讯混元</option>
+                  <option value="moonshot">月之暗面 (Kimi)</option>
+                  <option value="google">Google Gemini</option>
                 </select>
-                <button id="aiFetchModelsBtn" class="ai-btn ai-btn-small" title="获取模型列表" style="white-space: nowrap; padding: 0.5rem 0.75rem;">
-                  <i class="fa fa-refresh"></i>
-                  <span>加载模型</span>
+              </div>
+              <div class="ai-form-group">
+                <label class="ai-label">API 地址 *</label>
+                <input type="text" id="aiApiUrl" class="ai-input" placeholder="http://localhost:8000" />
+                <span class="ai-hint">自建服务或其他 API 的完整地址</span>
+              </div>
+              <div class="ai-form-group">
+                <label class="ai-label">API Key（可选）</label>
+                <input type="password" id="aiApiKey" class="ai-input" placeholder="sk-..." />
+                <span class="ai-hint">部分供应商需要 API Key</span>
+              </div>
+              <div class="ai-form-group">
+                <label class="ai-label">模型名称</label>
+                <div class="ai-model-selector">
+                  <select id="aiModelSelect" class="ai-select" style="flex: 1; margin-top: 0;">
+                    <option value="custom">自定义（手动输入）</option>
+                  </select>
+                  <button id="aiFetchModelsBtn" class="ai-btn ai-btn-small" title="获取模型列表" style="white-space: nowrap; padding: 0.5rem 0.75rem;">
+                    <i class="fa fa-refresh"></i>
+                    <span>加载模型</span>
+                  </button>
+                </div>
+                <input type="text" id="aiModel" class="ai-input" placeholder="手动输入模型名称" style="display: none; margin-top: 0.5rem;" />
+                <span class="ai-hint">点击刷新按钮自动获取可用模型，或选择"自定义"手动输入</span>
+              </div>
+              <div class="ai-config-actions">
+                <button id="aiTestBtn" class="ai-btn ai-btn-secondary">
+                  <i class="fa fa-plug"></i>
+                  <span>测试连接</span>
+                </button>
+                <button id="aiSaveBtn" class="ai-btn ai-btn-primary">
+                  <i class="fa fa-save"></i>
+                  <span>保存设置</span>
                 </button>
               </div>
-              <input type="text" id="aiModel" class="ai-input" placeholder="手动输入模型名称" style="display: none; margin-top: 0.5rem;" />
-              <span class="ai-hint">点击刷新按钮自动获取可用模型，或选择"自定义"手动输入</span>
             </div>
           </div>
 
-          <!-- AI 功能开关 -->
-          <div class="ai-section">
-            <h3>AI 功能</h3>
-            <p class="ai-desc">选择要启用的 AI 功能，可以按需开启。</p>
-            <div class="ai-features">
-              <label class="ai-feature-item">
-                <input type="checkbox" id="aiOptimizeTitle" class="ai-checkbox" />
-                <span class="ai-feature-icon">✨</span>
-                <div class="ai-feature-content">
-                  <span class="ai-feature-name">智能标题优化</span>
-                  <span class="ai-feature-desc">自动优化书签标题，使其更简洁清晰</span>
-                </div>
-              </label>
-              <label class="ai-feature-item">
-                <input type="checkbox" id="aiSuggestCategory" class="ai-checkbox" />
-                <span class="ai-feature-icon">📂</span>
-                <div class="ai-feature-content">
-                  <span class="ai-feature-name">智能分类建议</span>
-                  <span class="ai-feature-desc">根据内容智能推荐分组</span>
-                </div>
-              </label>
-              <label class="ai-feature-item">
-                <input type="checkbox" id="aiGenerateTags" class="ai-checkbox" />
-                <span class="ai-feature-icon">🏷️</span>
-                <div class="ai-feature-content">
-                  <span class="ai-feature-name">智能标签生成</span>
-                  <span class="ai-feature-desc">自动生成相关标签</span>
-                </div>
-              </label>
-              <label class="ai-feature-item">
-                <input type="checkbox" id="aiGenerateSummary" class="ai-checkbox" />
-                <span class="ai-feature-icon">📝</span>
-                <div class="ai-feature-content">
-                  <span class="ai-feature-name">书签摘要生成</span>
-                  <span class="ai-feature-desc">生成书签内容摘要</span>
-                </div>
-              </label>
-              <label class="ai-feature-item">
-                <input type="checkbox" id="aiSmartSearch" class="ai-checkbox" />
-                <span class="ai-feature-icon">🔍</span>
-                <div class="ai-feature-content">
-                  <span class="ai-feature-name">智能搜索增强</span>
-                  <span class="ai-feature-desc">理解搜索意图，返回更精准结果</span>
-                </div>
-              </label>
-              <label class="ai-feature-item">
-                <input type="checkbox" id="aiDetectDuplicates" class="ai-checkbox" />
-                <span class="ai-feature-icon">🔎</span>
-                <div class="ai-feature-content">
-                  <span class="ai-feature-name">重复书签检测</span>
-                  <span class="ai-feature-desc">检测并提示可能的重复书签</span>
-                </div>
-              </label>
+          <!-- AI 功能区（主要操作区） -->
+          <div class="ai-card ai-card-features">
+            <div class="ai-card-header">
+              <div class="ai-card-title">
+                <i class="fa fa-magic"></i>
+                <span>AI 功能</span>
+              </div>
+              <div class="ai-card-actions">
+                <button id="aiToggleAllFeatures" class="ai-btn-text" title="全选/取消全选">
+                  <span>全选</span>
+                </button>
+              </div>
             </div>
-          </div>
-
-          <!-- 操作按钮 -->
-          <div class="ai-actions">
-            <button id="aiTestBtn" class="ai-btn ai-btn-secondary">
-              <i class="fa fa-plug"></i>
-              <span>测试连接</span>
-            </button>
-            <button id="aiSaveBtn" class="ai-btn ai-btn-primary">
-              <i class="fa fa-save"></i>
-              <span>保存设置</span>
-            </button>
-          </div>
-
-          <!-- 状态显示 -->
-          <div id="aiStatus" class="ai-status" style="display: none;">
-            <div class="ai-status-icon"></div>
-            <div class="ai-status-text"></div>
+            <div class="ai-card-body">
+              <div class="ai-features-grid">
+                <label class="ai-feature-card">
+                  <input type="checkbox" id="aiOptimizeTitle" class="ai-checkbox" />
+                  <div class="ai-feature-card-content">
+                    <span class="ai-feature-icon">✨</span>
+                    <div class="ai-feature-info">
+                      <span class="ai-feature-name">智能标题优化</span>
+                      <span class="ai-feature-desc">自动优化书签标题，使其更简洁清晰</span>
+                    </div>
+                  </div>
+                  <div class="ai-toggle-switch"></div>
+                </label>
+                <label class="ai-feature-card">
+                  <input type="checkbox" id="aiSuggestCategory" class="ai-checkbox" />
+                  <div class="ai-feature-card-content">
+                    <span class="ai-feature-icon">📂</span>
+                    <div class="ai-feature-info">
+                      <span class="ai-feature-name">智能分类建议</span>
+                      <span class="ai-feature-desc">根据内容智能推荐分组</span>
+                    </div>
+                  </div>
+                  <div class="ai-toggle-switch"></div>
+                </label>
+                <label class="ai-feature-card">
+                  <input type="checkbox" id="aiGenerateTags" class="ai-checkbox" />
+                  <div class="ai-feature-card-content">
+                    <span class="ai-feature-icon">🏷️</span>
+                    <div class="ai-feature-info">
+                      <span class="ai-feature-name">智能标签生成</span>
+                      <span class="ai-feature-desc">自动生成相关标签</span>
+                    </div>
+                  </div>
+                  <div class="ai-toggle-switch"></div>
+                </label>
+                <label class="ai-feature-card">
+                  <input type="checkbox" id="aiGenerateSummary" class="ai-checkbox" />
+                  <div class="ai-feature-card-content">
+                    <span class="ai-feature-icon">📝</span>
+                    <div class="ai-feature-info">
+                      <span class="ai-feature-name">书签摘要生成</span>
+                      <span class="ai-feature-desc">生成书签内容摘要</span>
+                    </div>
+                  </div>
+                  <div class="ai-toggle-switch"></div>
+                </label>
+                <label class="ai-feature-card">
+                  <input type="checkbox" id="aiSmartSearch" class="ai-checkbox" />
+                  <div class="ai-feature-card-content">
+                    <span class="ai-feature-icon">🔍</span>
+                    <div class="ai-feature-info">
+                      <span class="ai-feature-name">智能搜索增强</span>
+                      <span class="ai-feature-desc">理解搜索意图，返回更精准结果</span>
+                    </div>
+                  </div>
+                  <div class="ai-toggle-switch"></div>
+                </label>
+                <label class="ai-feature-card">
+                  <input type="checkbox" id="aiDetectDuplicates" class="ai-checkbox" />
+                  <div class="ai-feature-card-content">
+                    <span class="ai-feature-icon">🔎</span>
+                    <div class="ai-feature-info">
+                      <span class="ai-feature-name">重复书签检测</span>
+                      <span class="ai-feature-desc">检测并提示可能的重复书签</span>
+                    </div>
+                  </div>
+                  <div class="ai-toggle-switch"></div>
+                </label>
+              </div>
+            </div>
           </div>
         </div>
       </section>

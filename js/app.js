@@ -1065,13 +1065,22 @@ function addCardToBoard(boardEl, link) {
   iconDiv.className = 'card-icon';
   
   const img = document.createElement('img');
-  img.src = link.icon || 'default-icon.png';
   img.alt = link.title;
-  img.addEventListener('error', function() {
-    this.onerror = null;
-    this.src = 'default-icon.png';
-  });
-  iconDiv.appendChild(img);
+  
+  // 如果有自定义图标，尝试加载；否则直接显示默认 SVG
+  if (link.icon && link.icon !== 'default-icon.png') {
+    img.src = link.icon;
+    img.addEventListener('error', function() {
+      this.onerror = null;
+      // 加载失败时显示默认 SVG 图标
+      showDefaultIcon(iconDiv, link.title);
+      this.remove();
+    });
+    iconDiv.appendChild(img);
+  } else {
+    // 直接显示默认 SVG 图标
+    showDefaultIcon(iconDiv, link.title);
+  }
 
   // 内容
   const content = document.createElement('div');
@@ -1261,13 +1270,22 @@ function addCard(link) {
   iconDiv.className = 'card-icon';
   
   const img = document.createElement('img');
-  img.src = link.icon || 'default-icon.png';
   img.alt = link.title;
-  img.addEventListener('error', function() {
-    this.onerror = null;
-    this.src = 'default-icon.png';
-  });
-  iconDiv.appendChild(img);
+  
+  // 如果有自定义图标，尝试加载；否则直接显示默认 SVG
+  if (link.icon && link.icon !== 'default-icon.png') {
+    img.src = link.icon;
+    img.addEventListener('error', function() {
+      this.onerror = null;
+      // 加载失败时显示默认 SVG 图标
+      showDefaultIcon(iconDiv, link.title);
+      this.remove();
+    });
+    iconDiv.appendChild(img);
+  } else {
+    // 直接显示默认 SVG 图标
+    showDefaultIcon(iconDiv, link.title);
+  }
 
   // 内容
   const content = document.createElement('div');
@@ -1726,4 +1744,29 @@ async function aiOptimizeBookmark(link) {
   } catch (error) {
     showToast('AI 优化失败: ' + error.message);
   }
+}
+
+/**
+ * 显示默认 SVG 图标
+ */
+function showDefaultIcon(container, title) {
+  // 创建一个精美的默认图标
+  const initial = title ? title.charAt(0).toUpperCase() : '?';
+  
+  const svgIcon = document.createElement('div');
+  svgIcon.className = 'default-svg-icon';
+  svgIcon.innerHTML = `
+    <svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="grad-${initial}" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#4F46E5;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#7C3AED;stop-opacity:1" />
+        </linearGradient>
+      </defs>
+      <circle cx="30" cy="30" r="28" fill="url(#grad-${initial})" />
+      <text x="30" y="38" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="white" text-anchor="middle">${initial}</text>
+    </svg>
+  `;
+  
+  container.appendChild(svgIcon);
 }

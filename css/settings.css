@@ -1085,19 +1085,242 @@
 }
 
 /* ========== AI 助手样式 ========== */
-.ai-section {
-  margin-bottom: 2rem;
-  padding: 1.5rem;
-  background: var(--bg-secondary);
+
+/* AI 卡片通用样式 */
+.ai-card {
+  margin-bottom: 1.5rem;
+  background: var(--bg-primary);
   border: 1px solid var(--border-color);
   border-radius: 0.75rem;
+  overflow: hidden;
+  transition: all 0.3s ease;
 }
 
-.ai-section h3 {
+.ai-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+.ai-card-header:hover {
+  background: var(--bg-tertiary);
+}
+
+.ai-card-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
   font-size: 1.125rem;
   font-weight: 600;
-  margin: 0 0 0.5rem 0;
   color: var(--text-primary);
+}
+
+.ai-card-title i {
+  font-size: 1.25rem;
+  color: var(--primary);
+}
+
+.ai-card-status {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ai-config-summary {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  padding: 0.25rem 0.75rem;
+  background: var(--bg-primary);
+  border-radius: 1rem;
+}
+
+.ai-config-summary.configured {
+  color: var(--success);
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.ai-toggle-icon {
+  transition: transform 0.3s ease;
+  color: var(--text-secondary);
+}
+
+.ai-toggle-icon.collapsed {
+  transform: rotate(-90deg);
+}
+
+.ai-card-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.ai-btn-text {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ai-btn-text:hover {
+  background: var(--bg-primary);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.ai-card-body {
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.ai-card-body.collapsed {
+  max-height: 0;
+  padding: 0 1.5rem;
+  overflow: hidden;
+  opacity: 0;
+}
+
+/* API 配置卡片 */
+.ai-card-config {
+  border-color: var(--border-color);
+}
+
+.ai-config-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color);
+}
+
+/* AI 功能卡片 */
+.ai-card-features {
+  border-color: var(--primary);
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.1);
+}
+
+.ai-card-features .ai-card-header {
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.05) 0%, rgba(124, 58, 237, 0.05) 100%);
+  cursor: default;
+}
+
+.ai-card-features .ai-card-header:hover {
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.08) 0%, rgba(124, 58, 237, 0.08) 100%);
+}
+
+.ai-features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.ai-feature-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: var(--bg-secondary);
+  border: 2px solid var(--border-color);
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.ai-feature-card:hover {
+  border-color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
+}
+
+.ai-feature-card:active {
+  transform: translateY(0);
+}
+
+.ai-feature-card input[type="checkbox"] {
+  display: none;
+}
+
+.ai-feature-card-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.ai-feature-card .ai-feature-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.ai-feature-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.ai-feature-card .ai-feature-name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.ai-feature-card .ai-feature-desc {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* 开关样式 */
+.ai-toggle-switch {
+  width: 44px;
+  height: 24px;
+  background: var(--border-color);
+  border-radius: 12px;
+  position: relative;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.ai-toggle-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background: white;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.ai-feature-card input[type="checkbox"]:checked + .ai-feature-card-content + .ai-toggle-switch {
+  background: var(--primary);
+}
+
+.ai-feature-card input[type="checkbox"]:checked + .ai-feature-card-content + .ai-toggle-switch::after {
+  left: 22px;
+}
+
+.ai-feature-card input[type="checkbox"]:checked ~ .ai-feature-card-content .ai-feature-name {
+  color: var(--primary);
+}
+
+.ai-feature-card:has(input[type="checkbox"]:checked) {
+  border-color: var(--primary);
+  background: rgba(79, 70, 229, 0.05);
 }
 
 .ai-desc {

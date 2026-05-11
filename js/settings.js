@@ -1290,7 +1290,7 @@ function setupAISettings() {
   if (aiModelSelect) {
     aiModelSelect.addEventListener('change', () => {
       if (aiModel) {
-        // 如果选择“自定义”，显示输入框
+        // 如果选择"自定义"，显示输入框
         if (aiModelSelect.value === 'custom') {
           aiModel.style.display = 'block';
           aiModel.focus();
@@ -1300,6 +1300,100 @@ function setupAISettings() {
         }
       }
     });
+  }
+  
+  // AI 功能开关变化时自动保存
+  const featureCheckboxes = [
+    aiOptimizeTitle,
+    aiSuggestCategory,
+    aiGenerateTags,
+    aiGenerateSummary,
+    aiSmartSearch,
+    aiDetectDuplicates
+  ].filter(Boolean);
+  
+  featureCheckboxes.forEach(checkbox => {
+    checkbox.addEventListener('change', () => {
+      // 延迟保存，确保 UI 更新完成
+      setTimeout(() => {
+        saveAISettings();
+      }, 100);
+    });
+  });
+  
+  // API 配置区折叠/展开
+  const aiConfigToggle = document.getElementById('aiConfigToggle');
+  const aiConfigBody = document.getElementById('aiConfigBody');
+  const aiToggleIcon = document.querySelector('.ai-toggle-icon');
+  
+  if (aiConfigToggle && aiConfigBody) {
+    aiConfigToggle.addEventListener('click', () => {
+      const isCollapsed = aiConfigBody.classList.toggle('collapsed');
+      if (aiToggleIcon) {
+        aiToggleIcon.classList.toggle('collapsed', isCollapsed);
+      }
+      
+      // 保存折叠状态
+      localStorage.setItem('ai_config_collapsed', isCollapsed ? 'true' : 'false');
+    });
+  }
+  
+  // 全选/全不选功能
+  const aiToggleAllBtn = document.getElementById('aiToggleAllFeatures');
+  if (aiToggleAllBtn) {
+    aiToggleAllBtn.addEventListener('click', () => {
+      const checkboxes = document.querySelectorAll('.ai-feature-card input[type="checkbox"]');
+      // 检查是否全部已选中
+      const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+      
+      // 如果全部已选中，则全不选；否则全选
+      const newState = !allChecked;
+      checkboxes.forEach(cb => {
+        cb.checked = newState;
+      });
+      
+      // 更新按钮文字
+      const btnText = aiToggleAllBtn.querySelector('span');
+      if (btnText) {
+        btnText.textContent = newState ? '取消全选' : '全选';
+      }
+      
+      // 自动保存设置
+      saveAISettings();
+    });
+  }
+}
+
+/**
+ * 更新 AI 配置摘要
+ */
+function updateAIConfigSummary(provider, providerConfig) {
+  const summaryEl = document.getElementById('aiConfigSummary');
+  if (!summaryEl) return;
+  
+  if (providerConfig.apiUrl || providerConfig.model) {
+    // 已配置
+    const providerNames = {
+      lmstudio: 'LM Studio',
+      openai: 'OpenAI',
+      anthropic: 'Anthropic',
+      aliyun: '阿里云',
+      zhipu: '智谱 AI',
+      baidu: '百度文心',
+      tencent: '腾讯混元',
+      moonshot: '月之暗面',
+      google: 'Google',
+      custom: '自定义'
+    };
+    
+    const name = providerNames[provider] || provider;
+    const model = providerConfig.model || '未选择';
+    summaryEl.textContent = `${name} - ${model}`;
+    summaryEl.classList.add('configured');
+  } else {
+    // 未配置
+    summaryEl.textContent = '未配置';
+    summaryEl.classList.remove('configured');
   }
 }
 
@@ -1364,6 +1458,27 @@ function loadAISettings() {
     if (aiGenerateSummary) aiGenerateSummary.checked = settings.features?.generateSummary || false;
     if (aiSmartSearch) aiSmartSearch.checked = settings.features?.smartSearch || false;
     if (aiDetectDuplicates) aiDetectDuplicates.checked = settings.features?.detectDuplicates || false;
+    
+    // 更新配置摘要
+    updateAIConfigSummary(settings.provider, providerConfig);
+    
+    // 根据配置状态决定默认展开/折叠
+    const isConfigured = providerConfig.apiUrl || providerConfig.model;
+    const storedCollapsed = localStorage.getItem('ai_config_collapsed');
+    
+    // 清除旧的存储状态，重新根据配置决定
+    localStorage.removeItem('ai_config_collapsed');
+    
+    const shouldCollapse = !!isConfigured; // 已配置则折叠，未配置则展开
+    
+    const aiConfigBody = document.getElementById('aiConfigBody');
+    const aiToggleIcon = document.querySelector('.ai-toggle-icon');
+    if (aiConfigBody && shouldCollapse) {
+      aiConfigBody.classList.add('collapsed');
+      if (aiToggleIcon) {
+        aiToggleIcon.classList.add('collapsed');
+      }
+    }
   });
 }
 function saveAISettings() {
@@ -1395,9 +1510,21 @@ function saveAISettings() {
     }
   };
   
-  // 验证必填项
+  // 如果没有 API 地址，只保存功能开关
   if (!settings.config.apiUrl) {
-    showAISstatus('error', '请填写 API 地址');
+    // 只保存功能开关，不保存供应商配置
+    chrome.storage.local.get(['aiSettings'], (result) => {
+      const existingSettings = result.aiSettings || {};
+      existingSettings.features = settings.features;
+      
+      chrome.storage.local.set({ aiSettings: existingSettings }, () => {
+        if (chrome.runtime.lastError) {
+          showAISstatus('error', '保存失败: ' + chrome.runtime.lastError.message);
+          return;
+        }
+        showAISstatus('success', '功能设置已保存！');
+      });
+    });
     return;
   }
   
@@ -1630,11 +1757,15 @@ async function fetchModelsList() {
  * 显示 AI 状态
  */
 function showAISstatus(type, message) {
-  if (!aiStatus) return;
-  
-  aiStatus.className = `ai-status ${type}`;
-  aiStatus.querySelector('.ai-status-text').textContent = message;
-  aiStatus.style.display = 'flex';
+  // 使用 toast 通知替代内联状态显示
+  if (type === 'loading') {
+    // loading 状态不显示 toast，只在控制台输出
+    console.log(message);
+  } else if (type === 'success') {
+    showToast(message);
+  } else if (type === 'error') {
+    showToast(message, 'error');
+  }
 }
 
 /**
