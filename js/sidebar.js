@@ -642,8 +642,10 @@ async function optimizeSidebarBookmark(link) {
   
   // 检查是否有开启任何 AI 功能
   const hasAnyFeature = aiSettings.features && (
-    aiSettings.features.optimizeTitle || 
-    aiSettings.features.suggestCategory
+    aiSettings.features.titleOptimization?.auto || 
+    aiSettings.features.titleOptimization?.manual ||
+    aiSettings.features.categorySuggestion?.auto ||
+    aiSettings.features.categorySuggestion?.manual
   );
   
   if (!hasAnyFeature) {
@@ -663,7 +665,7 @@ async function optimizeSidebarBookmark(link) {
     const tasks = [];
     
     // 1. 智能标题优化
-    if (aiSettings.features?.optimizeTitle) {
+    if (aiSettings.features?.titleOptimization?.manual) {
       tasks.push(
         aiService.optimizeTitle(link.title, link.url)
           .then(optimizedTitle => {
@@ -676,8 +678,8 @@ async function optimizeSidebarBookmark(link) {
       );
     }
     
-    // 2. 智能分类建议
-    if (aiSettings.features?.suggestCategory) {
+    // 2. 智能分组建议
+    if (aiSettings.features?.categorySuggestion?.manual) {
       tasks.push(
         aiService.suggestCategory(link.url, link.title, groupNames)
           .then(suggestedGroup => {

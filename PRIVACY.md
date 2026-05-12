@@ -80,9 +80,10 @@
 - 不监控侧边栏外的活动
 
 ### 6. host_permissions（主机权限）
-**用途**：获取网站的 favicon（图标）和标题信息
 
-**权限范围**：`http://*/*` 和 `https://*/*`
+**本扩展无需 host_permissions**
+
+所有跨域请求（AI API、favicon 获取）均在扩展页面和 service worker 中执行，Chrome 扩展机制自带这些能力。
 
 **说明**：
 - 仅在添加书签时访问目标网站

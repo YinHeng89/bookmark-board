@@ -97,6 +97,89 @@ class AIService {
   }
 
   /**
+   * 从推理内容中提取最终答案
+   */
+  extractFinalAnswer(reasoning) {
+    if (!reasoning) return '';
+    
+    // 1. 尝试找最后的结论标记
+    const conclusionMarkers = [
+      /最终答案[：:](.+)$/m,
+      /结论[：:](.+)$/m,
+      /结果[：:](.+)$/m,
+      /答案[：:](.+)$/m,
+      /推荐[：:](.+)$/m,
+      /建议[：:](.+)$/m
+    ];
+    
+    for (const marker of conclusionMarkers) {
+      const match = reasoning.match(marker);
+      if (match && match[1]) {
+        return match[1].trim();
+      }
+    }
+    
+    // 2. 尝试找引号中的内容
+    const quoteMatch = reasoning.match(/["'""']['"]([^"'""']+)["'""']/g);
+    if (quoteMatch && quoteMatch.length > 0) {
+      // 取最后一个引号内容
+      const lastQuote = quoteMatch[quoteMatch.length - 1];
+      return lastQuote.replace(/["'"""']/g, '').trim();
+    }
+    
+    // 3. 按句子分割，取最后 1-2 句
+    const sentences = reasoning.split(/[。！？\n]+/).filter(s => s.trim());
+    if (sentences.length > 0) {
+      // 取最后 1-2 句
+      return sentences.slice(-2).join('。').trim();
+    }
+    
+    return reasoning.trim();
+  }
+  
+  /**
+   * 清理 AI 输出内容
+   */
+  cleanAIOutput(content) {
+    if (!content) return '';
+    
+    // 1. 移除常见的思考标签
+    const thinkPatterns = [
+      /<think>.*?<\/think>/gs,
+      /<thinking>.*?<\/thinking>/gs,
+      /<reasoning>.*?<\/reasoning>/gs,
+      /思考过程[：:]?[^\n]*/g,
+      /推理过程[：:]?[^\n]*/g,
+      /分析过程[：:]?[^\n]*/g
+    ];
+    
+    for (const pattern of thinkPatterns) {
+      content = content.replace(pattern, '');
+    }
+    
+    // 2. 移除多余的空格和换行
+    content = content.replace(/\s+/g, ' ').trim();
+    
+    // 3. 移除开头和结尾的标点符号
+    content = content.replace(/^[，。！？、；："'"""'\s]+/, '');
+    content = content.replace(/[，。！？、；："'"""'\s]+$/, '');
+    
+    // 4. 对于标题优化，限制长度（最多 50 字）
+    // 对于分组建议，限制长度（最多 10 字）
+    // 这里做通用处理：如果超过 50 字，取前 50 字
+    if (content.length > 50) {
+      content = content.substring(0, 50).trim();
+      // 确保不在单词中间截断
+      const lastSpace = content.lastIndexOf(' ');
+      if (lastSpace > 30) {
+        content = content.substring(0, lastSpace);
+      }
+    }
+    
+    return content;
+  }
+
+  /**
    * 测试 API 连接
    */
   async testConnection() {
@@ -285,13 +368,10 @@ class AIService {
     
     // 如果 content 为空，尝试使用 reasoning_content 并提取最后一句
     if (!content) {
-      const reasoning = message.reasoning_content || '';
+      const reasoning = message.reasoning_content || message.reasoning || '';
       if (reasoning) {
         // 尝试从推理内容中提取最终答案
-        // 通常最后一句是结论
-        const sentences = reasoning.split(/[。！？\n]/);
-        // 取最后 2-3 句作为答案
-        content = sentences.slice(-3).join('').trim();
+        content = this.extractFinalAnswer(reasoning);
         console.log('从 reasoning_content 提取:', content);
       }
     }
@@ -300,6 +380,9 @@ class AIService {
     if (!content) {
       content = data.content || data.text || data.response || JSON.stringify(data);
     }
+    
+    // 清理内容：移除思考标签、多余空格、截断过长内容
+    content = this.cleanAIOutput(content);
     
     console.log('提取的内容:', content);
     
@@ -457,24 +540,21 @@ class AIService {
    */
   async optimizeTitle(title, url) {
     // 使用配置的提示词或默认提示词
-    let prompt = this.settings.prompts?.optimizeTitle || 
+    let prompt = this.settings.prompts?.titleOptimization || 
       `你是一个专业的书签管理助手。请优化以下书签标题，使其更简洁、更有意义。
 
 原始标题：{title}
 网址：{url}
 
-要求：
-1. 保持核心含义不变
-2. 去除冗余信息（如"官网"、"首页"、"| 网站名"、"- 网站名"、促销信息等）
-3. 控制在 15-25 个字符
-4. 使用中文
-5. 格式规范：主要关键词 - 次要描述
+【严格输出要求】
+- 只返回优化后的标题文字
+- 禁止输出任何解释、理由、分析过程
+- 禁止使用任何标点符号（除了标题本身需要的）
+- 禁止使用 Markdown 格式
+- 长度控制在 15-25 个字符
+- 去除冗余信息（如“官网”、“首页”、“| 网站名”、“- 网站名”）
 
-**重要：直接返回优化后的标题，不要解释、不要分析、不要思考过程。**
-
-只返回标题文字本身，例如：Parallels Desktop 26 - Mac虚拟机升级
-
-优化后的标题：`;
+直接输出标题：`;
     
     // 替换模板变量
     prompt = prompt
@@ -488,7 +568,7 @@ class AIService {
   }
 
   /**
-   * 智能分类建议
+   * 智能分组建议
    */
   async suggestCategory(url, title, existingGroups = []) {
     const domain = new URL(url).hostname.replace('www.', '');
@@ -497,7 +577,7 @@ class AIService {
       : '当前没有分组，请推荐一个新的分组名称。';
     
     // 使用配置的提示词或默认提示词
-    let prompt = this.settings.prompts?.suggestCategory ||
+    let prompt = this.settings.prompts?.categorySuggestion ||
       `你是一个智能分类专家。请为以下书签推荐最合适的分组。
 
 标题：{title}
@@ -506,14 +586,14 @@ class AIService {
 
 {groupsText}
 
-要求：
-1. 如果有匹配的现有分组，直接返回该分组名称
-2. 如果没有匹配的，推荐一个新分组名称
-3. 使用中文
-4. 分组名称要简洁明确（2-6个字）
-5. 只返回分组名称，不要任何其他内容
+【严格输出要求】
+- 只能输出分组名称，2-4个中文字
+- 禁止输出任何解释、理由、分析过程
+- 禁止使用任何标点符号（除了名称本身）
+- 禁止使用 Markdown 格式
+- 如果无法确定，输出"其他"
 
-分组名称：`;
+直接输出分组名称：`;
     
     // 替换模板变量
     prompt = prompt

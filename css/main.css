@@ -995,8 +995,8 @@ body {
 }
 
 .group-select-item.selected {
-  color: var(--primary);
-  font-weight: 500;
+  color: var(--text-primary);
+  background: var(--bg-secondary);
 }
 
 .group-select-item i {
@@ -1008,6 +1008,24 @@ body {
   height: 1px;
   background: var(--border-color);
   margin: 0.25rem 0;
+}
+
+/* 二级子菜单 */
+.group-select-submenu {
+  position: fixed;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 0.5rem;
+  min-width: 180px;
+  max-height: 400px;
+  overflow-y: auto;
+  z-index: 1001;
+}
+
+.group-select-item-has-submenu {
+  position: relative;
 }
 
 /* 卡片操作按钮 */

@@ -37,7 +37,7 @@ bookmark-board/
   "manifest_version": 3,
   "name": "书签白板",
   "description": "快速整理你的网络资源 | 隐私优先的本地书签管理工具",
-  "version": "3.2.1",
+  "version": "3.2.3",
   "chrome_url_overrides": {
     "newtab": "new-tab.html"
   },
@@ -71,7 +71,7 @@ bookmark-board/
 
 **检查项**：
 - ✅ `manifest_version` 必须是 3
-- ✅ `version` 格式正确（如 3.2.1）
+- ✅ `version` 格式正确（如 3.2.3）
 - ✅ 所有图标路径正确
 - ✅ 权限声明合理
 - ✅ 所有文件路径正确
@@ -235,7 +235,8 @@ cd /Users/yinheng/Documents/GitHub/bookmark-board
 | `tabs` | 获取当前标签页信息，用于一键添加当前页面 |
 | `scripting` | 注入脚本获取网页标题，提升用户体验 |
 | `sidePanel` | 提供侧边栏功能，快速访问书签 |
-| `http://*/*` 和 `https://*/*` | 获取网页图标（favicon）和标题信息 |
+
+**无需 host_permissions** - 扩展页面和 service worker 自带跨域能力
 
 **隐私政策**（必须提供）：
 
@@ -380,9 +381,9 @@ https://github.com/YinHeng89/bookmark-board/issues
 5. 提交审核
 
 **版本命名规范**：
-- `3.2.1` → `3.2.1`（小修复）
-- `3.2.1` → `3.3.0`（新功能）
-- `3.2.1` → `4.0.0`（重大更新）
+- `3.2.3` → `3.2.3`（小修复）
+- `3.2.3` → `3.3.0`（新功能）
+- `3.2.3` → `4.0.0`（重大更新）
 
 ---
 

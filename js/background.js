@@ -95,7 +95,9 @@ async function addBookmarkWithAI(url, title, icon, tabId) {
   });
 
   // 如果开启了 AI 自动优化，调用 AI 服务
-  if (aiSettings && aiSettings.features && aiSettings.provider && aiSettings.config?.apiUrl) {
+  if (aiSettings && aiSettings.features && aiSettings.config?.apiUrl) {
+    console.log(' 标题优化自动:', aiSettings.features.titleOptimization?.auto);
+    console.log(' 分类建议自动:', aiSettings.features.categorySuggestion?.auto);
     try {
       // 直接在 background.js 中调用 AI API
       const AI_CONFIG = {
@@ -147,26 +149,23 @@ async function addBookmarkWithAI(url, title, icon, tabId) {
       const autoTasks = [];
       
       // 自动标题优化
-      if (aiSettings.features.autoOptimizeTitle) {
+      if (aiSettings.features.titleOptimization?.auto) {
         // 使用配置的提示词或默认提示词
-        let titlePrompt = aiSettings.prompts?.autoOptimizeTitle || 
+        let titlePrompt = aiSettings.prompts?.titleOptimization || 
           `你是一个专业的书签管理助手。请优化以下书签标题，使其更简洁、更有意义。
 
 原始标题：{title}
 网址：{url}
 
-要求：
-1. 保持核心含义不变
-2. 去除冗余信息（如"官网"、"首页"、"| 网站名"、"- 网站名"、促销信息等）
-3. 控制在 15-25 个字符
-4. 使用中文
-5. 格式规范：主要关键词 - 次要描述
+【严格输出要求】
+- 只返回优化后的标题文字
+- 禁止输出任何解释、理由、分析过程
+- 禁止使用任何标点符号（除了标题本身需要的）
+- 禁止使用 Markdown 格式
+- 长度控制在 15-25 个字符
+- 去除冗余信息（如“官网”、“首页”、“| 网站名”、“- 网站名”）
 
-**重要：直接返回优化后的标题，不要解释、不要分析、不要思考过程。**
-
-只返回标题文字本身，例如：Parallels Desktop 26 - Mac虚拟机升级
-
-优化后的标题：`;
+直接输出标题：`;
         
         // 替换模板变量
         titlePrompt = titlePrompt
@@ -200,7 +199,7 @@ async function addBookmarkWithAI(url, title, icon, tabId) {
       }
       
       // 自动分类建议
-      if (aiSettings.features.autoSuggestCategory) {
+      if (aiSettings.features.categorySuggestion?.auto) {
         // 读取现有分组
         const groups = await new Promise((resolve) => {
           chrome.storage.local.get(['groups'], (result) => {
@@ -212,7 +211,7 @@ async function addBookmarkWithAI(url, title, icon, tabId) {
         const groupsText = groupNames.length > 0 ? `现有分组：${groupNames.join('、')}` : '当前没有分组，请推荐一个新的分组名称。';
         
         // 使用配置的提示词或默认提示词
-        let categoryPrompt = aiSettings.prompts?.autoSuggestCategory || 
+        let categoryPrompt = aiSettings.prompts?.categorySuggestion || 
           `你是一个智能分类专家。请为以下书签推荐最合适的分组。
 
 标题：{title}
@@ -221,14 +220,14 @@ async function addBookmarkWithAI(url, title, icon, tabId) {
 
 {groupsText}
 
-要求：
-1. 如果有匹配的现有分组，直接返回该分组名称
-2. 如果没有匹配的，推荐一个新分组名称
-3. 使用中文
-4. 分组名称要简洁明确（2-6个字）
-5. 只返回分组名称，不要任何其他内容
+【严格输出要求】
+- 只能输出分组名称，2-4个中文字
+- 禁止输出任何解释、理由、分析过程
+- 禁止使用任何标点符号（除了名称本身）
+- 禁止使用 Markdown 格式
+- 如果无法确定，输出“其他”
 
-分组名称：`;
+直接输出分组名称：`;
         
         // 替换模板变量
         categoryPrompt = categoryPrompt
@@ -290,7 +289,6 @@ async function addBookmarkWithAI(url, title, icon, tabId) {
       // 等待 AI 优化完成
       if (autoTasks.length > 0) {
         await Promise.allSettled(autoTasks);
-        console.log('✅ AI 自动优化完成');
       }
     } catch (err) {
       console.error('AI 服务调用失败:', err);
@@ -312,10 +310,13 @@ async function addBookmarkWithAI(url, title, icon, tabId) {
     links.unshift(link);
     chrome.storage.local.set({ links }, () => {
       // 通知书签白板页面刷新
-      chrome.runtime.sendMessage({ action: 'refreshData' });
+      chrome.runtime.sendMessage({ action: 'refreshData' }).catch(() => {
+        // 忽略错误：如果没有打开书签白板页面，这是正常的
+      });
       
       // 在当前页面显示成功通知
-      const aiTag = (aiSettings && aiSettings.features && (aiSettings.features.autoOptimizeTitle || aiSettings.features.autoSuggestCategory)) ? ' (AI 优化)' : '';
+      const aiTag = (aiSettings && aiSettings.features && 
+        (aiSettings.features.titleOptimization?.auto || aiSettings.features.categorySuggestion?.auto)) ? ' (AI 优化)' : '';
       showNotification(tabId, `已添加书签: ${link.title}${aiTag}`, 'success');
     });
   });

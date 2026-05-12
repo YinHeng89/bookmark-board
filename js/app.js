@@ -678,6 +678,81 @@ function showBookmarkContextMenu(link, x, y) {
   
   menu.appendChild(editItem);
   
+  // 选择分组（二级菜单）
+  const groupMenuItem = document.createElement('div');
+  groupMenuItem.className = 'group-select-item group-select-item-has-submenu';
+  groupMenuItem.innerHTML = `
+    <i class="fa fa-folder"></i>
+    <span>选择分组</span>
+    <i class="fa fa-chevron-right" style="margin-left: auto; font-size: 0.75rem;"></i>
+  `;
+  
+  // 创建二级菜单
+  const submenu = document.createElement('div');
+  submenu.className = 'group-select-submenu';
+  submenu.style.display = 'none';
+  
+  // 分组选项
+  groups.forEach(group => {
+    const item = document.createElement('div');
+    item.className = 'group-select-item' + (link.groups.includes(group.id) ? ' selected' : '');
+    item.innerHTML = `
+      <i class="fa ${link.groups.includes(group.id) ? 'fa-check-circle' : 'fa-circle-o'}"></i>
+      <span>${group.name}</span>
+    `;
+    
+    item.addEventListener('click', (e) => {
+      e.stopPropagation();
+      // 切换分组
+      if (link.groups.includes(group.id)) {
+        link.groups = link.groups.filter(gId => gId !== group.id);
+      } else {
+        link.groups.push(group.id);
+      }
+      
+      save();
+      renderLinks();
+      showToast('分组已更新');
+      // 更新选中状态
+      item.classList.toggle('selected');
+      const icon = item.querySelector('i');
+      icon.className = link.groups.includes(group.id) ? 'fa fa-check-circle' : 'fa fa-circle-o';
+    });
+    
+    submenu.appendChild(item);
+  });
+  
+  // 如果没有分组，显示提示
+  if (groups.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'group-select-item';
+    empty.style.color = 'var(--text-muted)';
+    empty.style.cursor = 'default';
+    empty.textContent = '暂无分组，请先创建';
+    submenu.appendChild(empty);
+  }
+  
+  // 点击“选择分组”显示/隐藏二级菜单
+  groupMenuItem.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isVisible = submenu.style.display === 'block';
+    
+    if (isVisible) {
+      submenu.style.display = 'none';
+      groupMenuItem.classList.remove('selected');
+    } else {
+      // 计算二级菜单位置（与“选择分组”这行对齐，保持10px距离）
+      const itemRect = groupMenuItem.getBoundingClientRect();
+      submenu.style.display = 'block';
+      submenu.style.left = (itemRect.right + 10) + 'px';
+      submenu.style.top = itemRect.top + 'px';
+      groupMenuItem.classList.add('selected');
+    }
+  });
+  
+  menu.appendChild(groupMenuItem);
+  menu.appendChild(submenu);
+  
   // AI 优化选项
   const aiItem = document.createElement('div');
   aiItem.className = 'group-select-item';
@@ -708,58 +783,6 @@ function showBookmarkContextMenu(link, x, y) {
   });
   
   menu.appendChild(deleteItem);
-  
-  // 分隔线
-  const divider2 = document.createElement('div');
-  divider2.className = 'group-select-divider';
-  menu.appendChild(divider2);
-  
-  // 分组标题
-  const groupTitle = document.createElement('div');
-  groupTitle.className = 'group-select-menu-title';
-  groupTitle.textContent = '选择分组';
-  menu.appendChild(groupTitle);
-  
-  // 分隔线
-  const divider3 = document.createElement('div');
-  divider3.className = 'group-select-divider';
-  menu.appendChild(divider3);
-  
-  // 分组选项
-  groups.forEach(group => {
-    const item = document.createElement('div');
-    item.className = 'group-select-item' + (link.groups.includes(group.id) ? ' selected' : '');
-    item.innerHTML = `
-      <i class="fa ${link.groups.includes(group.id) ? 'fa-check-circle' : 'fa-circle-o'}"></i>
-      <span>${group.name}</span>
-    `;
-    
-    item.addEventListener('click', () => {
-      // 切换分组
-      if (link.groups.includes(group.id)) {
-        link.groups = link.groups.filter(gId => gId !== group.id);
-      } else {
-        link.groups.push(group.id);
-      }
-      
-      save();
-      renderLinks();
-      showToast('分组已更新');
-      menu.remove();
-    });
-    
-    menu.appendChild(item);
-  });
-  
-  // 如果没有分组，显示提示
-  if (groups.length === 0) {
-    const empty = document.createElement('div');
-    empty.className = 'group-select-item';
-    empty.style.color = 'var(--text-muted)';
-    empty.style.cursor = 'default';
-    empty.textContent = '暂无分组，请先创建';
-    menu.appendChild(empty);
-  }
   
   // 定位菜单
   menu.style.left = Math.min(x, window.innerWidth - 220) + 'px';
@@ -826,14 +849,15 @@ async function addLinkFromUrl(url, draggedTitle = null) {
   const aiSettings = await getAISettings();
   let shouldWaitForAI = false;
   
-  if (aiSettings && aiSettings.features && aiSettings.provider && aiSettings.config?.apiUrl) {
+  if (aiSettings && aiSettings.features && aiSettings.config?.apiUrl) {
+    
     // 检查 AI 服务是否加载
     if (typeof AIService !== 'undefined') {
       const aiService = new AIService(aiSettings);
       const autoTasks = [];
       
       // 自动标题优化
-      if (aiSettings.features.autoOptimizeTitle) {
+      if (aiSettings.features.titleOptimization?.auto) {
         shouldWaitForAI = true;
         autoTasks.push(
           aiService.optimizeTitle(newLink.title, newLink.url)
@@ -848,7 +872,7 @@ async function addLinkFromUrl(url, draggedTitle = null) {
       }
       
       // 自动分类建议
-      if (aiSettings.features.autoSuggestCategory) {
+      if (aiSettings.features.categorySuggestion?.auto) {
         shouldWaitForAI = true;
         const groupNames = groups.map(g => g.name || g).filter(Boolean);
         autoTasks.push(
@@ -1637,7 +1661,7 @@ async function optimizeLinkWithAI(link, aiSettings) {
   const tasks = [];
 
   // 1. 智能标题优化
-  if (aiSettings.features?.optimizeTitle) {
+  if (aiSettings.features?.titleOptimization?.manual) {
     tasks.push(
       aiService.optimizeTitle(link.title, link.url)
         .then(optimizedTitle => {
@@ -1650,8 +1674,8 @@ async function optimizeLinkWithAI(link, aiSettings) {
     );
   }
 
-  // 2. 智能分类建议
-  if (aiSettings.features?.suggestCategory) {
+  // 2. 智能分组建议
+  if (aiSettings.features?.categorySuggestion?.manual) {
     // 提取分组名称列表
     const groupNames = groups.map(g => g.name || g).filter(Boolean);
     
@@ -1738,7 +1762,7 @@ async function aiOptimizeBookmark(link) {
   
   const aiSettings = await getAISettings();
   
-  if (!aiSettings || !aiSettings.provider || !aiSettings.config?.apiUrl) {
+  if (!aiSettings || !aiSettings.config?.apiUrl) {
     showToast('请先在设置中配置 AI');
     return;
   }
@@ -1748,16 +1772,16 @@ async function aiOptimizeBookmark(link) {
   try {
     const aiService = new AIService(aiSettings);
     
-    // 优化标题
-    if (aiSettings.features?.optimizeTitle) {
+    // 优化标题（手动）
+    if (aiSettings.features?.titleOptimization?.manual) {
       const optimizedTitle = await aiService.optimizeTitle(link.title, link.url);
       if (optimizedTitle && optimizedTitle !== link.title) {
         link.title = optimizedTitle;
       }
     }
     
-    // 分类建议
-    if (aiSettings.features?.suggestCategory) {
+    // 分类建议（手动）
+    if (aiSettings.features?.categorySuggestion?.manual) {
       // 提取分组名称列表
       const groupNames = groups.map(g => g.name || g).filter(Boolean);
       
