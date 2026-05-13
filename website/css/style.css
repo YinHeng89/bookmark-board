@@ -1206,6 +1206,11 @@ section {
 
 /* 手机 */
 @media (max-width: 768px) {
+  /* 移动端隐藏导航栏标题，只保留logo */
+  .nav-title {
+    display: none;
+  }
+  
   .nav-menu {
     position: fixed;
     top: 72px;
