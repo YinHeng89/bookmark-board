@@ -540,21 +540,30 @@ class AIService {
    */
   async optimizeTitle(title, url) {
     // 使用配置的提示词或默认提示词
-    let prompt = this.settings.prompts?.titleOptimization || 
-      `你是一个专业的书签管理助手。请优化以下书签标题，使其更简洁、更有意义。
+    let prompt = this.settings.prompts?.titleOptimization ||
+      `<task>
+优化标题
+</task>
 
-原始标题：{title}
-网址：{url}
+<input>
+<title>{title}</title>
+<url>{url}</url>
+</input>
 
-【严格输出要求】
-- 只返回优化后的标题文字
-- 禁止输出任何解释、理由、分析过程
-- 禁止使用任何标点符号（除了标题本身需要的）
-- 禁止使用 Markdown 格式
-- 长度控制在 15-25 个字符
-- 去除冗余信息（如“官网”、“首页”、“| 网站名”、“- 网站名”）
+<rules>
+- 只输出最终标题
+- 禁止输出解释
+- 保持核心含义不变
+- 去除冗余信息（如"官网"、"首页"、"| 网站名"、"- 网站名"、促销信息、标签、标题等）
+- 禁止输出多行
+- 格式规范：主要关键词 - 次要描述
+- 删除官网首页等无意义文本
+- 删除重复网站名
+- 长度限制15-25字符
+- 只允许输出中文
+</rules>
 
-直接输出标题：`;
+<output></output>`;
     
     // 替换模板变量
     prompt = prompt
@@ -578,22 +587,30 @@ class AIService {
     
     // 使用配置的提示词或默认提示词
     let prompt = this.settings.prompts?.categorySuggestion ||
-      `你是一个智能分类专家。请为以下书签推荐最合适的分组。
+      `<task>
+智能书签分类
+</task>
 
-标题：{title}
-网址：{url}
-域名：{domain}
+<input>
+<title>{title}</title>
+<url>{url}</url>
+<domain>{domain}</domain>
+<existingGroups>{groupsText}</existingGroups>
+</input>
 
-{groupsText}
+<rules>
+- 只输出分组名称
+- 禁止输出解释
+- 禁止输出推理
+- 禁止输出分析
+- 禁止输出多行
+- 禁止输出引号
+- 优先匹配现有分组
+- 无匹配时创建新分组
+- 分组名称2-6个中文字
+</rules>
 
-【严格输出要求】
-- 只能输出分组名称，2-4个中文字
-- 禁止输出任何解释、理由、分析过程
-- 禁止使用任何标点符号（除了名称本身）
-- 禁止使用 Markdown 格式
-- 如果无法确定，输出"其他"
-
-直接输出分组名称：`;
+<output></output>`;
     
     // 替换模板变量
     prompt = prompt

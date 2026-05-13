@@ -1,8 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "书签白板",
-  "description": "快速整理你的网络资源 | 隐私优先的本地书签管理工具",
-  "version": "3.2.3",
+  "name": "__MSG_appName__",
+  "description": "__MSG_appDesc__",
+  "version": "3.2.5",
+  "default_locale": "zh_CN",
   "chrome_url_overrides": {
     "newtab": "new-tab.html"
   },
@@ -21,7 +22,7 @@
     "default_path": "sidebar.html"
   },
   "action": {
-    "default_title": "书签白板"
+    "default_title": "__MSG_appName__"
   },
   "icons": {
     "16": "icons/logo.png",

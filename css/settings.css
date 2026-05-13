@@ -804,7 +804,7 @@
 .modal-field input {
   width: 100%;
   padding: 0.75rem;
-  border: 2px solid var(--border-color);
+  border: 1px solid var(--border-color);
   border-radius: 0.5rem;
   background: var(--bg-secondary);
   color: var(--text-primary);

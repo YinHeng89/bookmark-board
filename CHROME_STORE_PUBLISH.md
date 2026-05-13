@@ -37,7 +37,7 @@ bookmark-board/
   "manifest_version": 3,
   "name": "书签白板",
   "description": "快速整理你的网络资源 | 隐私优先的本地书签管理工具",
-  "version": "3.2.3",
+  "version": "3.2.5",
   "chrome_url_overrides": {
     "newtab": "new-tab.html"
   },
@@ -71,7 +71,7 @@ bookmark-board/
 
 **检查项**：
 - ✅ `manifest_version` 必须是 3
-- ✅ `version` 格式正确（如 3.2.3）
+- ✅ `version` 格式正确（如 3.2.5）
 - ✅ 所有图标路径正确
 - ✅ 权限声明合理
 - ✅ 所有文件路径正确
@@ -381,9 +381,9 @@ https://github.com/YinHeng89/bookmark-board/issues
 5. 提交审核
 
 **版本命名规范**：
-- `3.2.3` → `3.2.3`（小修复）
-- `3.2.3` → `3.3.0`（新功能）
-- `3.2.3` → `4.0.0`（重大更新）
+- `3.2.5` → `3.2.5`（小修复）
+- `3.2.5` → `3.3.0`（新功能）
+- `3.2.5` → `3.2.5`（重大更新）
 
 ---
 
