@@ -12,21 +12,23 @@ bookmark-board/
 ├── new-tab.html           ✅ 主页面
 ├── sidebar.html           ✅ 侧边栏页面
 ├── settings.html          ✅ 设置页面
+├── _locales/              ✅ 国际化文件
+│   ├── zh_CN/             ✅ 中文
+│   └── en/                ✅ 英文
 ├── css/
 │   ├── main.css          ✅ 主样式
-│   ── sidebar.css       ✅ 侧边栏样式
+│   ├── sidebar.css       ✅ 侧边栏样式
+│   └── settings.css      ✅ 设置页样式
 ├── js/
-│   ├── app.js            ✅ 主逻辑
+│   ├── app-refactored.js ✅ 主逻辑（模块化）
 │   ├── sidebar.js        ✅ 侧边栏逻辑
 │   ├── settings.js       ✅ 设置逻辑
-│   ── background.js     ✅ 后台脚本
+│   ├── background.js     ✅ 后台脚本
+│   └── modules/          ✅ 功能模块
 ├── icons/
-│   ├── logo-16.png       ✅ 16x16 图标
-│   ├── logo-48.png       ✅ 48x48 图标
-│   └── logo-128.png      ✅ 128x128 图标
+│   └── logo.png          ✅ 扩展图标（16/48/128px）
 ├── fonts/                 ✅ Font Awesome 字体
 ├── default-icon.png       ✅ 默认网站图标
-├── font-awesome.min.css   ✅ 图标库
 └── README.md              ✅ 项目说明
 ```
 
@@ -35,9 +37,10 @@ bookmark-board/
 ```json
 {
   "manifest_version": 3,
-  "name": "书签白板",
-  "description": "快速整理你的网络资源 | 隐私优先的本地书签管理工具",
+  "name": "__MSG_appName__",
+  "description": "__MSG_appDesc__",
   "version": "3.2.5",
+  "default_locale": "zh_CN",
   "chrome_url_overrides": {
     "newtab": "new-tab.html"
   },
@@ -46,7 +49,8 @@ bookmark-board/
     "contextMenus",
     "tabs",
     "scripting",
-    "sidePanel"
+    "sidePanel",
+    "activeTab"
   ],
   "host_permissions": [
     "http://*/*",

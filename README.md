@@ -2,7 +2,7 @@
 
 **隐私优先的本地书签管理工具** - 快速整理你的网络资源，告别浏览器书签栏的混乱！
 
-[![Chrome Extension](https://img.shields.io/badge/Chrome%20Extension-v3.2.5-blue?logo=google-chrome)](https://chrome.google.com/webstore)
+[![Chrome Extension](https://img.shields.io/badge/Chrome%20Extension-v3.2.5-blue?logo=google-chrome)](https://chromewebstore.google.com/detail/iceockbgpgoemnfccjdlnemihodlnmbj)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Manifest V3](https://img.shields.io/badge/Manifest-V3-orange?logo=google-chrome)](https://developer.chrome.com/docs/extensions/mv3/)
 
@@ -16,10 +16,13 @@
 
 ### 🚀 高效管理体验
 - **卡片式布局** - 视觉化展示，图标+标题一目了然
-- **实时搜索** - 即时过滤书签标题和URL
-- **批量操作** - 支持多选、全选、批量删除
+- **实时搜索** - 即时过滤书签标题、URL 和域名
+- **智能分组** - 手动分组 + 自动分组（基于域名）
+- **分区展示** - 所有书签、置顶书签、最近添加
+- **批量操作** - 支持多选、全选、批量删除/移动
+- **排序功能** - 按时间、名称、使用频率排序
 - **快速编辑** - 编辑书签名称，删除不需要的书签
-- **智能标题获取** - 自动提取网页标题或域名
+- **使用统计** - 自动记录点击次数和最后访问时间
 
 ### 📱 侧边栏功能
 - **快速访问** - 点击扩展图标或右键菜单打开侧边栏
@@ -136,20 +139,35 @@ bookmark-board/
 ├── manifest.json           # Chrome 扩展配置（Manifest V3）
 ├── new-tab.html            # 新标签页主界面
 ├── sidebar.html            # 侧边栏界面
+├── settings.html           # 设置中心界面
+├── _locales/               # 国际化文件
+│   ├── zh_CN/              # 中文（简体）
+│   └── en/                 # 英文
 ├── css/
 │   ├── main.css            # 主页面样式（CSS Variables）
 │   ├── sidebar.css         # 侧边栏样式
-│   └── tailwind-full.css   # Tailwind 完整样式（备用）
+│   └── settings.css        # 设置页样式
 ├── js/
-│   ├── app.js              # 主页面逻辑
+│   ├── app-refactored.js   # 主页面逻辑（模块化入口）
 │   ├── sidebar.js          # 侧边栏逻辑
-│   └── background.js       # 后台脚本（右键菜单、消息通信）
+│   ├── background.js       # 后台脚本（右键菜单、消息通信）
+│   ├── settings.js         # 设置中心逻辑
+│   └── modules/            # 功能模块
+│       ├── ai-integration.js   # AI 功能集成
+│       ├── bookmark-ops.js     # 书签操作
+│       ├── data-manager.js     # 数据管理
+│       ├── group-manager.js    # 分组管理
+│       ├── modal.js            # 模态框
+│       ├── toast.js            # Toast 通知
+│       └── ui-renderer.js      # UI 渲染
 ├── icons/
-│   ├── logo.png            # 扩展图标（16/48/128px）
-│   └── icon128.png         # 旧图标（已弃用）
+│   └── logo.png            # 扩展图标（16/48/128px）
 ├── fonts/                  # Font Awesome 字体文件
 ├── default-icon.png        # 默认网站图标
-├── font-awesome.min.css    # 图标库样式
+├── website/                # 宣传官网
+│   ├── index.html
+│   ├── css/
+│   └── js/
 └── README.md               # 项目说明文档
 ```
 
@@ -204,6 +222,16 @@ bookmark-board/
 
 ### 版本历史
 - **v3.2.5** (当前版本)
+  - ✅ 分组管理系统（手动分组 + 自动分组）
+  - ✅ 智能搜索（支持 `!分组`、`@域名` 语法）
+  - ✅ 分区展示（所有书签、置顶、最近添加）
+  - ✅ 排序功能（时间、名称、使用频率）
+  - ✅ 使用统计（点击次数、最后访问时间）
+  - ✅ 设置中心（书签管理、分组管理、数据导入导出）
+  - ✅ AI 智能分类（基于 OpenAI API）
+  - ✅ 国际化支持（中文、英文）
+  
+- **v3.2.x**
   - ✅ 侧边栏功能（移动端样式）
   - ✅ 右键菜单支持链接添加
   - ✅ 自动跟随系统主题
@@ -222,12 +250,11 @@ bookmark-board/
   - ✅ 手动添加
 
 ### 待开发功能
-- [ ] 书签分类和分组系统
-- [ ] 导入/导出功能（JSON格式）
-- [ ] 书签排序选项（时间/字母）
 - [ ] 键盘快捷键支持
-- [ ] 数据备份到云端
-- [ ] 收藏夹同步选项
+- [ ] 数据自动备份提醒
+- [ ] 浏览器原生书签导入
+- [ ] 自定义分组颜色
+- [ ] 书签标签系统（Tags）
 
 ## 📄 许可证
 
@@ -251,14 +278,22 @@ bookmark-board/
 A: 需要完全重新安装扩展（移除后重新加载）
 
 **Q: 书签丢失了？**
-A: 书签数据存储在浏览器本地，清除浏览器数据会导致丢失
+A: 书签数据存储在浏览器本地，清除浏览器数据会导致丢失。建议定期使用设置页的导出功能备份。
 
 **Q: 侧边栏不自动刷新？**
-A: 确保使用的是最新版本（v3.2.5+）
+A: 确保使用的是最新版本（v3.2.5+）。如果仍有问题，关闭并重新打开侧边栏。
+
+**Q: 如何备份书签？**
+A: 打开设置页面 → 数据管理 → 导出数据，会下载加密的 JSON 文件。
+
+**Q: 如何从 Chrome 商店安装？**
+A: 访问 [Chrome Web Store](https://chromewebstore.google.com/detail/iceockbgpgoemnfccjdlnemihodlnmbj) 点击"添加到 Chrome"即可。
 
 ## 🌟 致谢
 
+- [书签白板官网](https://yinheng89.github.io/bookmark-board/) - 项目官网
 - [书签白板 GitHub](https://github.com/YinHeng89/bookmark-board) - 项目主页
+- [Chrome Web Store](https://chromewebstore.google.com/detail/iceockbgpgoemnfccjdlnemihodlnmbj) - Chrome 商店
 - [Chrome Extension API](https://developer.chrome.com/docs/extensions/) - 强大的扩展能力
 - [Font Awesome](https://fontawesome.com/) - 精美的图标库
 - CSS Variables - 灵活的主题系统

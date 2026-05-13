@@ -3,18 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="书签白板 - 隐私优先的卡片式书签管理工具，拖拽添加、智能分组、侧边栏快速访问，完全离线可用">
-  <meta name="keywords" content="书签管理, 书签工具, 网页收藏, 链接管理, 本地存储, 隐私保护, 离线可用, Chrome扩展">
+  <meta name="description" content="书签白板 - 隐私优先的卡片式书签管理工具，拖拽添加、智能分组、侧边栏快速访问，完全离线可用" data-i18n-content="meta-description">
+  <meta name="keywords" content="书签管理, 书签工具, 网页收藏, 链接管理, 本地存储, 隐私保护, 离线可用, Chrome扩展" data-i18n-content="meta-keywords">
   <meta name="author" content="Bookmark Board Team">
   
   <!-- Open Graph / 社交分享 -->
-  <meta property="og:title" content="书签白板 - 隐私优先的卡片式书签管理工具">
-  <meta property="og:description" content="像画板一样管理你的网络资源！拖拽添加、智能分组、卡片式布局、侧边栏快速访问">
+  <meta property="og:title" content="书签白板 - 隐私优先的卡片式书签管理工具" data-i18n-content="og-title">
+  <meta property="og:description" content="像画板一样管理你的网络资源！拖拽添加、智能分组、卡片式布局、侧边栏快速访问" data-i18n-content="og-description">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://github.com/YinHeng89/bookmark-board">
   <meta property="og:image" content="../icons/logo.png">
   
-  <title>书签白板 - 隐私优先的卡片式书签管理工具</title>
+  <title data-i18n="meta-title">书签白板 - 隐私优先的卡片式书签管理工具</title>
   
   <!-- 字体 -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -32,23 +32,31 @@
   <nav class="navbar" id="navbar">
     <div class="container nav-container">
       <div class="nav-brand">
-        <img src="../icons/logo.png" alt="书签白板 Logo" class="nav-logo">
-        <span class="nav-title">书签白板</span>
+        <img src="../icons/logo.png" alt="Bookmark Board Logo" class="nav-logo">
+        <span class="nav-title" data-i18n="nav-brand">书签白板</span>
       </div>
       
       <div class="nav-menu" id="navMenu">
-        <a href="#features" class="nav-link">核心特性</a>
-        <a href="#use-cases" class="nav-link">使用场景</a>
-        <a href="#install" class="nav-link">安装使用</a>
-        <a href="#tech-stack" class="nav-link">技术架构</a>
+        <a href="#features" class="nav-link" data-i18n="nav-features">核心特性</a>
+        <a href="#use-cases" class="nav-link" data-i18n="nav-use-cases">使用场景</a>
+        <a href="#install" class="nav-link" data-i18n="nav-install">安装使用</a>
+        <a href="#tech-stack" class="nav-link" data-i18n="nav-tech">技术架构</a>
       </div>
       
       <div class="nav-actions">
+        <!-- 语言切换 - 苹果风格滑块 -->
+        <div class="lang-switcher" id="langSwitcher">
+          <div class="lang-slider-bg" id="langSliderBg"></div>
+          <button class="lang-btn active" data-lang="zh">ZH</button>
+          <button class="lang-btn" data-lang="en">EN</button>
+        </div>
+        
         <a href="https://github.com/YinHeng89/bookmark-board" target="_blank" class="btn btn-outline btn-sm">
           <svg class="btn-icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
             <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
           </svg>
-          GitHub
+          <span class="lang-text-zh">GitHub</span>
+          <span class="lang-text-en" style="display:none;">GitHub</span>
         </a>
         <button class="mobile-menu-toggle" id="mobileMenuToggle">
           <span></span>
@@ -64,41 +72,43 @@
     <div class="container hero-container">
       <div class="hero-content">
         <h1 class="hero-title">
-          <span class="gradient-text">书签白板</span>
+          <span class="gradient-text" data-i18n="hero-title">书签白板</span>
           <br>
-          <span class="hero-subtitle-main">隐私优先的卡片式书签管理工具</span>
+          <span class="hero-subtitle-main" data-i18n="hero-subtitle">隐私优先的卡片式书签管理工具</span>
         </h1>
-        <p class="hero-description">
+        <p class="hero-description" data-i18n="hero-description">
           像画板一样管理你的网络资源！拖拽添加、智能分组、卡片式布局、侧边栏快速访问，完全离线可用，保护你的隐私。
         </p>
         <div class="hero-actions">
-          <a href="#install" class="btn btn-primary btn-lg">
+          <a href="https://chromewebstore.google.com/detail/iceockbgpgoemnfccjdlnemihodlnmbj" target="_blank" class="btn btn-primary btn-lg" id="heroInstallBtn">
             <svg class="btn-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/>
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
             </svg>
-            安装到 Chrome
+            <span class="lang-text-zh">安装到 Chrome</span>
+            <span class="lang-text-en" style="display:none;">Add to Chrome</span>
           </a>
           <a href="https://github.com/YinHeng89/bookmark-board" target="_blank" class="btn btn-outline btn-lg">
             <svg class="btn-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
               <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
             </svg>
-            在 GitHub 上查看
+            <span class="lang-text-zh">在 GitHub 上查看</span>
+            <span class="lang-text-en" style="display:none;">View on GitHub</span>
           </a>
         </div>
         <div class="hero-stats">
           <div class="stat-item">
             <div class="stat-number">100%</div>
-            <div class="stat-label">本地存储</div>
+            <div class="stat-label" data-i18n="hero-stats-local">本地存储</div>
           </div>
           <div class="stat-divider"></div>
           <div class="stat-item">
             <div class="stat-number">0</div>
-            <div class="stat-label">网络请求</div>
+            <div class="stat-label" data-i18n="hero-stats-network">网络请求</div>
           </div>
           <div class="stat-divider"></div>
           <div class="stat-item">
             <div class="stat-number">5+</div>
-            <div class="stat-label">添加方式</div>
+            <div class="stat-label" data-i18n="hero-stats-methods">添加方式</div>
           </div>
         </div>
       </div>
@@ -112,7 +122,7 @@
                 <span></span>
                 <span></span>
               </div>
-              <div class="mockup-title">书签白板</div>
+              <div class="mockup-title" data-i18n="mockup-title">书签白板</div>
             </div>
             <div class="mockup-content">
               <div class="mockup-grid">
@@ -123,7 +133,7 @@
                       <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
                     </svg>
                   </div>
-                  <div class="card-text">学习资料</div>
+                  <div class="card-text" data-i18n="mockup-card-1">学习资料</div>
                 </div>
                 <div class="mockup-card card-2">
                   <div class="card-icon">
@@ -132,7 +142,7 @@
                       <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
                     </svg>
                   </div>
-                  <div class="card-text">工作项目</div>
+                  <div class="card-text" data-i18n="mockup-card-2">工作项目</div>
                 </div>
                 <div class="mockup-card card-3">
                   <div class="card-icon">
@@ -142,7 +152,7 @@
                       <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
                     </svg>
                   </div>
-                  <div class="card-text">购物清单</div>
+                  <div class="card-text" data-i18n="mockup-card-3">购物清单</div>
                 </div>
                 <div class="mockup-card card-4">
                   <div class="card-icon">
@@ -150,7 +160,7 @@
                       <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                     </svg>
                   </div>
-                  <div class="card-text">设计灵感</div>
+                  <div class="card-text" data-i18n="mockup-card-4">设计灵感</div>
                 </div>
               </div>
             </div>
@@ -175,8 +185,8 @@
   <section class="features" id="features">
     <div class="container">
       <div class="section-header">
-        <h2 class="section-title">核心特性</h2>
-        <p class="section-subtitle">强大而简洁的书签管理体验</p>
+        <h2 class="section-title" data-i18n="section-features">核心特性</h2>
+        <p class="section-subtitle" data-i18n="section-features-subtitle">强大而简洁的书签管理体验</p>
       </div>
       
       <div class="features-grid">
@@ -188,8 +198,8 @@
               <path d="M2 12l10 5 10-5"></path>
             </svg>
           </div>
-          <h3 class="feature-title">多场景添加</h3>
-          <p class="feature-description">
+          <h3 class="feature-title" data-i18n="feature-1-title">多场景添加</h3>
+          <p class="feature-description" data-i18n="feature-1-desc">
             拖拽添加、右键菜单、手动输入、侧边栏一键添加，5种方式快速保存网页
           </p>
         </div>
@@ -200,8 +210,8 @@
               <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
             </svg>
           </div>
-          <h3 class="feature-title">高效管理</h3>
-          <p class="feature-description">
+          <h3 class="feature-title" data-i18n="feature-2-title">高效管理</h3>
+          <p class="feature-description" data-i18n="feature-2-desc">
             卡片式布局、实时搜索、批量操作、智能排序，让整理变得轻松愉快
           </p>
         </div>
@@ -212,8 +222,8 @@
               <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
             </svg>
           </div>
-          <h3 class="feature-title">智能分组</h3>
-          <p class="feature-description">
+          <h3 class="feature-title" data-i18n="feature-3-title">智能分组</h3>
+          <p class="feature-description" data-i18n="feature-3-desc">
             手动分组、自动分类、分组筛选，多层级组织你的书签集合
           </p>
         </div>
@@ -226,8 +236,8 @@
               <line x1="12" y1="17" x2="12" y2="21"></line>
             </svg>
           </div>
-          <h3 class="feature-title">侧边栏</h3>
-          <p class="feature-description">
+          <h3 class="feature-title" data-i18n="feature-4-title">侧边栏</h3>
+          <p class="feature-description" data-i18n="feature-4-desc">
             快速访问、实时同步、移动端样式，浏览网页时随时管理书签
           </p>
         </div>
@@ -246,8 +256,8 @@
               <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
             </svg>
           </div>
-          <h3 class="feature-title">现代界面</h3>
-          <p class="feature-description">
+          <h3 class="feature-title" data-i18n="feature-5-title">现代界面</h3>
+          <p class="feature-description" data-i18n="feature-5-desc">
             深色/浅色主题、响应式设计、流畅动画，视觉体验舒适优雅
           </p>
         </div>
@@ -259,8 +269,8 @@
               <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
             </svg>
           </div>
-          <h3 class="feature-title">隐私保护</h3>
-          <p class="feature-description">
+          <h3 class="feature-title" data-i18n="feature-6-title">隐私保护</h3>
+          <p class="feature-description" data-i18n="feature-6-desc">
             完全本地存储、无需联网、数据自主，你的数据完全由你掌控
           </p>
         </div>
@@ -272,8 +282,8 @@
   <section class="use-cases" id="use-cases">
     <div class="container">
       <div class="section-header">
-        <h2 class="section-title">使用场景</h2>
-        <p class="section-subtitle">适合各种书签管理需求</p>
+        <h2 class="section-title" data-i18n="section-use-cases">使用场景</h2>
+        <p class="section-subtitle" data-i18n="section-use-cases-subtitle">适合各种书签管理需求</p>
       </div>
       
       <div class="use-cases-grid">
@@ -284,14 +294,14 @@
               <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
             </svg>
           </div>
-          <h3 class="use-case-title">学习研究</h3>
-          <p class="use-case-description">
+          <h3 class="use-case-title" data-i18n="use-case-1-title">学习研究</h3>
+          <p class="use-case-description" data-i18n="use-case-1-desc">
             整理学习资料、论文参考文献、在线课程链接，构建个人知识库
           </p>
           <ul class="use-case-list">
-            <li>✓ 按科目分类整理</li>
-            <li>✓ 快速搜索查找</li>
-            <li>✓ 随时添加新资源</li>
+            <li data-i18n="use-case-1-li-1">✓ 按科目分类整理</li>
+            <li data-i18n="use-case-1-li-2">✓ 快速搜索查找</li>
+            <li data-i18n="use-case-1-li-3">✓ 随时添加新资源</li>
           </ul>
         </div>
         
@@ -302,14 +312,14 @@
               <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
             </svg>
           </div>
-          <h3 class="use-case-title">项目管理</h3>
-          <p class="use-case-description">
+          <h3 class="use-case-title" data-i18n="use-case-2-title">项目管理</h3>
+          <p class="use-case-description" data-i18n="use-case-2-desc">
             按项目分类保存相关页面，团队成员共享参考资料
           </p>
           <ul class="use-case-list">
-            <li>✓ 项目分组管理</li>
-            <li>✓ 置顶重要链接</li>
-            <li>✓ 快速访问常用工具</li>
+            <li data-i18n="use-case-2-li-1">✓ 项目分组管理</li>
+            <li data-i18n="use-case-2-li-2">✓ 置顶重要链接</li>
+            <li data-i18n="use-case-2-li-3">✓ 快速访问常用工具</li>
           </ul>
         </div>
         
@@ -321,14 +331,14 @@
               <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
             </svg>
           </div>
-          <h3 class="use-case-title">购物比价</h3>
-          <p class="use-case-description">
+          <h3 class="use-case-title" data-i18n="use-case-3-title">购物比价</h3>
+          <p class="use-case-description" data-i18n="use-case-3-desc">
             保存商品页面方便对比，整理购物清单和优惠信息
           </p>
           <ul class="use-case-list">
-            <li>✓ 商品链接收集</li>
-            <li>✓ 价格对比整理</li>
-            <li>✓ 促销活动追踪</li>
+            <li data-i18n="use-case-3-li-1">✓ 商品链接收集</li>
+            <li data-i18n="use-case-3-li-2">✓ 价格对比整理</li>
+            <li data-i18n="use-case-3-li-3">✓ 促销活动追踪</li>
           </ul>
         </div>
         
@@ -339,14 +349,14 @@
               <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
             </svg>
           </div>
-          <h3 class="use-case-title">资料收集</h3>
-          <p class="use-case-description">
+          <h3 class="use-case-title" data-i18n="use-case-4-title">资料收集</h3>
+          <p class="use-case-description" data-i18n="use-case-4-desc">
             整理研究资料和参考链接，收藏优质内容和灵感来源
           </p>
           <ul class="use-case-list">
-            <li>✓ 文章链接收藏</li>
-            <li>✓ 参考资料整理</li>
-            <li>✓ 灵感创意收集</li>
+            <li data-i18n="use-case-4-li-1">✓ 文章链接收藏</li>
+            <li data-i18n="use-case-4-li-2">✓ 参考资料整理</li>
+            <li data-i18n="use-case-4-li-3">✓ 灵感创意收集</li>
           </ul>
         </div>
       </div>
@@ -357,16 +367,16 @@
   <section class="install" id="install">
     <div class="container">
       <div class="section-header">
-        <h2 class="section-title">3 步开始使用</h2>
-        <p class="section-subtitle">简单快速，即刻体验</p>
+        <h2 class="section-title" data-i18n="section-install">3 步开始使用</h2>
+        <p class="section-subtitle" data-i18n="section-install-subtitle">简单快速，即刻体验</p>
       </div>
       
       <div class="install-steps">
         <div class="install-step fade-in">
           <div class="step-number">1</div>
           <div class="step-content">
-            <h3 class="step-title">获取扩展</h3>
-            <p class="step-description">
+            <h3 class="step-title" data-i18n="install-step-1-title">获取扩展</h3>
+            <p class="step-description" data-i18n="install-step-1-desc">
               从 Chrome Web Store 安装，或从 GitHub 下载源代码
             </p>
           </div>
@@ -375,8 +385,8 @@
         <div class="install-step fade-in">
           <div class="step-number">2</div>
           <div class="step-content">
-            <h3 class="step-title">加载到 Chrome</h3>
-            <p class="step-description">
+            <h3 class="step-title" data-i18n="install-step-2-title">加载到 Chrome</h3>
+            <p class="step-description" data-i18n="install-step-2-desc">
               打开 chrome://extensions/，开启开发者模式，加载已解压的扩展程序
             </p>
           </div>
@@ -385,8 +395,8 @@
         <div class="install-step fade-in">
           <div class="step-number">3</div>
           <div class="step-content">
-            <h3 class="step-title">开始整理</h3>
-            <p class="step-description">
+            <h3 class="step-title" data-i18n="install-step-3-title">开始整理</h3>
+            <p class="step-description" data-i18n="install-step-3-desc">
               打开新标签页即可看到书签白板，开始拖拽添加你的第一个书签！
             </p>
           </div>
@@ -398,19 +408,22 @@
           <svg class="btn-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
           </svg>
-          从 Chrome 商店安装
+          <span class="lang-text-zh">从 Chrome 商店安装</span>
+          <span class="lang-text-en" style="display:none;">Install from Chrome Store</span>
         </a>
         <a href="https://github.com/YinHeng89/bookmark-board" target="_blank" class="btn btn-outline btn-lg">
           <svg class="btn-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
             <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
           </svg>
-          从 GitHub 安装
+          <span class="lang-text-zh">从 GitHub 安装</span>
+          <span class="lang-text-en" style="display:none;">Install from GitHub</span>
         </a>
         <a href="https://github.com/YinHeng89/bookmark-board/blob/main/GUIDE.md" target="_blank" class="btn btn-outline btn-lg">
           <svg class="btn-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
             <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
           </svg>
-          查看使用文档
+          <span class="lang-text-zh">查看使用文档</span>
+          <span class="lang-text-en" style="display:none;">View Documentation</span>
         </a>
       </div>
     </div>
@@ -420,8 +433,8 @@
   <section class="tech-stack" id="tech-stack">
     <div class="container">
       <div class="section-header">
-        <h2 class="section-title">技术架构</h2>
-        <p class="section-subtitle">轻量、快速、无依赖</p>
+        <h2 class="section-title" data-i18n="section-tech">技术架构</h2>
+        <p class="section-subtitle" data-i18n="section-tech-subtitle">轻量、快速、无依赖</p>
       </div>
       
       <div class="tech-grid">
@@ -431,8 +444,8 @@
               <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
             </svg>
           </div>
-          <h4 class="tech-name">Manifest V3</h4>
-          <p class="tech-desc">最新 Chrome 扩展标准</p>
+          <h4 class="tech-name" data-i18n="tech-1-title">Manifest V3</h4>
+          <p class="tech-desc" data-i18n="tech-1-desc">最新 Chrome 扩展标准</p>
         </div>
         
         <div class="tech-item fade-in">
@@ -443,8 +456,8 @@
               <path d="M2 12l10 5 10-5"></path>
             </svg>
           </div>
-          <h4 class="tech-name">原生 CSS</h4>
-          <p class="tech-desc">CSS Variables 主题系统</p>
+          <h4 class="tech-name" data-i18n="tech-2-title">原生 CSS</h4>
+          <p class="tech-desc" data-i18n="tech-2-desc">CSS Variables 主题系统</p>
         </div>
         
         <div class="tech-item fade-in">
@@ -454,8 +467,8 @@
               <polyline points="8 6 2 12 8 18"></polyline>
             </svg>
           </div>
-          <h4 class="tech-name">JavaScript ES6+</h4>
-          <p class="tech-desc">现代交互逻辑</p>
+          <h4 class="tech-name" data-i18n="tech-3-title">JavaScript ES6+</h4>
+          <p class="tech-desc" data-i18n="tech-3-desc">现代交互逻辑</p>
         </div>
         
         <div class="tech-item fade-in">
@@ -464,8 +477,8 @@
               <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
             </svg>
           </div>
-          <h4 class="tech-name">零依赖</h4>
-          <p class="tech-desc">无需外部库，轻量快速</p>
+          <h4 class="tech-name" data-i18n="tech-4-title">零依赖</h4>
+          <p class="tech-desc" data-i18n="tech-4-desc">无需外部库，轻量快速</p>
         </div>
         
         <div class="tech-item fade-in">
@@ -475,8 +488,8 @@
               <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
             </svg>
           </div>
-          <h4 class="tech-name">Chrome Storage</h4>
-          <p class="tech-desc">本地数据安全存储</p>
+          <h4 class="tech-name" data-i18n="tech-5-title">Chrome Storage</h4>
+          <p class="tech-desc" data-i18n="tech-5-desc">本地数据安全存储</p>
         </div>
         
         <div class="tech-item fade-in">
@@ -485,8 +498,8 @@
               <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path>
             </svg>
           </div>
-          <h4 class="tech-name">离线可用</h4>
-          <p class="tech-desc">无需网络连接</p>
+          <h4 class="tech-name" data-i18n="tech-6-title">离线可用</h4>
+          <p class="tech-desc" data-i18n="tech-6-desc">无需网络连接</p>
         </div>
       </div>
     </div>
@@ -497,27 +510,27 @@
     <div class="container">
       <div class="footer-content">
         <div class="footer-section">
-          <h4 class="footer-title">项目</h4>
+          <h4 class="footer-title" data-i18n="footer-project">项目</h4>
           <ul class="footer-links">
-            <li><a href="https://github.com/YinHeng89/bookmark-board" target="_blank">GitHub 仓库</a></li>
-            <li><a href="https://github.com/YinHeng89/bookmark-board/blob/main/GUIDE.md" target="_blank">使用文档</a></li>
-            <li><a href="https://github.com/YinHeng89/bookmark-board/issues" target="_blank">问题反馈</a></li>
-            <li><a href="https://github.com/YinHeng89/bookmark-board/blob/main/UPDATE_LOG.md" target="_blank">更新日志</a></li>
+            <li><a href="https://github.com/YinHeng89/bookmark-board" target="_blank" data-i18n="footer-link-github">GitHub 仓库</a></li>
+            <li><a href="https://github.com/YinHeng89/bookmark-board/blob/main/GUIDE.md" target="_blank" data-i18n="footer-link-guide">使用文档</a></li>
+            <li><a href="https://github.com/YinHeng89/bookmark-board/issues" target="_blank" data-i18n="footer-link-issues">问题反馈</a></li>
+            <li><a href="https://github.com/YinHeng89/bookmark-board/blob/main/UPDATE_LOG.md" target="_blank" data-i18n="footer-link-changelog">更新日志</a></li>
           </ul>
         </div>
         
         <div class="footer-section">
-          <h4 class="footer-title">资源</h4>
+          <h4 class="footer-title" data-i18n="footer-resources">资源</h4>
           <ul class="footer-links">
-            <li><a href="https://developer.chrome.com/docs/extensions/" target="_blank">Chrome 扩展文档</a></li>
-            <li><a href="https://github.com/YinHeng89/bookmark-board/blob/main/PRIVACY.md" target="_blank">隐私政策</a></li>
-            <li><a href="https://github.com/YinHeng89/bookmark-board/blob/main/README.md" target="_blank">项目说明</a></li>
+            <li><a href="https://developer.chrome.com/docs/extensions/" target="_blank" data-i18n="footer-link-chrome-docs">Chrome 扩展文档</a></li>
+            <li><a href="https://github.com/YinHeng89/bookmark-board/blob/main/PRIVACY.md" target="_blank" data-i18n="footer-link-privacy">隐私政策</a></li>
+            <li><a href="https://github.com/YinHeng89/bookmark-board/blob/main/README.md" target="_blank" data-i18n="footer-link-about">项目说明</a></li>
           </ul>
         </div>
         
         <div class="footer-section">
-          <h4 class="footer-title">许可证</h4>
-          <p class="footer-license">
+          <h4 class="footer-title" data-i18n="footer-license-title">许可证</h4>
+          <p class="footer-license" data-i18n="footer-license-desc">
             本项目采用 <a href="https://opensource.org/licenses/MIT" target="_blank">MIT 许可证</a>
             <br>
             完全开源，可自由使用和修改
@@ -526,8 +539,8 @@
       </div>
       
       <div class="footer-bottom">
-        <p>&copy; 2026 书签白板 Bookmark Board. 保留所有权利。</p>
-        <p class="footer-made-with">用 ❤️ 打造，让书签管理更简单</p>
+        <p data-i18n="footer-copyright">&copy; 2026 书签白板 Bookmark Board. 保留所有权利。</p>
+        <p class="footer-made-with" data-i18n="footer-made-with">用 ❤️ 打造，让书签管理更简单</p>
       </div>
     </div>
   </footer>
