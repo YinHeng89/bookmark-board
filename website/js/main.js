@@ -264,7 +264,7 @@ function initLanguageSwitcher() {
       'section-install': '3 步开始使用',
       'section-install-subtitle': '简单快速，即刻体验',
       'install-step-1-title': '获取扩展',
-      'install-step-1-desc': '从 Chrome Web Store 安装，或从 GitHub 下载源代码',
+      'install-step-1-desc': '从 Chrome 商店安装，或从 GitHub 下载源代码',
       'install-step-2-title': '加载到 Chrome',
       'install-step-2-desc': '打开 chrome://extensions/，开启开发者模式，加载已解压的扩展程序',
       'install-step-3-title': '开始整理',
