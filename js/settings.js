@@ -1449,7 +1449,7 @@ function setupAISettings() {
     });
   }
   
-  // AI 功能开关变化时自动保存
+  // AI 功能开关变化时自动保存（只保存功能设置，不影响 API 配置）
   const featureCheckboxes = [
     aiTitleOptimizationAuto,
     aiTitleOptimizationManual,
@@ -1463,7 +1463,7 @@ function setupAISettings() {
     checkbox.addEventListener('change', () => {
       // 延迟保存，确保 UI 更新完成
       setTimeout(() => {
-        saveAISettings();
+        saveAIFeaturesOnly();  // 只保存功能开关，不保存 API 配置
       }, 100);
     });
   });
@@ -1815,6 +1815,46 @@ function saveAISettings() {
       }
       
       showAISstatus('success', '设置已保存！');
+      
+      // 3秒后隐藏状态
+      setTimeout(() => {
+        if (aiStatus) aiStatus.style.display = 'none';
+      }, 3000);
+    });
+  });
+}
+
+/**
+ * 只保存 AI 功能设置（不影响 API 配置）
+ */
+function saveAIFeaturesOnly() {
+  const settings = {
+    features: {
+      titleOptimization: {
+        auto: aiTitleOptimizationAuto?.checked || false,
+        manual: aiTitleOptimizationManual?.checked || false
+      },
+      categorySuggestion: {
+        auto: aiCategorySuggestionAuto?.checked || false,
+        manual: aiCategorySuggestionManual?.checked || false
+      },
+      generateSummary: aiGenerateSummary?.checked || false,
+      smartSearch: aiSmartSearch?.checked || false
+    }
+  };
+  
+  // 只更新功能设置，不触碰 API 配置
+  chrome.storage.local.get(['aiSettings'], (result) => {
+    const existingSettings = result.aiSettings || {};
+    existingSettings.features = settings.features;
+    
+    chrome.storage.local.set({ aiSettings: existingSettings }, () => {
+      if (chrome.runtime.lastError) {
+        showAISstatus('error', '保存失败: ' + chrome.runtime.lastError.message);
+        return;
+      }
+      
+      showAISstatus('success', '功能设置已保存！');
       
       // 3秒后隐藏状态
       setTimeout(() => {
