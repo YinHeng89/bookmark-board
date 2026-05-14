@@ -68,6 +68,13 @@ function loadData() {
     emptyState.innerHTML = '<i class="fa fa-spinner fa-spin"></i><p>加载中...</p>';
   }
   
+  // 恢复提示栏状态
+  chrome.storage.local.get(['tipHidden'], (result) => {
+    if (result.tipHidden === true) {
+      tipBar.style.display = 'none';
+    }
+  });
+  
   dataManager.loadData(() => {
     renderGroups();
     renderLinks();
