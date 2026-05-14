@@ -121,8 +121,30 @@ class AIIntegration {
     
     const aiSettings = await this.getAISettings();
     
+    // 校验：检查 API 配置是否完整
     if (!aiSettings || !aiSettings.config?.apiUrl) {
-      this.toast.show('请先在设置中配置 AI');
+      this.toast.show('请先在设置中配置 AI API 信息');
+      return;
+    }
+    
+    // 如果使用需要认证的供应商，检查 API Key
+    const provider = aiSettings.provider || 'custom';
+    const requiresApiKey = ['openai', 'anthropic', 'google', 'deepseek', 'moonshot'].includes(provider);
+    
+    if (requiresApiKey && !aiSettings.config?.apiKey) {
+      this.toast.show(`请先在设置中填写 ${provider} 的 API Key`);
+      return;
+    }
+    
+    // 校验2：检查是否至少开启了一个手动功能
+    const hasManualFeature = 
+      aiSettings.features?.titleOptimization?.manual ||
+      aiSettings.features?.categorySuggestion?.manual ||
+      aiSettings.features?.generateSummary ||
+      aiSettings.features?.smartSearch;
+    
+    if (!hasManualFeature) {
+      this.toast.show('请先在设置中开启 AI 功能（手动优化/手动分组等）');
       return;
     }
 

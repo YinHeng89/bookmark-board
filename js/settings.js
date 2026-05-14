@@ -40,6 +40,7 @@ let domainCache = new Map();
 let autoGroupNames = {};
 let selectedLinks = new Set();
 let isBatchMode = false;
+let isApiConfigValidated = false;  // API 配置是否通过测试验证
 
 // ========== 初始化 ==========
 document.addEventListener('DOMContentLoaded', () => {
@@ -1096,7 +1097,7 @@ async function exportData() {
     
     // 收集所有数据
     const exportObj = {
-      version: '3.2.5',
+      version: '3.2.6',
       exportDate: new Date().toISOString(),
       links: links,
       groups: groups,
@@ -1377,9 +1378,23 @@ function setupAISettings() {
     aiSaveBtn.addEventListener('click', saveAISettings);
   }
   
-  // 供应商切换时自动填充默认值
+  // API 配置输入框变化时，禁用保存按钮（需要重新测试）
+  [aiApiUrl, aiApiKey, aiModel].forEach(input => {
+    if (input) {
+      input.addEventListener('input', () => {
+        isApiConfigValidated = false;
+        updateSaveButtonState(false);
+      });
+    }
+  });
+  
+  // 供应商切换时，禁用保存按钮（需要重新测试）
   if (aiProvider) {
-    aiProvider.addEventListener('change', onProviderChange);
+    aiProvider.addEventListener('change', () => {
+      isApiConfigValidated = false;
+      updateSaveButtonState(false);
+      onProviderChange();
+    });
   }
   
   // 获取模型列表按钮
@@ -1593,6 +1608,10 @@ function loadAISettings() {
     // 更新配置摘要
     updateAIConfigSummary(settings.provider, providerConfig);
     
+    // 初始化保存按钮状态：默认禁用，需要测试通过后才能保存
+    isApiConfigValidated = false;
+    updateSaveButtonState(false);
+    
     // 根据配置状态决定默认展开/折叠
     const isConfigured = providerConfig.apiUrl || providerConfig.model;
     const storedCollapsed = localStorage.getItem('ai_config_collapsed');
@@ -1775,6 +1794,12 @@ function saveAISettings() {
     }
   };
   
+  // 如果有 API 配置，检查是否通过测试验证
+  if (settings.config.apiUrl && !isApiConfigValidated) {
+    showAISstatus('error', '请先点击"测试连接"按钮，验证配置无误后再保存');
+    return;
+  }
+  
   // 如果没有 API 地址，只保存功能开关
   if (!settings.config.apiUrl) {
     // 只保存功能开关，不保存供应商配置
@@ -1815,6 +1840,9 @@ function saveAISettings() {
       }
       
       showAISstatus('success', '设置已保存！');
+      
+      // 实时更新 API 配置摘要
+      updateAIConfigSummary(currentProvider, providerConfigs[currentProvider]);
       
       // 3秒后隐藏状态
       setTimeout(() => {
@@ -1876,10 +1904,17 @@ async function testAIConnection() {
   
   if (!apiUrl) {
     showAISstatus('error', '请先填写 API 地址');
+    updateSaveButtonState(false);
     return;
   }
   
+  // API Key 不强制要求，让测试接口自己验证
   showAISstatus('loading', '正在测试连接...');
+  
+  // 测试按钮显示 loading 状态
+  const originalText = aiTestBtn.innerHTML;
+  aiTestBtn.disabled = true;
+  aiTestBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i><span>测试中...</span>';
   
   try {
     // 创建 AI 服务实例
@@ -1897,11 +1932,42 @@ async function testAIConnection() {
     
     if (result.success) {
       showAISstatus('success', result.message);
+      // 测试成功，显示保存按钮
+      isApiConfigValidated = true;
+      updateSaveButtonState(true);
     } else {
       showAISstatus('error', result.message);
+      // 测试失败，隐藏保存按钮
+      isApiConfigValidated = false;
+      updateSaveButtonState(false);
     }
   } catch (error) {
     showAISstatus('error', '测试失败: ' + error.message);
+    // 测试失败，隐藏保存按钮
+    isApiConfigValidated = false;
+    updateSaveButtonState(false);
+  } finally {
+    // 恢复测试按钮状态
+    aiTestBtn.disabled = false;
+    aiTestBtn.innerHTML = originalText;
+  }
+}
+
+/**
+ * 更新保存按钮状态
+ * @param {boolean} isValidated - 是否通过测试验证
+ */
+function updateSaveButtonState(isValidated) {
+  if (!aiSaveBtn) return;
+  
+  if (isValidated) {
+    // 测试通过：显示按钮（带动画）
+    aiSaveBtn.classList.add('show');
+    aiSaveBtn.title = '保存 AI 配置';
+  } else {
+    // 未测试或测试失败：隐藏按钮
+    aiSaveBtn.classList.remove('show');
+    aiSaveBtn.title = '';
   }
 }
 
@@ -2086,12 +2152,12 @@ function getDefaultAISettings() {
     },
     features: {
       titleOptimization: {
-        auto: true,
-        manual: true
+        auto: false,
+        manual: true  // 默认开启手动优化
       },
       categorySuggestion: {
-        auto: true,
-        manual: true
+        auto: false,
+        manual: true  // 默认开启手动分组
       },
       generateSummary: false,
       smartSearch: false

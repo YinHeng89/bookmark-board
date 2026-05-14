@@ -2,7 +2,7 @@
 
 **隐私优先的本地书签管理工具** - 快速整理你的网络资源，告别浏览器书签栏的混乱！
 
-[![Chrome Extension](https://img.shields.io/badge/Chrome%20Extension-v3.2.5-blue?logo=google-chrome)](https://chromewebstore.google.com/detail/iceockbgpgoemnfccjdlnemihodlnmbj)
+[![Chrome Extension](https://img.shields.io/badge/Chrome%20Extension-v3.2.6-blue?logo=google-chrome)](https://chromewebstore.google.com/detail/iceockbgpgoemnfccjdlnemihodlnmbj)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Manifest V3](https://img.shields.io/badge/Manifest-V3-orange?logo=google-chrome)](https://developer.chrome.com/docs/extensions/mv3/)
 
@@ -221,7 +221,7 @@ bookmark-board/
 5. 开启 Pull Request
 
 ### 版本历史
-- **v3.2.5** (当前版本)
+- **v3.2.6** (当前版本)
   - ✅ 分组管理系统（手动分组 + 自动分组）
   - ✅ 智能搜索（支持 `!分组`、`@域名` 语法）
   - ✅ 分区展示（所有书签、置顶、最近添加）
@@ -281,7 +281,7 @@ A: 需要完全重新安装扩展（移除后重新加载）
 A: 书签数据存储在浏览器本地，清除浏览器数据会导致丢失。建议定期使用设置页的导出功能备份。
 
 **Q: 侧边栏不自动刷新？**
-A: 确保使用的是最新版本（v3.2.5+）。如果仍有问题，关闭并重新打开侧边栏。
+A: 确保使用的是最新版本（v3.2.6+）。如果仍有问题，关闭并重新打开侧边栏。
 
 **Q: 如何备份书签？**
 A: 打开设置页面 → 数据管理 → 导出数据，会下载加密的 JSON 文件。

@@ -39,7 +39,7 @@ bookmark-board/
   "manifest_version": 3,
   "name": "__MSG_appName__",
   "description": "__MSG_appDesc__",
-  "version": "3.2.5",
+  "version": "3.2.6",
   "default_locale": "zh_CN",
   "chrome_url_overrides": {
     "newtab": "new-tab.html"
@@ -75,7 +75,7 @@ bookmark-board/
 
 **检查项**：
 - ✅ `manifest_version` 必须是 3
-- ✅ `version` 格式正确（如 3.2.5）
+- ✅ `version` 格式正确（如 3.2.6）
 - ✅ 所有图标路径正确
 - ✅ 权限声明合理
 - ✅ 所有文件路径正确
@@ -385,9 +385,9 @@ https://github.com/YinHeng89/bookmark-board/issues
 5. 提交审核
 
 **版本命名规范**：
-- `3.2.5` → `3.2.5`（小修复）
-- `3.2.5` → `3.3.0`（新功能）
-- `3.2.5` → `3.2.5`（重大更新）
+- `3.2.6` → `3.2.6`（小修复）
+- `3.2.6` → `3.3.0`（新功能）
+- `3.2.6` → `4.0.0`（重大更新）
 
 ---
 
