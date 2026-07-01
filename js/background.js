@@ -130,20 +130,35 @@ async function addBookmarkWithAI(url, title, icon, tabId) {
           name: '智谱',
           defaultUrl: 'https://open.bigmodel.cn/api/paas/v4',
           chatEndpoint: '/chat/completions'
+        },
+        google: {
+          name: 'Google',
+          defaultUrl: 'https://generativelanguage.googleapis.com/v1beta',
+          chatEndpoint: '/models/'  // 前缀，实际 endpoint 动态拼接模型名
         }
       };
       
+      const isGoogle = aiSettings.provider === 'google';
       const provider = AI_CONFIG[aiSettings.provider] || AI_CONFIG.custom;
       const baseUrl = aiSettings.config.apiUrl || provider.defaultUrl;
       const cleanBaseUrl = baseUrl.replace(/\/$/, '');
-      const apiUrl = `${cleanBaseUrl}${provider.chatEndpoint}`;
       
+      // Google Gemini 的 API Key 放在 URL 查询参数中，其余供应商用 Bearer header
+      let apiUrl;
       const headers = {
         'Content-Type': 'application/json'
       };
       
-      if (aiSettings.config.apiKey) {
-        headers['Authorization'] = `Bearer ${aiSettings.config.apiKey}`;
+      if (isGoogle) {
+        const apiKey = aiSettings.config.apiKey || '';
+        const model = aiSettings.config.model || 'gemini-1.5-pro';
+        const chatEndpoint = `/models/${model}:generateContent`;
+        apiUrl = `${cleanBaseUrl}${chatEndpoint}?key=${encodeURIComponent(apiKey)}`;
+      } else {
+        apiUrl = `${cleanBaseUrl}${provider.chatEndpoint}`;
+        if (aiSettings.config.apiKey) {
+          headers['Authorization'] = `Bearer ${aiSettings.config.apiKey}`;
+        }
       }
       
       const autoTasks = [];
@@ -187,20 +202,28 @@ async function addBookmarkWithAI(url, title, icon, tabId) {
           fetch(apiUrl, {
             method: 'POST',
             headers,
-            body: JSON.stringify({
-              model: aiSettings.config.model,
-              messages: [{ role: 'user', content: titlePrompt }],
-              stream: false,
-              max_tokens: 50,
-              temperature: 0.3
-            })
+            body: JSON.stringify(
+              isGoogle 
+                ? { contents: [{ parts: [{ text: titlePrompt }] }] }
+                : {
+                    model: aiSettings.config.model,
+                    messages: [{ role: 'user', content: titlePrompt }],
+                    stream: false,
+                    max_tokens: 50,
+                    temperature: 0.3
+                  }
+            )
           })
           .then(res => res.json())
           .then(data => {
-            const optimizedTitle = data.choices?.[0]?.message?.content?.trim();
-            if (optimizedTitle && optimizedTitle !== link.title) {
-              link.title = optimizedTitle;
-              console.log('✅ 自动标题优化成功:', optimizedTitle);
+            // Google Gemini 响应格式：data.candidates[0].content.parts[0].text
+            const optimizedTitle = isGoogle
+              ? (data.candidates?.[0]?.content?.parts?.[0]?.text || '')
+              : (data.choices?.[0]?.message?.content || '');
+            const trimmed = optimizedTitle.trim();
+            if (trimmed && trimmed !== link.title) {
+              link.title = trimmed;
+              console.log('✅ 自动标题优化成功:', trimmed);
             }
           })
           .catch(err => console.error('自动标题优化失败:', err))
@@ -257,24 +280,31 @@ async function addBookmarkWithAI(url, title, icon, tabId) {
           fetch(apiUrl, {
             method: 'POST',
             headers,
-            body: JSON.stringify({
-              model: aiSettings.config.model,
-              messages: [{ role: 'user', content: categoryPrompt }],
-              stream: false,
-              max_tokens: 30,
-              temperature: 0.3
-            })
+            body: JSON.stringify(
+              isGoogle 
+                ? { contents: [{ parts: [{ text: categoryPrompt }] }] }
+                : {
+                    model: aiSettings.config.model,
+                    messages: [{ role: 'user', content: categoryPrompt }],
+                    stream: false,
+                    max_tokens: 30,
+                    temperature: 0.3
+                  }
+            )
           })
           .then(res => res.json())
           .then(data => {
-            const suggestedGroup = data.choices?.[0]?.message?.content?.trim();
-            if (suggestedGroup && 
-                suggestedGroup !== 'undefined' && 
+            // Google Gemini 响应格式：data.candidates[0].content.parts[0].text
+            const suggestedGroup = isGoogle
+              ? (data.candidates?.[0]?.content?.parts?.[0]?.text || '').trim()
+              : (data.choices?.[0]?.message?.content || '').trim();
+            if (suggestedGroup &&
+                suggestedGroup !== 'undefined' &&
                 suggestedGroup !== 'null' &&
                 suggestedGroup !== '无重复' &&
-                suggestedGroup.trim() !== '') {
+                suggestedGroup !== '') {
               
-              const groupName = suggestedGroup.trim();
+              const groupName = suggestedGroup;
               
               // 查找或创建分组
               let targetGroup = groups.find(g => g.name === groupName);

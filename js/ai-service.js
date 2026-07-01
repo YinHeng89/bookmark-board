@@ -83,9 +83,10 @@ const AI_PROVIDERS = {
     name: 'Google',
     defaultUrl: 'https://generativelanguage.googleapis.com/v1beta',  // ✅ 官方基础 URL
     needApiKey: true,
-    defaultModel: 'gemini-pro',
-    chatEndpoint: '/models/gemini-pro:generateContent',
-    modelsEndpoint: '/models'
+    defaultModel: 'gemini-1.5-pro',  // gemini-pro 已弃用
+    chatEndpoint: '/models/',  // 前缀，实际 endpoint 动态拼接模型名
+    modelsEndpoint: '/models',
+    supportAutoModel: true  // Google 支持获取模型列表
   }
 };
 
@@ -232,15 +233,21 @@ class AIService {
       const cleanBaseUrl = baseUrl.replace(/\/$/, '');
       
       // 构建模型列表接口 URL
-      const modelsUrl = `${cleanBaseUrl}${provider.modelsEndpoint}`;
+      let modelsUrl = `${cleanBaseUrl}${provider.modelsEndpoint}`;
       
-      console.log('获取模型列表:', modelsUrl);
+      // Google 的 API Key 需要放在 URL 查询参数中
+      if (this.provider === 'google' && this.config.apiKey) {
+        modelsUrl += `?key=${encodeURIComponent(this.config.apiKey)}`;
+      }
+      
+      console.log('获取模型列表:', this.provider === 'google' ? modelsUrl.replace(this.config.apiKey, '***') : modelsUrl);
       
       const headers = {
         'Content-Type': 'application/json'
       };
       
-      if (this.config.apiKey) {
+      // 非 Google 供应商使用 Authorization header
+      if (this.provider !== 'google' && this.config.apiKey) {
         headers['Authorization'] = `Bearer ${this.config.apiKey}`;
       }
       
@@ -256,7 +263,17 @@ class AIService {
       
       const data = await response.json();
       
-      // 解析模型列表
+      // Google Gemini 格式: { models: [{ name: "models/gemini-pro", ... }] }
+      if (this.provider === 'google' && data.models && Array.isArray(data.models)) {
+        return data.models
+          .map(model => {
+            // 移除 "models/" 前缀
+            return model.name ? model.name.replace(/^models\//, '') : null;
+          })
+          .filter(name => name && !name.includes('/versions/'));
+      }
+      
+      // 解析模型列表（其他供应商格式）
       if (data.data && Array.isArray(data.data)) {
         // OpenAI 格式
         return data.data.map(model => model.id);
@@ -294,6 +311,9 @@ class AIService {
         break;
       case 'anthropic':
         response = await this.callAnthropic(prompt);
+        break;
+      case 'google':
+        response = await this.callGoogleAPI(prompt);
         break;
       default:
         // 其他供应商使用通用格式
@@ -474,6 +494,82 @@ class AIService {
     
     return {
       content: data.content?.[0]?.text || ''
+    };
+  }
+
+  /**
+   * Google Gemini API
+   * 注意：Google Gemini 的认证方式、请求体、响应格式都与其他供应商不同
+   */
+  async callGoogleAPI(prompt) {
+    const provider = AI_PROVIDERS.google;
+    const baseUrl = this.config.apiUrl || provider.defaultUrl;
+    const apiKey = this.config.apiKey;
+    const model = this.config.model || provider.defaultModel;
+
+    if (!apiKey) {
+      throw new Error('Google Gemini 需要 API Key');
+    }
+
+    if (!baseUrl) {
+      throw new Error('API 地址未配置');
+    }
+
+    // 移除末尾的斜杠
+    const cleanBaseUrl = baseUrl.replace(/\/$/, '');
+
+    // Google Gemini 的 endpoint 随模型变化：/models/{model}:generateContent
+    // API Key 必须放在 URL 查询参数中（而非 Authorization 头）
+    const chatEndpoint = `/models/${model}:generateContent`;
+    const apiUrl = `${cleanBaseUrl}${chatEndpoint}?key=${encodeURIComponent(apiKey)}`;
+
+    console.log('调用 Google Gemini API:', apiUrl.replace(apiKey, '***'));
+
+    // Gemini 请求体格式: { contents: [{ parts: [{ text: "..." }] }] }
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{ text: prompt }]
+        }]
+      })
+    });
+
+    if (!response.ok) {
+      // 尝试读取 Google 的错误信息
+      let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+      try {
+        const errorData = await response.json();
+        if (errorData.error?.message) {
+          errorMessage = `HTTP ${response.status}: ${errorData.error.message}`;
+        }
+      } catch (e) {
+        // JSON 解析失败，使用默认错误消息
+      }
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+
+    // Gemini 响应格式: { candidates: [{ content: { parts: [{ text: "..." }] } }] }
+    let content = '';
+    if (data.candidates && data.candidates.length > 0) {
+      const candidate = data.candidates[0];
+      if (candidate.content?.parts && candidate.content.parts.length > 0) {
+        content = candidate.content.parts.map(part => part.text || '').join('\n');
+      }
+    }
+
+    // 清理内容
+    content = this.cleanAIOutput(content);
+
+    console.log('Google Gemini 响应内容:', content);
+
+    return {
+      content: content
     };
   }
 

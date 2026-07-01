@@ -1097,7 +1097,7 @@ async function exportData() {
     
     // 收集所有数据
     const exportObj = {
-      version: '3.2.6',
+      version: '3.2.7',
       exportDate: new Date().toISOString(),
       links: links,
       groups: groups,
