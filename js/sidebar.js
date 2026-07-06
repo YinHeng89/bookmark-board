@@ -7,7 +7,13 @@ let filterText = '';
 const SIDEBAR_DISPLAY_LIMIT = 50;  // 侧边栏最多显示50个书签
 
 // 初始化
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  // 先初始化 i18n（检查语言覆盖），再绑定 DOM
+  if (window.I18n) {
+    await I18n.init();
+    I18n.bindDOM();
+  }
+  
   loadData();
   setupEventListeners();
   loadTheme();
@@ -19,7 +25,6 @@ document.addEventListener('DOMContentLoaded', () => {
 function setupCloseListener() {
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === 'toggleSidebar') {
-      // 收到关闭指令，关闭侧边栏窗口
       window.close();
       sendResponse({ success: true });
     }
@@ -31,7 +36,7 @@ function loadData() {
   // 显示加载状态
   const container = document.getElementById('linkList');
   if (container) {
-    container.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text-muted);">加载中...</div>';
+    container.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text-muted);">' + I18n.t('sidebar_loading') + '</div>';
   }
   
   chrome.storage.local.get(['links'], (result) => {
@@ -43,7 +48,6 @@ function loadData() {
 function loadTheme() {
   const savedTheme = localStorage.getItem('darkMode');
   
-  // 如果有保存的主题设置，使用保存的
   if (savedTheme !== null) {
     const isDark = savedTheme === 'true';
     if (isDark) {
@@ -51,14 +55,12 @@ function loadTheme() {
     }
     updateThemeIcon();
   } else {
-    // 否则跟随系统设置
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     if (prefersDark) {
       document.documentElement.classList.add('dark');
     }
     updateThemeIcon();
     
-    // 监听系统主题变化
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
       const isDark = e.matches;
       document.documentElement.classList.toggle('dark', isDark);
@@ -103,7 +105,6 @@ function setupEventListeners() {
   const addBtn = document.getElementById('sidebarAddBtn');
   if (addBtn) {
     addBtn.addEventListener('click', () => {
-      // 获取当前活动标签页
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         if (tabs && tabs[0]) {
           const tab = tabs[0];
@@ -160,17 +161,15 @@ function renderLinks() {
     board.innerHTML = `
       <div class="sidebar-empty">
         <i class="fa fa-bookmark"></i>
-        <p>暂无书签</p>
-        <p class="sidebar-drop-hint">拖拽链接到此处添加书签</p>
+        <p>${I18n.t('sidebar_empty_title')}</p>
+        <p class="sidebar-drop-hint">${I18n.t('sidebar_empty_hint')}</p>
       </div>
     `;
     return;
   }
   
-  // 限制显示数量，提高性能
   const displayLinks = filtered.slice(0, SIDEBAR_DISPLAY_LIMIT);
   
-  // 分批渲染，避免卡顿
   let index = 0;
   const batchSize = 10;
   
@@ -189,11 +188,10 @@ function renderLinks() {
     if (index < displayLinks.length) {
       requestAnimationFrame(renderBatch);
     } else if (filtered.length > SIDEBAR_DISPLAY_LIMIT) {
-      // 显示提示
       const hint = document.createElement('div');
       hint.className = 'sidebar-hint';
       hint.style.cssText = 'text-align: center; padding: 1rem; color: var(--text-muted); font-size: 0.875rem;';
-      hint.textContent = `显示 ${SIDEBAR_DISPLAY_LIMIT}/${filtered.length} 个书签，请使用搜索筛选`;
+      hint.textContent = I18n.t('sidebar_display_limit', String(SIDEBAR_DISPLAY_LIMIT), String(filtered.length));
       board.appendChild(hint);
     }
   }
@@ -258,7 +256,7 @@ function createBookmarkCard(link) {
   const editBtn = document.createElement('button');
   editBtn.className = 'card-btn card-btn-edit';
   editBtn.innerHTML = '<i class="fa fa-pencil"></i>';
-  editBtn.title = '编辑';
+  editBtn.title = I18n.t('edit');
   editBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     editBookmark(link);
@@ -267,7 +265,7 @@ function createBookmarkCard(link) {
   const deleteBtn = document.createElement('button');
   deleteBtn.className = 'card-btn card-btn-delete';
   deleteBtn.innerHTML = '<i class="fa fa-trash"></i>';
-  deleteBtn.title = '删除';
+  deleteBtn.title = I18n.t('delete');
   deleteBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     deleteBookmark(link);
@@ -283,7 +281,6 @@ function createBookmarkCard(link) {
   
   // 点击打开链接
   inner.addEventListener('click', (e) => {
-    // 如果点击的是按钮，不打开链接
     if (e.target.closest('.card-btn')) return;
     chrome.tabs.create({ url: link.url });
   });
@@ -292,7 +289,7 @@ function createBookmarkCard(link) {
 }
 
 function editBookmark(link) {
-  const newTitle = prompt('修改书签名称：', link.title);
+  const newTitle = prompt(I18n.t('sidebar_edit_title'), link.title);
   if (newTitle !== null && newTitle.trim()) {
     link.title = newTitle.trim();
     saveData();
@@ -301,7 +298,7 @@ function editBookmark(link) {
 }
 
 function deleteBookmark(link) {
-  if (confirm(`确定删除 "${link.title}" 吗？`)) {
+  if (confirm(I18n.t('sidebar_delete_confirm', link.title))) {
     links = links.filter(l => l.url !== link.url);
     saveData();
     renderLinks();
@@ -313,17 +310,16 @@ function saveData() {
 }
 
 async function addBookmark(url, title, iconUrl) {
-  // 检查是否已存在
   const exists = links.find(l => l.url === url);
   if (exists) {
-    showSidebarToast('该书签已存在！', 'warning');
+    showSidebarToast(I18n.t('sidebar_exists'), 'warning');
     return;
   }
 
   const newLink = {
     id: Date.now().toString(),
     url: url,
-    title: title || '未命名',
+    title: title || I18n.t('unnamed'),
     icon: iconUrl || 'default-icon.png',
     groups: [],
     createdAt: Date.now()
@@ -331,7 +327,7 @@ async function addBookmark(url, title, iconUrl) {
 
   links.unshift(newLink);
   saveData();
-  showSidebarToast('书签已添加！', 'success');
+  showSidebarToast(I18n.t('sidebar_added'), 'success');
   
   // 异步调用 AI 优化（不阻塞 UI）
   optimizeSidebarBookmark(newLink).catch(err => {
@@ -370,7 +366,6 @@ function showSidebarToast(message, type = 'success') {
 }
 
 function showManualAddDialog() {
-  // 创建模态框
   const overlay = document.createElement('div');
   overlay.style.cssText = `
     position: fixed;
@@ -399,28 +394,28 @@ function showManualAddDialog() {
   dialog.innerHTML = `
     <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom: 1rem; color: var(--text-primary);">
       <i class="fa fa-plus-circle" style="color: var(--primary); margin-right: 0.5rem;"></i>
-      手动添加书签
+      ${I18n.t('sidebar_manual_title')}
     </h3>
     <div style="margin-bottom: 1rem;">
       <label style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-secondary);">
-        网站地址 *
+        ${I18n.t('sidebar_manual_url_label')}
       </label>
-      <input type="url" id="manualUrl" value="https://" placeholder="https://example.com" required
+      <input type="url" id="manualUrl" value="https://" placeholder="${I18n.t('sidebar_manual_url_placeholder')}" required
         style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 0.5rem; background: var(--bg-secondary); color: var(--text-primary); font-size: 0.875rem; box-sizing: border-box;" />
     </div>
     <div style="margin-bottom: 1.5rem;">
       <label style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-secondary);">
-        书签名称
+        ${I18n.t('sidebar_manual_name_label')}
       </label>
-      <input type="text" id="manualTitle" placeholder="留空则自动获取"
+      <input type="text" id="manualTitle" placeholder="${I18n.t('sidebar_manual_name_placeholder')}"
         style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 0.5rem; background: var(--bg-secondary); color: var(--text-primary); font-size: 0.875rem; box-sizing: border-box;" />
     </div>
     <div style="display: flex; gap: 0.75rem;">
       <button id="manualCancel" style="flex: 1; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 0.5rem; background: var(--bg-secondary); color: var(--text-secondary); cursor: pointer; font-size: 0.875rem; font-weight: 600; transition: all 0.2s;">
-        取消
+        ${I18n.t('sidebar_manual_cancel_btn')}
       </button>
       <button id="manualSubmit" style="flex: 1; padding: 0.75rem; border: none; border-radius: 0.5rem; background: var(--primary); color: white; cursor: pointer; font-size: 0.875rem; font-weight: 600; transition: all 0.2s;">
-        添加
+        ${I18n.t('sidebar_manual_add_btn')}
       </button>
     </div>
   `;
@@ -428,11 +423,10 @@ function showManualAddDialog() {
   overlay.appendChild(dialog);
   document.body.appendChild(overlay);
 
-  // 自动聚焦，并将光标定位到 https:// 后面
+  // 自动聚焦
   setTimeout(() => {
     const urlInput = document.getElementById('manualUrl');
     urlInput.focus();
-    // 将光标移动到 https:// 后面（第8个字符）
     urlInput.setSelectionRange(8, 8);
   }, 100);
 
@@ -454,25 +448,23 @@ function showManualAddDialog() {
     const title = document.getElementById('manualTitle').value.trim();
 
     if (!url) {
-      showSidebarToast('请输入网站地址', 'warning');
+      showSidebarToast(I18n.t('sidebar_manual_url_required'), 'warning');
       return;
     }
 
-    // 验证 URL 格式
     try {
       new URL(url);
     } catch (e) {
-      showSidebarToast('URL 格式不正确', 'warning');
+      showSidebarToast(I18n.t('sidebar_invalid_url'), 'warning');
       return;
     }
 
-    // 如果没填标题，尝试获取网站信息
     if (!title) {
       fetchWebsiteInfo(url).then(info => {
         addBookmark(url, info.title, info.icon);
         overlay.remove();
       }).catch(() => {
-        addBookmark(url, '未命名', 'default-icon.png');
+        addBookmark(url, I18n.t('unnamed'), 'default-icon.png');
         overlay.remove();
       });
     } else {
@@ -497,7 +489,6 @@ function showManualAddDialog() {
 
 function fetchWebsiteInfo(url) {
   return new Promise((resolve, reject) => {
-    // 从 URL 提取域名作为标题
     try {
       const hostname = new URL(url).hostname.replace(/^www\./, '');
       resolve({
@@ -506,7 +497,7 @@ function fetchWebsiteInfo(url) {
       });
     } catch (e) {
       resolve({
-        title: '未命名',
+        title: I18n.t('unnamed'),
         icon: 'default-icon.png'
       });
     }
@@ -517,7 +508,6 @@ function setupDragAndDrop() {
   const board = document.getElementById('sidebarBoard');
   if (!board) return;
 
-  // 拖拽悬停
   board.addEventListener('dragover', (e) => {
     e.preventDefault();
     board.style.outline = '2px dashed var(--primary)';
@@ -525,7 +515,6 @@ function setupDragAndDrop() {
     board.style.borderRadius = '0.5rem';
   });
 
-  // 拖拽离开
   board.addEventListener('dragleave', (e) => {
     e.preventDefault();
     board.style.outline = '';
@@ -533,67 +522,55 @@ function setupDragAndDrop() {
     board.style.borderRadius = '';
   });
 
-  // 拖拽放下
   board.addEventListener('drop', (e) => {
     e.preventDefault();
     board.style.outline = '';
     board.style.outlineOffset = '';
     board.style.borderRadius = '';
 
-    // 获取拖拽的 URL
     const url = e.dataTransfer.getData('text/uri-list') || 
                 e.dataTransfer.getData('text/plain');
     
     if (!url) {
-      showSidebarToast('无法获取链接地址', 'warning');
+      showSidebarToast(I18n.t('sidebar_cannot_get_url'), 'warning');
       return;
     }
 
-    // 清理 URL（去除可能的换行符等）
     const cleanUrl = url.trim().split('\n')[0];
     
-    // 验证 URL 格式
     try {
       new URL(cleanUrl);
     } catch (e) {
-      showSidebarToast('URL 格式不正确', 'warning');
+      showSidebarToast(I18n.t('sidebar_invalid_url'), 'warning');
       return;
     }
 
-    // 检查是否已存在
     const exists = links.find(l => l.url === cleanUrl);
     if (exists) {
-      showSidebarToast('该书签已存在！', 'warning');
+      showSidebarToast(I18n.t('sidebar_exists'), 'warning');
       return;
     }
 
-    // 查询当前标签页，尝试获取标题
     chrome.tabs.query({ url: cleanUrl }, (tabs) => {
-      let finalTitle = '未命名';
+      let finalTitle = I18n.t('unnamed');
       let icon = 'default-icon.png';
       
       if (tabs && tabs.length > 0) {
-        // 找到了匹配的标签页，使用其标题
         const tab = tabs[0];
-        finalTitle = tab.title || '未命名';
-        // 优先使用标签页的 favicon，否则使用 Google 服务
+        finalTitle = tab.title || I18n.t('unnamed');
         icon = tab.favIconUrl || `https://www.google.com/s2/favicons?domain=${new URL(cleanUrl).hostname}&sz=64`;
       } else {
-        // 没有匹配的标签页，使用域名作为标题
         try {
           const hostname = new URL(cleanUrl).hostname.replace(/^www\./, '');
           finalTitle = hostname.length > 30 ? hostname.substring(0, 30) + '...' : hostname;
-          // 使用 Google 服务获取 favicon
           icon = `https://www.google.com/s2/favicons?domain=${new URL(cleanUrl).hostname}&sz=64`;
         } catch (e) {
-          // 使用默认值
+          // ignore
         }
       }
 
-      // 限制标题长度
       finalTitle = finalTitle.length > 50 ? finalTitle.substring(0, 50) + '...' : finalTitle;
 
-      // 添加书签
       const newLink = {
         id: Date.now().toString(),
         url: cleanUrl,
@@ -605,16 +582,13 @@ function setupDragAndDrop() {
 
       links.unshift(newLink);
       saveData();
-      showSidebarToast('书签已添加！', 'success');
+      showSidebarToast(I18n.t('sidebar_added'), 'success');
     });
   });
 }
 
 // ========== AI 功能集成 ==========
 
-/**
- * 获取 AI 设置
- */
 function getSidebarAISettings() {
   return new Promise((resolve) => {
     chrome.storage.local.get(['aiSettings'], (result) => {
@@ -623,11 +597,7 @@ function getSidebarAISettings() {
   });
 }
 
-/**
- * 侧边栏书签 AI 优化
- */
 async function optimizeSidebarBookmark(link) {
-  // 检查 AI 服务是否加载
   if (typeof AIService === 'undefined') {
     console.warn('AIService 未定义，跳过 AI 优化');
     return;
@@ -635,12 +605,10 @@ async function optimizeSidebarBookmark(link) {
   
   const aiSettings = await getSidebarAISettings();
   
-  // 检查 AI 是否启用
   if (!aiSettings || !aiSettings.provider || !aiSettings.config?.apiUrl) {
     return;
   }
   
-  // 检查是否有开启任何 AI 功能
   const hasAnyFeature = aiSettings.features && (
     aiSettings.features.titleOptimization?.auto || 
     aiSettings.features.titleOptimization?.manual ||
@@ -653,59 +621,49 @@ async function optimizeSidebarBookmark(link) {
   }
   
   try {
-    // 创建 AI 服务实例
     const aiService = new AIService(aiSettings);
     
-    // 获取当前分组列表
     const groupNames = links
       .flatMap(l => l.groups || [])
       .filter((v, i, a) => a.indexOf(v) === i);
     
-    // 并行执行 AI 任务
     const tasks = [];
     
-    // 1. 智能标题优化
     if (aiSettings.features?.titleOptimization?.manual) {
       tasks.push(
         aiService.optimizeTitle(link.title, link.url)
           .then(optimizedTitle => {
             if (optimizedTitle && optimizedTitle !== link.title) {
               link.title = optimizedTitle;
-              showSidebarToast('AI 已优化标题', 'success');
+              showSidebarToast(I18n.t('sidebar_ai_optimized_title'), 'success');
             }
           })
           .catch(err => console.error('标题优化失败:', err))
       );
     }
     
-    // 2. 智能分组建议
     if (aiSettings.features?.categorySuggestion?.manual) {
       tasks.push(
         aiService.suggestCategory(link.url, link.title, groupNames)
           .then(suggestedGroup => {
             if (suggestedGroup && suggestedGroup !== '无重复') {
-              // 如果分组不存在，创建新分组
               if (!groupNames.includes(suggestedGroup)) {
                 groupNames.push(suggestedGroup);
               }
               
-              // 添加书签到分组
               if (!link.groups) link.groups = [];
               if (!link.groups.includes(suggestedGroup)) {
                 link.groups.push(suggestedGroup);
               }
               
-              showSidebarToast(`AI 已分类到: ${suggestedGroup}`, 'success');
+              showSidebarToast(I18n.t('sidebar_ai_categorized', suggestedGroup), 'success');
             }
           })
           .catch(err => console.error('分类建议失败:', err))
       );
     }
     
-    // 等待所有任务完成
     await Promise.allSettled(tasks);
-    
-    // 保存更新
     saveData();
   } catch (error) {
     console.error('AI 优化失败:', error);

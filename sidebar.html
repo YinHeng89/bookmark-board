@@ -11,17 +11,17 @@
   <!-- 侧边栏头部 -->
   <header class="sidebar-header">
     <div class="sidebar-logo">
-      <img src="icons/logo.png" alt="书签白板" style="width: 24px; height: 24px;" />
-      <span>书签白板</span>
+      <img src="icons/logo.png" data-i18n-attr="alt:sidebar_title" alt="书签白板" style="width: 24px; height: 24px;" />
+      <span data-i18n="sidebar_title">书签白板</span>
     </div>
     <div class="sidebar-actions">
-      <button id="sidebarThemeToggle" class="sidebar-icon-btn" title="切换主题">
+      <button id="sidebarThemeToggle" class="sidebar-icon-btn" data-i18n-attr="title:sidebar_theme_toggle" title="切换主题">
         <i class="fa fa-moon-o"></i>
       </button>
-      <button id="sidebarAddBtn" class="sidebar-icon-btn" title="添加当前页面到书签">
+      <button id="sidebarAddBtn" class="sidebar-icon-btn" data-i18n-attr="title:sidebar_add_current" title="添加当前页面到书签">
         <i class="fa fa-plus"></i>
       </button>
-      <button id="closeSidebar" class="sidebar-close" title="关闭">
+      <button id="closeSidebar" class="sidebar-close" data-i18n-attr="title:close" title="关闭">
         <i class="fa fa-times"></i>
       </button>
     </div>
@@ -29,22 +29,22 @@
 
   <!-- 搜索框 -->
   <div class="sidebar-search">
-    <input type="text" id="sidebarSearch" placeholder="搜索书签..." />
+    <input type="text" id="sidebarSearch" data-i18n-attr="placeholder:sidebar_search_placeholder" placeholder="搜索书签..." />
   </div>
 
   <!-- 书签列表 -->
   <div id="sidebarBoard" class="sidebar-board">
-    <!-- 书签卡片动态生成 -->
   </div>
 
   <!-- 手动添加书签 -->
   <div class="sidebar-manual-add">
     <button id="sidebarManualAdd" class="sidebar-manual-btn">
       <i class="fa fa-edit"></i>
-      <span>手动添加书签</span>
+      <span data-i18n="sidebar_add_manual_btn">手动添加书签</span>
     </button>
   </div>
 
+  <script src="js/modules/i18n.js"></script>
   <script src="js/ai-service.js"></script>
   <script src="js/sidebar.js"></script>
 </body>

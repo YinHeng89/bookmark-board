@@ -10,10 +10,6 @@ class UIRenderer {
 
   /**
    * 渲染分组标签
-   * @param {string} containerSelector - 容器选择器
-   * @param {string} activeGroupFilter - 当前激活的分组
-   * @param {Function} onGroupClick - 分组点击回调
-   * @param {Function} onGroupContextMenu - 分组右键菜单回调
    */
   renderGroups(containerSelector, activeGroupFilter, onGroupClick, onGroupContextMenu) {
     const container = document.querySelector(containerSelector);
@@ -29,7 +25,7 @@ class UIRenderer {
       const allTabNew = document.createElement('button');
       allTabNew.className = 'group-tab' + (activeGroupFilter === 'all' ? ' active' : '');
       allTabNew.dataset.group = 'all';
-      allTabNew.innerHTML = '<i class="fa fa-th"></i><span>全部</span>';
+      allTabNew.innerHTML = '<i class="fa fa-th"></i><span>' + I18n.t('group_tab_all') + '</span>';
       container.appendChild(allTabNew);
     }
     
@@ -57,7 +53,7 @@ class UIRenderer {
       }
       
       // 显示名称
-      const displayName = (group.name || '未命名').replace(/ \(\d+\)$/, '');
+      const displayName = (group.name || I18n.t('unnamed')).replace(/ \(\d+\)$/, '');
       const nameHtml = `<span>${displayName}</span>`;
       const countHtml = count > 0 ? `<span class="group-count">${count}</span>` : '';
       
@@ -77,7 +73,7 @@ class UIRenderer {
     const addGroupBtn = document.createElement('button');
     addGroupBtn.id = 'addGroupBtn';
     addGroupBtn.className = 'add-group-btn';
-    addGroupBtn.title = '新建分组';
+    addGroupBtn.title = I18n.t('group_tab_create');
     addGroupBtn.innerHTML = '<i class="fa fa-plus"></i>';
     container.appendChild(addGroupBtn);
     
@@ -90,9 +86,6 @@ class UIRenderer {
 
   /**
    * 渲染书签卡片到指定容器
-   * @param {HTMLElement} boardEl - 容器元素
-   * @param {Array} links - 书签列表
-   * @param {Object} options - 配置选项
    */
   renderBookmarkCards(boardEl, links, options = {}) {
     const { 
@@ -164,9 +157,6 @@ class UIRenderer {
 
   /**
    * 创建书签卡片
-   * @param {Object} link - 书签对象
-   * @param {Object} options - 配置选项
-   * @returns {HTMLElement} 卡片元素
    */
   createBookmarkCard(link, options = {}) {
     const { onCardClick, onCardContextMenu } = options;
@@ -239,10 +229,10 @@ class UIRenderer {
     const statsDiv = document.createElement('div');
     statsDiv.className = 'card-stats';
     const clickCount = link.clickCount || 0;
-    const lastAccessText = link.lastAccessed ? this.formatTimeAgo(link.lastAccessed) : '从未查看';
+    const lastAccessText = link.lastAccessed ? I18n.formatTimeAgo(link.lastAccessed) : I18n.t('time_never');
     statsDiv.innerHTML = `
       <span class="stat-item">
-        <i class="fa fa-eye"></i> ${clickCount}次
+        <i class="fa fa-eye"></i> ${I18n.t('settings_view_count', String(clickCount))}
       </span>
       <span class="stat-item">
         <i class="fa fa-clock-o"></i> ${lastAccessText}
@@ -270,8 +260,6 @@ class UIRenderer {
 
   /**
    * 添加"手动添加"卡片
-   * @param {HTMLElement} boardEl - 容器元素
-   * @param {Function} onClick - 点击回调
    */
   addAddCard(boardEl, onClick) {
     const card = document.createElement('div');
@@ -286,7 +274,7 @@ class UIRenderer {
     
     const text = document.createElement('span');
     text.className = 'add-text';
-    text.textContent = '添加书签';
+    text.textContent = I18n.t('add_card_text');
     
     inner.appendChild(icon);
     inner.appendChild(text);
@@ -296,8 +284,6 @@ class UIRenderer {
 
   /**
    * 显示默认 SVG 图标
-   * @param {HTMLElement} container - 容器元素
-   * @param {string} title - 标题
    */
   showDefaultIcon(container, title) {
     const initial = title ? title.charAt(0).toUpperCase() : '?';
@@ -321,27 +307,10 @@ class UIRenderer {
   }
 
   /**
-   * 格式化时间
-   * @param {number} timestamp - 时间戳
-   * @returns {string} 格式化后的时间字符串
+   * 格式化时间（委托给 I18n）
    */
   formatTimeAgo(timestamp) {
-    const now = Date.now();
-    const diff = now - timestamp;
-    
-    const seconds = Math.floor(diff / 1000);
-    const minutes = Math.floor(seconds / 60);
-    const hours = Math.floor(minutes / 60);
-    const days = Math.floor(hours / 24);
-    const months = Math.floor(days / 30);
-    const years = Math.floor(days / 365);
-    
-    if (years > 0) return `${years}年前`;
-    if (months > 0) return `${months}月前`;
-    if (days > 0) return `${days}天前`;
-    if (hours > 0) return `${hours}小时前`;
-    if (minutes > 0) return `${minutes}分钟前`;
-    return '刚刚';
+    return I18n.formatTimeAgo(timestamp);
   }
 }
 

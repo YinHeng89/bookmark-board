@@ -31,18 +31,59 @@ let currentView = 'all';
 // ========== 初始化 ==========
 loadTheme();
 
-window.addEventListener('load', () => {
+window.addEventListener('load', async () => {
   document.body.classList.add('loaded');
+  // 先初始化 i18n（检查语言覆盖），再绑定 DOM
+  if (window.I18n) {
+    await I18n.init();
+    I18n.bindDOM();
+  }
+  // 生成排序选项下拉框
+  initSortSelect();
   loadData();
 });
 
 setupEventListeners();
 
+// ========== 排序下拉框初始化 ==========
+function initSortSelect() {
+  const sortSelect = document.getElementById('sortSelect');
+  if (!sortSelect) return;
+
+  const sortOptions = [
+    { value: 'createdAt-desc',  key: 'sort_created_desc' },
+    { value: 'createdAt-asc',   key: 'sort_created_asc' },
+    { value: 'title-asc',       key: 'sort_title_asc' },
+    { value: 'title-desc',      key: 'sort_title_desc' },
+    { value: 'clickCount-desc', key: 'sort_clicks_desc' },
+  ];
+
+  sortSelect.innerHTML = '';
+  sortOptions.forEach(opt => {
+    const option = document.createElement('option');
+    option.value = opt.value;
+    option.textContent = I18n.t(opt.key);
+    sortSelect.appendChild(option);
+  });
+}
+
 // ========== 主题管理 ==========
 function loadTheme() {
-  chrome.storage.local.get(['darkMode'], (result) => {
-    if (result.darkMode === true || 
-        (result.darkMode === undefined && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+  chrome.storage.local.get(['themeMode', 'darkMode'], (result) => {
+    let isDark = false;
+    const themeMode = result.themeMode || 'auto';
+    
+    if (themeMode === 'dark') {
+      isDark = true;
+    } else if (themeMode === 'light') {
+      isDark = false;
+    } else {
+      // auto: 跟随系统 或 兼容旧的 darkMode 布尔值
+      isDark = (result.darkMode === true) || 
+        (result.darkMode === undefined && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    }
+    
+    if (isDark) {
       document.documentElement.classList.add('dark');
       updateThemeIcon(true);
     }
@@ -65,7 +106,7 @@ function updateThemeIcon(isDark) {
 // ========== 数据加载 ==========
 function loadData() {
   if (dataManager.links.length > 0 && emptyState) {
-    emptyState.innerHTML = '<i class="fa fa-spinner fa-spin"></i><p>加载中...</p>';
+    emptyState.innerHTML = '<i class="fa fa-spinner fa-spin"></i><p>' + I18n.t('loading') + '</p>';
   }
   
   // 恢复提示栏状态
@@ -145,9 +186,10 @@ function setupEventListeners() {
 
   // 主题切换
   themeToggle.addEventListener('click', () => {
+    const isDark = !document.documentElement.classList.contains('dark');
     document.documentElement.classList.toggle('dark');
-    const isDark = document.documentElement.classList.contains('dark');
-    chrome.storage.local.set({ darkMode: isDark });
+    const mode = isDark ? 'dark' : 'light';
+    chrome.storage.local.set({ darkMode: isDark, themeMode: mode });
     updateThemeIcon(isDark);
   });
 
@@ -164,15 +206,17 @@ function setupEventListeners() {
     }
   });
 
-  // 监听系统主题变化
+  // 监听系统主题变化（仅在 auto 模式下生效）
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-    const savedTheme = localStorage.getItem('darkMode');
-    if (savedTheme === null) {
-      const isDark = e.matches;
-      document.documentElement.classList.toggle('dark', isDark);
-      updateThemeIcon(isDark);
-      chrome.storage.local.set({ darkMode: isDark });
-    }
+    chrome.storage.local.get(['themeMode'], (result) => {
+      // 只有在 auto 模式或未设置时才跟随系统
+      if (!result.themeMode || result.themeMode === 'auto') {
+        const isDark = e.matches;
+        document.documentElement.classList.toggle('dark', isDark);
+        updateThemeIcon(isDark);
+        chrome.storage.local.set({ darkMode: isDark });
+      }
+    });
   });
 
   // 监听消息
@@ -190,15 +234,15 @@ function setupEventListeners() {
   // 手动添加
   addManualBtn.addEventListener('click', () => {
     modalManager.show({
-      title: '添加书签',
-      message: '请输入网址：',
+      title: I18n.t('modal_add_bookmark_title'),
+      message: I18n.t('modal_add_bookmark_message'),
       input: true,
-      defaultValue: 'https://',
+      defaultValue: I18n.t('modal_default_url'),
       onConfirm: (url) => {
         if (url && /^https?:\/\//.test(url)) {
           addLinkFromUrl(url);
         } else {
-          toastManager.show('请输入有效的网址');
+          toastManager.show(I18n.t('modal_input_valid_url'));
         }
       }
     });

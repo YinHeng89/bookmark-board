@@ -43,7 +43,13 @@ let isBatchMode = false;
 let isApiConfigValidated = false;  // API 配置是否通过测试验证
 
 // ========== 初始化 ==========
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  // 先初始化 i18n（检查语言覆盖），再绑定 DOM
+  if (window.I18n) {
+    await I18n.init();
+    I18n.bindDOM();
+  }
+  
   // 第一步：立即恢复或设置默认菜单（优先级最高）
   initMenuState();
   
@@ -112,6 +118,9 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // 设置 AI 助手
   setupAISettings();
+  
+  // 设置外观（语言 + 主题）
+  setupAppearance();
 });
 
 // 初始化菜单状态
@@ -306,7 +315,7 @@ function renderLinks() {
     settingsBoard.innerHTML = `
       <div class="empty-state">
         <i class="fa fa-inbox"></i>
-        <p>${filterText ? '没有匹配的书签' : '暂无书签'}</p>
+        <p>${filterText ? I18n.t('settings_no_match') : I18n.t('settings_no_bookmarks')}</p>
       </div>
     `;
     return;
@@ -387,11 +396,11 @@ function createBookmarkListItem(link) {
   const statsDiv = document.createElement('div');
   statsDiv.className = 'list-stats';
   const clickCount = link.clickCount || 0;
-  const lastAccessText = link.lastAccessed ? formatTimeAgo(link.lastAccessed) : '从未查看';
+  const lastAccessText = link.lastAccessed ? I18n.formatTimeAgo(link.lastAccessed) : I18n.t('settings_never_viewed');
   statsDiv.innerHTML = `
     <div class="list-stat">
       <i class="fa fa-eye"></i>
-      <span>${clickCount}次</span>
+      <span>${I18n.t('settings_view_count', String(clickCount))}</span>
     </div>
     <div class="list-stat">
       <i class="fa fa-clock-o"></i>
@@ -407,7 +416,7 @@ function createBookmarkListItem(link) {
   // 查看按钮
   const viewBtn = document.createElement('button');
   viewBtn.className = 'list-action-btn view';
-  viewBtn.title = '查看';
+  viewBtn.title = I18n.t('settings_view');
   viewBtn.innerHTML = '<i class="fa fa-external-link"></i>';
   viewBtn.addEventListener('click', () => {
     link.clickCount = (link.clickCount || 0) + 1;
@@ -420,7 +429,7 @@ function createBookmarkListItem(link) {
   // 编辑按钮
   const editBtn = document.createElement('button');
   editBtn.className = 'list-action-btn';
-  editBtn.title = '编辑';
+  editBtn.title = I18n.t('edit');
   editBtn.innerHTML = '<i class="fa fa-edit"></i>';
   editBtn.addEventListener('click', () => {
     editBookmark(link);
@@ -430,7 +439,7 @@ function createBookmarkListItem(link) {
   // 删除按钮
   const deleteBtn = document.createElement('button');
   deleteBtn.className = 'list-action-btn delete';
-  deleteBtn.title = '删除';
+  deleteBtn.title = I18n.t('delete');
   deleteBtn.innerHTML = '<i class="fa fa-trash"></i>';
   deleteBtn.addEventListener('click', () => {
     deleteBookmark(link);
@@ -442,20 +451,9 @@ function createBookmarkListItem(link) {
   return item;
 }
 
-// 格式化时间
+// 格式化时间（委托给 I18n）
 function formatTimeAgo(timestamp) {
-  const now = Date.now();
-  const diff = now - timestamp;
-  
-  const seconds = Math.floor(diff / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
-  
-  if (days > 0) return `${days}天前`;
-  if (hours > 0) return `${hours}小时前`;
-  if (minutes > 0) return `${minutes}分钟前`;
-  return '刚刚';
+  return I18n.formatTimeAgo(timestamp);
 }
 
 // 保存数据
@@ -528,13 +526,13 @@ function setupBatchMode() {
   if (deleteSelectedBtn) {
     deleteSelectedBtn.addEventListener('click', () => {
       if (selectedLinks.size === 0) {
-        showToast('请先选择要删除的书签');
+        showToast(I18n.t('settings_batch_no_select'));
         return;
       }
       
       showConfirmModal(
-        '确认删除',
-        `确定要删除 ${selectedLinks.size} 个书签吗？`,
+        I18n.t('settings_confirm_delete_title'),
+        I18n.t('settings_batch_confirm_delete', String(selectedLinks.size)),
         () => {
           links = links.filter(link => !selectedLinks.has(link.url));
           const count = selectedLinks.size;
@@ -542,7 +540,7 @@ function setupBatchMode() {
           saveData();
           renderLinks();
           updateSelectedCount();
-          showToast(`已删除 ${count} 个书签`);
+          showToast(I18n.t('settings_batch_deleted', String(count)));
         }
       );
     });
@@ -552,7 +550,7 @@ function setupBatchMode() {
   if (groupSelectedBtn) {
     groupSelectedBtn.addEventListener('click', () => {
       if (selectedLinks.size === 0) {
-        showToast('请先选择要添加分组的书签');
+        showToast(I18n.t('settings_batch_no_group_select'));
         return;
       }
       
@@ -579,7 +577,7 @@ function setupBatchMode() {
           updateSelectedCount();
           
           // 显示成功提示
-          showToast(`已将 ${addedCount} 个书签添加到分组`);
+          showToast(I18n.t('settings_batch_grouped', String(addedCount)));
         });
       });
     });
@@ -600,8 +598,8 @@ function setupGroupManagement() {
         groups.push(newGroup);
         saveGroups();
         renderGroups();
-        showToast('分组已创建');
-      }, '新建分组', '请输入分组名称：');
+        showToast(I18n.t('settings_group_created'));
+      }, I18n.t('settings_new_group_title'), I18n.t('settings_group_name_input_label'));
     });
   }
   
@@ -632,7 +630,7 @@ function renderGroups() {
     groupsList.innerHTML = `
       <div class="empty-state">
         <i class="fa fa-folder-open"></i>
-        <p>暂无分组</p>
+        <p>${I18n.t('settings_no_groups')}</p>
       </div>
     `;
     return;
@@ -670,7 +668,7 @@ function createGroupListItem(group) {
   
   infoDiv.innerHTML = `
     <div class="group-name">${group.name}</div>
-    <div class="group-meta">${count} 个书签 · ${group.auto ? '自动分组' : '自定义分组'}</div>
+    <div class="group-meta">${I18n.t('settings_bookmarks_count', String(count))} · ${group.auto ? I18n.t('settings_auto_group') : I18n.t('settings_custom_group')}</div>
   `;
   item.appendChild(infoDiv);
   
@@ -681,7 +679,7 @@ function createGroupListItem(group) {
   // 编辑按钮（所有分组都可以编辑名称）
   const editBtn = document.createElement('button');
   editBtn.className = 'group-action-btn';
-  editBtn.title = '编辑名称';
+  editBtn.title = I18n.t('edit') + ' ' + I18n.t('settings_title_label');
   editBtn.innerHTML = '<i class="fa fa-edit"></i>';
   editBtn.addEventListener('click', () => {
     editGroup(group);
@@ -692,7 +690,7 @@ function createGroupListItem(group) {
   if (!group.auto) {
     const deleteBtn = document.createElement('button');
     deleteBtn.className = 'group-action-btn delete';
-    deleteBtn.title = '删除分组';
+    deleteBtn.title = I18n.t('delete') + ' ' + I18n.t('settings_groups_create');
     deleteBtn.innerHTML = '<i class="fa fa-trash"></i>';
     deleteBtn.addEventListener('click', () => {
       deleteGroup(group.id);
@@ -703,7 +701,7 @@ function createGroupListItem(group) {
     const disabledBtn = document.createElement('button');
     disabledBtn.className = 'group-action-btn';
     disabledBtn.disabled = true;
-    disabledBtn.title = '自动分组不可删除';
+    disabledBtn.title = I18n.t('settings_auto_group_cannot_delete');
     disabledBtn.innerHTML = '<i class="fa fa-lock"></i>';
     actionsDiv.appendChild(disabledBtn);
   }
@@ -728,10 +726,10 @@ function editGroup(group) {
         saveGroups();
       }
       renderGroups();
-      showToast('分组名称已更新');
+      showToast(I18n.t('settings_group_updated'));
     },
-    group.auto ? '编辑自动分组名称' : '编辑分组',
-    '请输入分组名称：'
+    group.auto ? I18n.t('settings_edit_auto_group_title') : I18n.t('settings_edit_group_title'),
+    I18n.t('settings_group_name_input_label')
   );
 }
 
@@ -741,8 +739,8 @@ function deleteGroup(groupId) {
   if (!group) return;
   
   showConfirmModal(
-    '确认删除',
-    `确定要删除分组 "${group.name}" 吗？\n分组内的书签不会被删除。`,
+    I18n.t('settings_confirm_delete_title'),
+    I18n.t('settings_confirm_delete_group', group.name),
     () => {
       // 从所有书签中移除该分组
       links.forEach(link => {
@@ -755,7 +753,7 @@ function deleteGroup(groupId) {
       groups = groups.filter(g => g.id !== groupId);
       saveGroups();
       renderGroups();
-      showToast('分组已删除');
+      showToast(I18n.t('settings_group_deleted'));
     }
   );
 }
@@ -818,20 +816,20 @@ function editBookmark(link) {
   showEditModal(link, () => {
     saveData();
     renderLinks();
-    showToast('书签已更新');
+    showToast(I18n.t('settings_bookmark_updated'));
   });
 }
 
 // 删除书签
 function deleteBookmark(link) {
   showConfirmModal(
-    '确认删除',
-    `确定要删除"${link.title}"吗？`,
+    I18n.t('settings_confirm_delete_title'),
+    I18n.t('settings_confirm_delete_bookmark', link.title),
     () => {
       links = links.filter(l => l.url !== link.url);
       saveData();
       renderLinks();
-      showToast('书签已删除');
+      showToast(I18n.t('settings_bookmark_deleted'));
     }
   );
 }
@@ -845,7 +843,7 @@ function showEditModal(link, onConfirm, customTitle = '编辑书签', customMess
   
   const isGroupEdit = !link.url;
   const title = customTitle;
-  const message = customMessage || (isGroupEdit ? '请输入名称：' : '');
+  const message = customMessage || (isGroupEdit ? '' : '');
   
   modal.innerHTML = `
     <div class="modal-content">
@@ -853,19 +851,19 @@ function showEditModal(link, onConfirm, customTitle = '编辑书签', customMess
       <div class="modal-body">
         ${message ? `<p style="margin-bottom: 1rem; color: var(--text-secondary);">${message}</p>` : ''}
         <div class="modal-field">
-          <label>${isGroupEdit ? '分组名称' : '标题'}</label>
-          <input type="text" id="modalTitleInput" value="${link.title || ''}" placeholder="${isGroupEdit ? '请输入分组名称' : ''}" />
+          <label>${isGroupEdit ? I18n.t('settings_group_name_label') : I18n.t('settings_title_label')}</label>
+          <input type="text" id="modalTitleInput" value="${link.title || ''}" placeholder="${isGroupEdit ? I18n.t('settings_group_name_placeholder') : ''}" />
         </div>
         ${!isGroupEdit ? `
         <div class="modal-field">
-          <label>URL</label>
+          <label>${I18n.t('settings_url_label')}</label>
           <input type="text" id="modalUrlInput" value="${link.url || ''}" />
         </div>
         ` : ''}
       </div>
       <div class="modal-footer">
-        <button class="modal-btn modal-btn-cancel">取消</button>
-        <button class="modal-btn modal-btn-primary">保存</button>
+        <button class="modal-btn modal-btn-cancel">${I18n.t('cancel')}</button>
+        <button class="modal-btn modal-btn-primary">${I18n.t('save')}</button>
       </div>
     </div>
   `;
@@ -887,7 +885,7 @@ function showEditModal(link, onConfirm, customTitle = '编辑书签', customMess
   confirmBtn.addEventListener('click', () => {
     const name = titleInput.value.trim();
     if (!name && isGroupEdit) {
-      showToast('请输入名称');
+      showToast(I18n.t('modal_input_name_required'));
       return;
     }
     
@@ -931,8 +929,8 @@ function showConfirmModal(title, message, onConfirm) {
         <p>${message}</p>
       </div>
       <div class="modal-footer">
-        <button class="modal-btn modal-btn-cancel">取消</button>
-        <button class="modal-btn modal-btn-danger">确认</button>
+        <button class="modal-btn modal-btn-cancel">${I18n.t('cancel')}</button>
+        <button class="modal-btn modal-btn-danger">${I18n.t('confirm')}</button>
       </div>
     </div>
   `;
@@ -982,18 +980,18 @@ function showGroupSelectionModal(onSelect) {
   });
   
   if (groups.length === 0) {
-    optionsHtml = '<p class="no-groups">暂无分组，请先创建分组</p>';
+    optionsHtml = `<p class="no-groups">${I18n.t('modal_group_selection_no_groups')}</p>`;
   }
   
   modal.innerHTML = `
     <div class="modal-content modal-small">
-      <h3>选择分组</h3>
+      <h3>${I18n.t('modal_group_selection_title')}</h3>
       <div class="modal-body group-list">
         ${optionsHtml}
       </div>
       <div class="modal-footer">
-        <button class="modal-btn modal-btn-cancel">取消</button>
-        <button class="modal-btn modal-btn-primary" ${groups.length === 0 ? 'disabled' : ''}>确定</button>
+        <button class="modal-btn modal-btn-cancel">${I18n.t('cancel')}</button>
+        <button class="modal-btn modal-btn-primary" ${groups.length === 0 ? 'disabled' : ''}>${I18n.t('confirm')}</button>
       </div>
     </div>
   `;
@@ -1093,7 +1091,7 @@ function updateDataStats() {
 // 导出数据
 async function exportData() {
   try {
-    showToast('正在准备导出数据...');
+    showToast(I18n.t('data_export_preparing'));
     
     // 收集所有数据
     const exportObj = {
@@ -1125,10 +1123,10 @@ async function exportData() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     
-    showToast('数据导出成功！');
+    showToast(I18n.t('data_export_success'));
   } catch (error) {
     console.error('导出数据失败:', error);
-    showToast('导出数据失败: ' + error.message);
+    showToast(I18n.t('data_export_failed', error.message));
   }
 }
 
@@ -1138,7 +1136,7 @@ async function handleImportFile(event) {
   if (!file) return;
   
   try {
-    showToast('正在读取文件...');
+    showToast(I18n.t('data_import_reading'));
     
     // 读取文件
     const text = await file.text();
@@ -1151,16 +1149,16 @@ async function handleImportFile(event) {
     
     // 验证数据
     if (!importObj.links || !importObj.groups) {
-      throw new Error('数据格式不正确');
+      throw new Error(I18n.t('data_import_invalid'));
     }
     
     // 确认导入
     showConfirmModal(
-      '确认导入',
-      `导入将覆盖当前所有数据！\n书签: ${importObj.links.length} 个\n分组: ${importObj.groups.length} 个\n\n确定要继续吗？`,
+      I18n.t('modal_confirm_import_title'),
+      I18n.t('data_import_overwrite', String(importObj.links.length), String(importObj.groups.length)),
       async () => {
         try {
-          showToast('正在导入数据...');
+          showToast(I18n.t('data_import_importing'));
           
           // 导入数据
           links = importObj.links || [];
@@ -1183,7 +1181,7 @@ async function handleImportFile(event) {
             groups, 
             autoGroupNames 
           }, () => {
-            showToast('数据导入成功！');
+            showToast(I18n.t('data_import_success'));
             
             // 刷新当前视图
             const activeSection = document.querySelector('.settings-section.active');
@@ -1193,13 +1191,13 @@ async function handleImportFile(event) {
           });
         } catch (error) {
           console.error('导入数据失败:', error);
-          showToast('导入数据失败: ' + error.message);
+          showToast(I18n.t('data_import_failed', error.message));
         }
       }
     );
   } catch (error) {
     console.error('导入失败:', error);
-    showToast('导入失败: ' + (error.message || '文件格式错误或数据已损坏'));
+    showToast(error.message || I18n.t('data_import_corrupt'));
   }
   
   // 清空input，允许重复导入同一文件
@@ -1237,7 +1235,7 @@ async function decryptData(encryptedText) {
   try {
     const encrypted = JSON.parse(encryptedText);
     if (!encrypted.v || !encrypted.d) {
-      throw new Error('无效的加密数据');
+      throw new Error(I18n.t('data_encrypt_invalid'));
     }
     
     const key = 'bookmark-board-2026';
@@ -1267,7 +1265,7 @@ async function decryptData(encryptedText) {
     // 5. UTF-8 解码
     return new TextDecoder().decode(utf8Bytes);
   } catch (error) {
-    throw new Error('解密失败，文件可能已损坏或格式不正确');
+    throw new Error(I18n.t('data_decrypt_failed'));
   }
 }
 
@@ -1359,7 +1357,122 @@ async function getAISettings() {
   });
 }
 
+// ========== 外观与主题设置 ==========
+function setupAppearance() {
+  // 加载当前设置
+  loadAppearanceSettings();
+  
+  // 语言选项点击
+  const langOptions = document.querySelectorAll('#languageOptions .appearance-option');
+  langOptions.forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const value = btn.dataset.value;
+      // 高亮选中项
+      langOptions.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      // 保存并刷新
+      await I18n.setLanguage(value);
+    });
+  });
+  
+  // 主题选项点击
+  const themeOptions = document.querySelectorAll('#themeOptions .appearance-option');
+  themeOptions.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const value = btn.dataset.value;
+      // 高亮选中项
+      themeOptions.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      // 立即应用
+      applyTheme(value);
+      // 保存
+      chrome.storage.local.set({ themeMode: value });
+    });
+  });
+}
+
+function loadAppearanceSettings() {
+  // 语言偏好
+  I18n.getLanguagePreference().then(langPref => {
+    const langValue = langPref === 'auto' ? 'auto' : langPref;
+    const langBtn = document.querySelector(`#languageOptions .appearance-option[data-value="${langValue}"]`);
+    if (langBtn) {
+      document.querySelectorAll('#languageOptions .appearance-option').forEach(b => b.classList.remove('active'));
+      langBtn.classList.add('active');
+    }
+  });
+  
+  // 主题偏好
+  chrome.storage.local.get(['themeMode', 'darkMode'], (result) => {
+    const themeMode = result.themeMode || 'auto';
+    // 兼容旧的 darkMode 布尔值
+    if (!result.themeMode && result.darkMode === true) {
+      // 旧设置：darkMode=true → dark
+      const darkBtn = document.querySelector('#themeOptions .appearance-option[data-value="dark"]');
+      if (darkBtn) {
+        document.querySelectorAll('#themeOptions .appearance-option').forEach(b => b.classList.remove('active'));
+        darkBtn.classList.add('active');
+      }
+      return;
+    }
+    const themeBtn = document.querySelector(`#themeOptions .appearance-option[data-value="${themeMode}"]`);
+    if (themeBtn) {
+      document.querySelectorAll('#themeOptions .appearance-option').forEach(b => b.classList.remove('active'));
+      themeBtn.classList.add('active');
+    }
+  });
+}
+
+function applyTheme(mode) {
+  const root = document.documentElement;
+  
+  if (mode === 'dark') {
+    root.classList.add('dark');
+    chrome.storage.local.set({ darkMode: true, themeMode: 'dark' });
+  } else if (mode === 'light') {
+    root.classList.remove('dark');
+    chrome.storage.local.set({ darkMode: false, themeMode: 'light' });
+  } else {
+    // auto: 跟随系统
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (prefersDark) {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+    chrome.storage.local.set({ darkMode: undefined, themeMode: 'auto' });
+  }
+}
+
 // ========== AI 助手功能 ==========
+
+/**
+ * 动态生成 AI 供应商下拉选项
+ */
+function initAIProviderSelect() {
+  if (!aiProvider) return;
+  
+  const providers = [
+    { value: 'lmstudio', key: 'ai_provider_lmstudio' },
+    { value: 'openai', key: 'ai_provider_openai' },
+    { value: 'anthropic', key: 'ai_provider_anthropic' },
+    { value: 'aliyun', key: 'ai_provider_aliyun' },
+    { value: 'zhipu', key: 'ai_provider_zhipu' },
+    { value: 'baidu', key: 'ai_provider_baidu' },
+    { value: 'tencent', key: 'ai_provider_tencent' },
+    { value: 'moonshot', key: 'ai_provider_moonshot' },
+    { value: 'google', key: 'ai_provider_google' },
+    { value: 'custom', key: 'ai_provider_custom' }
+  ];
+  
+  aiProvider.innerHTML = '';
+  providers.forEach(p => {
+    const option = document.createElement('option');
+    option.value = p.value;
+    option.textContent = I18n.t(p.key);
+    aiProvider.appendChild(option);
+  });
+}
 
 /**
  * 设置 AI 助手
@@ -1367,6 +1480,9 @@ async function getAISettings() {
 function setupAISettings() {
   // 加载 AI 设置
   loadAISettings();
+  
+  // 动态生成 AI 供应商下拉选项
+  initAIProviderSelect();
   
   // 测试连接按钮
   if (aiTestBtn) {
@@ -1511,25 +1627,25 @@ function updateAIConfigSummary(provider, providerConfig) {
   if (providerConfig.apiUrl || providerConfig.model) {
     // 已配置
     const providerNames = {
-      lmstudio: 'LM Studio',
-      openai: 'OpenAI',
-      anthropic: 'Anthropic',
-      aliyun: '阿里云',
-      zhipu: '智谱 AI',
-      baidu: '百度文心',
-      tencent: '腾讯混元',
-      moonshot: '月之暗面',
-      google: 'Google',
-      custom: '自定义'
+      lmstudio: I18n.t('ai_provider_lmstudio'),
+      openai: I18n.t('ai_provider_openai'),
+      anthropic: I18n.t('ai_provider_anthropic'),
+      aliyun: I18n.t('ai_provider_aliyun'),
+      zhipu: I18n.t('ai_provider_zhipu'),
+      baidu: I18n.t('ai_provider_baidu'),
+      tencent: I18n.t('ai_provider_tencent'),
+      moonshot: I18n.t('ai_provider_moonshot'),
+      google: I18n.t('ai_provider_google'),
+      custom: I18n.t('ai_provider_custom')
     };
     
     const name = providerNames[provider] || provider;
-    const model = providerConfig.model || '未选择';
+    const model = providerConfig.model || I18n.t('not_selected');
     summaryEl.textContent = `${name} - ${model}`;
     summaryEl.classList.add('configured');
   } else {
     // 未配置
-    summaryEl.textContent = '未配置';
+    summaryEl.textContent = I18n.t('not_configured');
     summaryEl.classList.remove('configured');
   }
 }
@@ -1639,15 +1755,15 @@ function openPromptEditor(promptKey) {
   currentPromptKey = promptKey;
   
   // 获取功能名称
-  const functionNames = {
-    titleOptimization: '标题优化',
-    categorySuggestion: '智能分组',
-    generateSummary: '书签摘要生成',
-    smartSearch: '智能搜索增强'
+      const functionNames = {
+    titleOptimization: I18n.t('ai_func_titleOptimization'),
+    categorySuggestion: I18n.t('ai_func_categorySuggestion'),
+    generateSummary: I18n.t('ai_func_generateSummary'),
+    smartSearch: I18n.t('ai_func_smartSearch')
   };
-  
+
   if (promptFunctionName) {
-    promptFunctionName.textContent = `功能：${functionNames[promptKey] || promptKey}`;
+    promptFunctionName.textContent = I18n.t('ai_prompt_function', functionNames[promptKey] || promptKey);
   }
   
   // 加载当前提示词（优先使用自定义，否则使用默认）
@@ -1694,7 +1810,7 @@ async function saveCurrentPrompt() {
   const newPrompt = promptTextarea.value.trim();
   
   if (!newPrompt) {
-    showToast('提示词不能为空', 'warning');
+    showToast(I18n.t('ai_prompt_save_empty'));
     return;
   }
   
@@ -1716,11 +1832,11 @@ async function saveCurrentPrompt() {
     // 更新全局缓存
     window.currentAISettings = aiSettings;
     
-    showToast('提示词已保存', 'success');
+    showToast(I18n.t('ai_prompt_save_done'));
     closePromptEditor();
   } catch (error) {
     console.error('保存提示词失败:', error);
-    showToast('保存失败: ' + error.message, 'error');
+    showToast(I18n.t('ai_prompt_save_failed', error.message));
   }
 }
 
@@ -1731,8 +1847,8 @@ async function resetToDefaultPrompt() {
   if (!currentPromptKey) return;
   
   showConfirmModal(
-    '恢复默认提示词',
-    '确定要恢复默认提示词吗？这将丢弃您的自定义修改。',
+    I18n.t('ai_prompt_reset'),
+    I18n.t('ai_prompt_reset_confirm'),
     async () => {
       try {
         // 获取当前 AI 设置
@@ -1752,10 +1868,10 @@ async function resetToDefaultPrompt() {
         // 重新加载默认提示词
         loadPromptContent(currentPromptKey);
         
-        showToast('已恢复默认提示词', 'success');
+        showToast(I18n.t('ai_prompt_reset_done'));
       } catch (error) {
         console.error('恢复默认提示词失败:', error);
-        showToast('恢复失败: ' + error.message, 'error');
+        showToast(I18n.t('ai_prompt_reset_failed', error.message));
       }
     }
   );
@@ -1796,7 +1912,7 @@ function saveAISettings() {
   
   // 如果有 API 配置，检查是否通过测试验证
   if (settings.config.apiUrl && !isApiConfigValidated) {
-    showAISstatus('error', '请先点击"测试连接"按钮，验证配置无误后再保存');
+    showAISstatus('error', I18n.t('ai_need_test_first'));
     return;
   }
   
@@ -1809,15 +1925,15 @@ function saveAISettings() {
       
       chrome.storage.local.set({ aiSettings: existingSettings }, () => {
         if (chrome.runtime.lastError) {
-          showAISstatus('error', '保存失败: ' + chrome.runtime.lastError.message);
+          showAISstatus('error', I18n.t('ai_save_failed', chrome.runtime.lastError.message));
           return;
         }
-        showAISstatus('success', '功能设置已保存！');
+        showAISstatus('success', I18n.t('ai_save_success_features'));
       });
     });
     return;
   }
-  
+
   // 获取现有供应商配置
   chrome.storage.local.get(['aiProviderConfigs'], (result) => {
     const providerConfigs = result.aiProviderConfigs || {};
@@ -1835,11 +1951,11 @@ function saveAISettings() {
       aiProviderConfigs: providerConfigs
     }, () => {
       if (chrome.runtime.lastError) {
-        showAISstatus('error', '保存失败: ' + chrome.runtime.lastError.message);
+        showAISstatus('error', I18n.t('ai_save_failed', chrome.runtime.lastError.message));
         return;
       }
       
-      showAISstatus('success', '设置已保存！');
+      showAISstatus('success', I18n.t('ai_save_success'));
       
       // 实时更新 API 配置摘要
       updateAIConfigSummary(currentProvider, providerConfigs[currentProvider]);
@@ -1878,11 +1994,11 @@ function saveAIFeaturesOnly() {
     
     chrome.storage.local.set({ aiSettings: existingSettings }, () => {
       if (chrome.runtime.lastError) {
-        showAISstatus('error', '保存失败: ' + chrome.runtime.lastError.message);
+        showAISstatus('error', I18n.t('ai_save_failed', chrome.runtime.lastError.message));
         return;
       }
       
-      showAISstatus('success', '功能设置已保存！');
+      showAISstatus('success', I18n.t('ai_save_success_features'));
       
       // 3秒后隐藏状态
       setTimeout(() => {
@@ -1903,18 +2019,18 @@ async function testAIConnection() {
   }
   
   if (!apiUrl) {
-    showAISstatus('error', '请先填写 API 地址');
+    showAISstatus('error', I18n.t('ai_need_url'));
     updateSaveButtonState(false);
     return;
   }
   
   // API Key 不强制要求，让测试接口自己验证
-  showAISstatus('loading', '正在测试连接...');
+  showAISstatus('loading', I18n.t('ai_testing'));
   
   // 测试按钮显示 loading 状态
   const originalText = aiTestBtn.innerHTML;
   aiTestBtn.disabled = true;
-  aiTestBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i><span>测试中...</span>';
+  aiTestBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i><span>' + I18n.t('ai_testing') + '</span>';
   
   try {
     // 创建 AI 服务实例
@@ -1942,7 +2058,7 @@ async function testAIConnection() {
       updateSaveButtonState(false);
     }
   } catch (error) {
-    showAISstatus('error', '测试失败: ' + error.message);
+    showAISstatus('error', I18n.t('ai_test_failed', error.message));
     // 测试失败，隐藏保存按钮
     isApiConfigValidated = false;
     updateSaveButtonState(false);
@@ -2057,11 +2173,11 @@ async function fetchModelsList() {
   }
   
   if (!apiUrl) {
-    showAISstatus('error', '请先填写 API 地址');
+    showAISstatus('error', I18n.t('ai_need_url'));
     return;
   }
   
-  showAISstatus('loading', '正在获取模型列表...');
+  showAISstatus('loading', I18n.t('ai_testing_models'));
   
   try {
     // 创建 AI 服务实例
@@ -2110,17 +2226,17 @@ async function fetchModelsList() {
         aiModel.style.display = 'none';
       }
       
-      showAISstatus('success', `获取到 ${models.length} 个模型`);
+      showAISstatus('success', I18n.t('ai_model_count', String(models.length)));
       
       // 显示 Toast 通知
       if (typeof showToast === 'function') {
-        showToast(`成功加载 ${models.length} 个模型`, 'success');
+        showToast(I18n.t('ai_model_count', String(models.length)));
       }
     } else {
-      showAISstatus('error', '未获取到模型列表');
+      showAISstatus('error', I18n.t('ai_model_none'));
     }
   } catch (error) {
-    showAISstatus('error', '获取模型失败: ' + error.message);
+    showAISstatus('error', I18n.t('ai_model_fetch_failed', error.message));
   }
 }
 

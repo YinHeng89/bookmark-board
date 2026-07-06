@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>设置 - 书签白板</title>
+  <title data-i18n="settings_title">设置 - 书签白板</title>
   <link href="css/font-awesome.min.css" rel="stylesheet" />
   <link href="css/main.css" rel="stylesheet" />
   <link href="css/settings.css" rel="stylesheet" />
@@ -13,57 +13,57 @@
     <!-- 左侧导航 -->
     <aside class="settings-sidebar">
       <div class="settings-header">
-        <img src="icons/logo.png" alt="书签白板" class="settings-logo" />
-        <h1>设置</h1>
+        <img src="icons/logo.png" data-i18n-attr="alt:app_name" alt="书签白板" class="settings-logo" />
+        <h1 data-i18n="settings_title">设置</h1>
       </div>
-      
+
       <nav class="settings-nav">
         <a href="#bookmark-manager" class="nav-item" data-section="bookmark-manager">
           <i class="fa fa-bookmark"></i>
-          <span>书签管理</span>
+          <span data-i18n="settings_nav_bookmarks">书签管理</span>
         </a>
         <a href="#groups" class="nav-item" data-section="groups">
           <i class="fa fa-folder"></i>
-          <span>分组管理</span>
+          <span data-i18n="settings_nav_groups">分组管理</span>
         </a>
         <a href="#appearance" class="nav-item" data-section="appearance">
           <i class="fa fa-paint-brush"></i>
-          <span>外观与主题</span>
+          <span data-i18n="settings_nav_appearance">外观与主题</span>
         </a>
         <a href="#display" class="nav-item" data-section="display">
           <i class="fa fa-desktop"></i>
-          <span>显示与排序</span>
+          <span data-i18n="settings_nav_display">显示与排序</span>
         </a>
         <a href="#data" class="nav-item" data-section="data">
           <i class="fa fa-database"></i>
-          <span>数据管理</span>
+          <span data-i18n="settings_nav_data">数据管理</span>
         </a>
         <a href="#ai-assistant" class="nav-item" data-section="ai-assistant">
           <i class="fa fa-magic"></i>
-          <span>AI 助手</span>
+          <span data-i18n="settings_nav_ai">AI 助手</span>
         </a>
         <a href="#search" class="nav-item" data-section="search">
           <i class="fa fa-search"></i>
-          <span>搜索与筛选</span>
+          <span data-i18n="settings_nav_search_filter">搜索与筛选</span>
         </a>
         <a href="#privacy" class="nav-item" data-section="privacy">
           <i class="fa fa-shield"></i>
-          <span>隐私与安全</span>
+          <span data-i18n="settings_nav_privacy">隐私与安全</span>
         </a>
         <a href="#shortcuts" class="nav-item" data-section="shortcuts">
           <i class="fa fa-keyboard-o"></i>
-          <span>快捷操作</span>
+          <span data-i18n="settings_nav_shortcuts">快捷操作</span>
         </a>
         <a href="#about" class="nav-item" data-section="about">
           <i class="fa fa-info-circle"></i>
-          <span>关于</span>
+          <span data-i18n="settings_nav_about">关于</span>
         </a>
       </nav>
-      
+
       <div class="settings-footer">
         <button id="backToMain" class="back-btn">
           <i class="fa fa-arrow-left"></i>
-          <span>返回主页</span>
+          <span data-i18n="settings_back_btn">返回主页</span>
         </button>
       </div>
     </aside>
@@ -72,119 +72,155 @@
     <main class="settings-content">
       <!-- 书签管理 -->
       <section id="bookmark-manager" class="settings-section">
-        <h2>书签管理</h2>
+        <h2 data-i18n="settings_nav_bookmarks">书签管理</h2>
         <div class="section-content">
-          <!-- 工具栏 -->
           <div class="bookmark-toolbar">
             <div class="toolbar-left">
-              <!-- 搜索框 -->
               <div class="settings-search">
                 <input
                   type="text"
                   id="settingsSearchInput"
                   class="settings-search-input"
+                  data-i18n-attr="placeholder:settings_search_placeholder"
                   placeholder="搜索书签..."
                 />
               </div>
             </div>
             <div class="toolbar-right">
-              <!-- 批量操作栏（默认隐藏，从右侧滑出） -->
               <div id="batchActions" class="batch-actions-inline">
-                <p class="batch-text"><strong id="selectedCountText">0</strong>&nbsp;个书签被选中</p>
+                <p class="batch-text"><strong id="selectedCountText">0</strong>&nbsp;<span data-i18n="settings_batch_selected">$1 个书签被选中</span></p>
                 <div class="batch-buttons">
                   <button id="selectAllBtn" class="batch-btn">
-                    <span>全选</span>
+                    <span data-i18n="settings_batch_select_all">全选</span>
                   </button>
                   <button id="deselectAllBtn" class="batch-btn">
-                    <span>取消全选</span>
+                    <span data-i18n="settings_batch_deselect">取消全选</span>
                   </button>
                   <button id="groupSelectedBtn" class="batch-btn batch-btn-primary">
-                    <span>分组</span>
+                    <span data-i18n="settings_batch_group">分组</span>
                   </button>
                   <button id="deleteSelectedBtn" class="batch-btn batch-btn-danger">
-                    <span>删除</span>
+                    <span data-i18n="settings_batch_delete">删除</span>
                   </button>
                 </div>
               </div>
-              
-              <!-- 批量操作按钮 -->
+
               <button id="batchModeBtn" class="toolbar-btn">
-                <span>批量管理</span>
+                <span data-i18n="settings_batch_manage">批量管理</span>
               </button>
             </div>
           </div>
-          
-          <!-- 书签列表 -->
+
           <div id="settingsBookmarkBoard" class="bookmark-list">
-            <!-- 书签列表项将在这里渲染 -->
           </div>
         </div>
       </section>
 
       <!-- 外观与主题 -->
       <section id="appearance" class="settings-section">
-        <h2>外观与主题</h2>
-        <div class="section-content placeholder">
-          <div class="placeholder-icon">
-            <i class="fa fa-paint-brush"></i>
+        <h2 data-i18n="settings_nav_appearance">外观与主题</h2>
+        <div class="section-content">
+          <!-- 语言设置 -->
+          <div class="appearance-group">
+            <div class="appearance-group-header">
+              <i class="fa fa-globe"></i>
+              <div>
+                <h3 class="appearance-group-title" data-i18n="settings_appearance_language">界面语言</h3>
+                <p class="appearance-group-desc" data-i18n="settings_appearance_language_desc">选择界面显示语言</p>
+              </div>
+            </div>
+            <div class="appearance-options" id="languageOptions">
+              <button class="appearance-option" data-value="auto" id="langAutoBtn">
+                <span class="option-label" data-i18n="settings_appearance_language_auto">跟随浏览器</span>
+                <span class="option-check"><i class="fa fa-check"></i></span>
+              </button>
+              <button class="appearance-option" data-value="zh_CN" id="langZhBtn">
+                <span class="option-label" data-i18n="settings_appearance_language_zh">中文</span>
+                <span class="option-check"><i class="fa fa-check"></i></span>
+              </button>
+              <button class="appearance-option" data-value="en" id="langEnBtn">
+                <span class="option-label" data-i18n="settings_appearance_language_en">English</span>
+                <span class="option-check"><i class="fa fa-check"></i></span>
+              </button>
+            </div>
           </div>
-          <h3>即将推出</h3>
-          <p>主题切换、自定义颜色、布局设置等功能正在开发中...</p>
+
+          <!-- 颜色模式 -->
+          <div class="appearance-group">
+            <div class="appearance-group-header">
+              <i class="fa fa-moon-o"></i>
+              <div>
+                <h3 class="appearance-group-title" data-i18n="settings_appearance_theme">颜色模式</h3>
+                <p class="appearance-group-desc" data-i18n="settings_appearance_theme_desc">选择深色或浅色主题</p>
+              </div>
+            </div>
+            <div class="appearance-options" id="themeOptions">
+              <button class="appearance-option" data-value="auto" id="themeAutoBtn">
+                <span class="option-label" data-i18n="settings_appearance_theme_auto">跟随系统</span>
+                <span class="option-check"><i class="fa fa-check"></i></span>
+              </button>
+              <button class="appearance-option" data-value="light" id="themeLightBtn">
+                <span class="option-label" data-i18n="settings_appearance_theme_light">浅色</span>
+                <span class="option-check"><i class="fa fa-check"></i></span>
+              </button>
+              <button class="appearance-option" data-value="dark" id="themeDarkBtn">
+                <span class="option-label" data-i18n="settings_appearance_theme_dark">深色</span>
+                <span class="option-check"><i class="fa fa-check"></i></span>
+              </button>
+            </div>
+          </div>
         </div>
       </section>
 
       <!-- 显示与排序 -->
       <section id="display" class="settings-section">
-        <h2>显示与排序</h2>
+        <h2 data-i18n="settings_nav_display">显示与排序</h2>
         <div class="section-content placeholder">
           <div class="placeholder-icon">
             <i class="fa fa-desktop"></i>
           </div>
-          <h3>即将推出</h3>
-          <p>排序方式、显示选项、卡片密度等功能正在开发中...</p>
+          <h3 data-i18n="placeholder_coming_soon">即将推出</h3>
+          <p data-i18n="placeholder_display">排序方式、显示选项、卡片密度等功能正在开发中...</p>
         </div>
       </section>
 
       <!-- 数据管理 -->
       <section id="data" class="settings-section">
-        <h2>数据管理</h2>
+        <h2 data-i18n="settings_nav_data">数据管理</h2>
         <div class="section-content">
-          <!-- 导出数据 -->
           <div class="data-section">
-            <h3>导出数据</h3>
-            <p class="data-desc">导出所有书签数据（包括书签、分组、访问次数、配置等），数据将加密保存。</p>
+            <h3 data-i18n="data_export_title">导出数据</h3>
+            <p class="data-desc" data-i18n="data_export_desc">导出所有书签数据（包括书签、分组、访问次数、配置等），数据将加密保存。</p>
             <button id="exportDataBtn" class="data-btn data-btn-primary">
               <i class="fa fa-download"></i>
-              <span>导出数据</span>
+              <span data-i18n="data_export_btn">导出数据</span>
             </button>
           </div>
-          
-          <!-- 导入数据 -->
+
           <div class="data-section">
-            <h3>导入数据</h3>
-            <p class="data-desc">导入加密的备份文件，将覆盖当前所有数据。请谨慎操作！</p>
+            <h3 data-i18n="data_import_title">导入数据</h3>
+            <p class="data-desc" data-i18n="data_import_desc">导入加密的备份文件，将覆盖当前所有数据。请谨慎操作！</p>
             <button id="importDataBtn" class="data-btn data-btn-warning">
               <i class="fa fa-upload"></i>
-              <span>导入数据</span>
+              <span data-i18n="data_import_btn">导入数据</span>
             </button>
             <input type="file" id="importFileInput" accept=".json" style="display: none;" />
           </div>
-          
-          <!-- 数据统计 -->
+
           <div class="data-section">
-            <h3>数据统计</h3>
+            <h3 data-i18n="data_stats_title">数据统计</h3>
             <div class="data-stats">
               <div class="stat-item">
                 <div class="stat-value" id="totalBookmarks">0</div>
-                <div class="stat-label">书签总数</div>
+                <div class="stat-label" data-i18n="data_stats_total">书签总数</div>
               </div>
               <div class="stat-item">
                 <div class="stat-value" id="totalGroups">0</div>
-                <div class="stat-label">分组总数</div>
+                <div class="stat-label" data-i18n="data_stats_groups">分组总数</div>
               </div>
               <div class="stat-item">
                 <div class="stat-value" id="totalClicks">0</div>
-                <div class="stat-label">总访问次数</div>
+                <div class="stat-label" data-i18n="data_stats_clicks">总访问次数</div>
               </div>
             </div>
           </div>
@@ -193,80 +229,67 @@
 
       <!-- AI 助手 -->
       <section id="ai-assistant" class="settings-section">
-        <h2>AI 助手</h2>
+        <h2 data-i18n="settings_nav_ai">AI 助手</h2>
         <div class="section-content">
-          <!-- API 配置区（可折叠） -->
           <div class="ai-card ai-card-config">
             <div class="ai-card-header" id="aiConfigToggle">
               <div class="ai-card-title">
                 <i class="fa fa-cog"></i>
-                <span>API 配置</span>
+                <span data-i18n="ai_config_title">API 配置</span>
               </div>
               <div class="ai-card-status">
-                <span id="aiConfigSummary" class="ai-config-summary">未配置</span>
+                <span id="aiConfigSummary" class="ai-config-summary" data-i18n="not_configured">未配置</span>
                 <i class="fa fa-chevron-down ai-toggle-icon"></i>
               </div>
             </div>
             <div class="ai-card-body" id="aiConfigBody">
               <div class="ai-form-group">
-                <label class="ai-label">AI 供应商</label>
+                <label class="ai-label" data-i18n="ai_label_provider">AI 供应商</label>
                 <select id="aiProvider" class="ai-select">
-                  <option value="lmstudio">LM Studio（推荐）</option>
-                  <option value="openai">OpenAI (GPT)</option>
-                  <option value="anthropic">Anthropic (Claude)</option>
-                  <option value="aliyun">阿里云 (通义千问)</option>
-                  <option value="zhipu">智谱 AI (ChatGLM)</option>
-                  <option value="baidu">百度文心一言</option>
-                  <option value="tencent">腾讯混元</option>
-                  <option value="moonshot">月之暗面 (Kimi)</option>
-                  <option value="google">Google Gemini</option>
-                  <option value="custom">自定义 API</option>
-
                 </select>
               </div>
               <div class="ai-form-group">
-                <label class="ai-label">API 地址 *</label>
+                <label class="ai-label" data-i18n="ai_label_api_url">API 地址 *</label>
                 <input type="text" id="aiApiUrl" class="ai-input" placeholder="http://localhost:8000" />
-                <span class="ai-hint">自建服务或其他 API 的完整地址</span>
+                <span class="ai-hint" data-i18n="ai_hint_url">自建服务或其他 API 的完整地址</span>
               </div>
               <div class="ai-form-group">
-                <label class="ai-label">API Key（可选）</label>
+                <label class="ai-label" data-i18n="ai_label_api_key">API Key（可选）</label>
                 <input type="password" id="aiApiKey" class="ai-input" placeholder="sk-..." />
-                <span class="ai-hint">部分供应商需要 API Key</span>
+                <span class="ai-hint" data-i18n="ai_hint_key">部分供应商需要 API Key</span>
               </div>
               <div class="ai-form-group">
-                <label class="ai-label">模型名称</label>
+                <label class="ai-label" data-i18n="ai_label_model">模型名称</label>
                 <div class="ai-model-selector">
                   <select id="aiModelSelect" class="ai-select" style="flex: 1; margin-top: 0;">
-                    <option value="custom">自定义（手动输入）</option>
+                    <option value="custom" data-i18n="ai_model_custom">自定义（手动输入）</option>
                   </select>
-                  <button id="aiFetchModelsBtn" class="ai-btn ai-btn-small" title="获取模型列表" style="white-space: nowrap; padding: 0.5rem 0.75rem;">
+                  <button id="aiFetchModelsBtn" class="ai-btn ai-btn-small" data-i18n-attr="title:ai_btn_load_models" title="获取模型列表" style="white-space: nowrap; padding: 0.5rem 0.75rem;">
                     <i class="fa fa-refresh"></i>
-                    <span>加载模型</span>
+                    <span data-i18n="ai_btn_load_models">加载模型</span>
                   </button>
                 </div>
-                <input type="text" id="aiModel" class="ai-input" placeholder="手动输入模型名称" style="display: none; margin-top: 0.5rem;" />
-                <span class="ai-hint">点击刷新按钮自动获取可用模型，或选择"自定义"手动输入</span>
+                <input type="text" id="aiModel" class="ai-input" data-i18n-attr="placeholder:ai_model_placeholder" placeholder="手动输入模型名称" style="display: none; margin-top: 0.5rem;" />
+                <span class="ai-hint" data-i18n="ai_hint_model">点击刷新按钮自动获取可用模型，或选择"自定义"手动输入</span>
               </div>
               <div class="ai-config-actions">
                 <button id="aiTestBtn" class="ai-btn ai-btn-secondary">
                   <i class="fa fa-plug"></i>
-                  <span>测试连接</span>
+                  <span data-i18n="ai_btn_test">测试连接</span>
                 </button>
-                <button id="aiSaveBtn" class="ai-btn ai-btn-primary" title="请先测试连接通过后保存">
+                <button id="aiSaveBtn" class="ai-btn ai-btn-primary" data-i18n-attr="title:ai_btn_save_title" title="请先测试连接通过后保存">
                   <i class="fa fa-save"></i>
-                  <span>保存设置</span>
+                  <span data-i18n="ai_btn_save">保存设置</span>
                 </button>
               </div>
             </div>
           </div>
 
-          <!-- AI 功能区（主要操作区） -->
           <div class="ai-card ai-card-features">
             <div class="ai-card-header">
               <div class="ai-card-title">
                 <i class="fa fa-magic"></i>
-                <span>AI 功能</span>
+                <span data-i18n="ai_features_title">AI 功能</span>
               </div>
             </div>
             <div class="ai-card-body">
@@ -275,22 +298,22 @@
                 <div class="ai-feature-header">
                   <span class="ai-feature-icon">✨</span>
                   <div class="ai-feature-info">
-                    <span class="ai-feature-name">标题优化</span>
-                    <span class="ai-feature-desc">优化标题，使其更简洁清晰</span>
+                    <span class="ai-feature-name" data-i18n="ai_feature_title_optimize">标题优化</span>
+                    <span class="ai-feature-desc" data-i18n="ai_feature_title_optimize_desc">优化标题，使其更简洁清晰</span>
                   </div>
                 </div>
                 <div class="ai-feature-actions">
                   <label class="ai-feature-switch">
                     <input type="checkbox" id="aiTitleOptimizationAuto" class="ai-checkbox" />
-                    <span class="ai-switch-label">添加时自动优化</span>
+                    <span class="ai-switch-label" data-i18n="ai_feature_title_auto">添加时自动优化</span>
                     <div class="ai-toggle-switch"></div>
                   </label>
                   <label class="ai-feature-switch">
                     <input type="checkbox" id="aiTitleOptimizationManual" class="ai-checkbox" />
-                    <span class="ai-switch-label">手动优化</span>
+                    <span class="ai-switch-label" data-i18n="ai_feature_title_manual">手动优化</span>
                     <div class="ai-toggle-switch"></div>
                   </label>
-                  <button type="button" class="ai-edit-prompt-btn" data-prompt="titleOptimization" title="编辑提示词">
+                  <button type="button" class="ai-edit-prompt-btn" data-prompt="titleOptimization" data-i18n-attr="title:ai_prompt_edit_title" title="编辑提示词">
                     <i class="fa fa-pencil"></i>
                   </button>
                 </div>
@@ -301,22 +324,22 @@
                 <div class="ai-feature-header">
                   <span class="ai-feature-icon">📁</span>
                   <div class="ai-feature-info">
-                    <span class="ai-feature-name">智能分组</span>
-                    <span class="ai-feature-desc">根据内容智能推荐分组</span>
+                    <span class="ai-feature-name" data-i18n="ai_feature_category">智能分组</span>
+                    <span class="ai-feature-desc" data-i18n="ai_feature_category_desc">根据内容智能推荐分组</span>
                   </div>
                 </div>
                 <div class="ai-feature-actions">
                   <label class="ai-feature-switch">
                     <input type="checkbox" id="aiCategorySuggestionAuto" class="ai-checkbox" />
-                    <span class="ai-switch-label">添加时自动分组</span>
+                    <span class="ai-switch-label" data-i18n="ai_feature_category_auto">添加时自动分组</span>
                     <div class="ai-toggle-switch"></div>
                   </label>
                   <label class="ai-feature-switch">
                     <input type="checkbox" id="aiCategorySuggestionManual" class="ai-checkbox" />
-                    <span class="ai-switch-label">手动分组</span>
+                    <span class="ai-switch-label" data-i18n="ai_feature_category_manual">手动分组</span>
                     <div class="ai-toggle-switch"></div>
                   </label>
-                  <button type="button" class="ai-edit-prompt-btn" data-prompt="categorySuggestion" title="编辑提示词">
+                  <button type="button" class="ai-edit-prompt-btn" data-prompt="categorySuggestion" data-i18n-attr="title:ai_prompt_edit_title" title="编辑提示词">
                     <i class="fa fa-pencil"></i>
                   </button>
                 </div>
@@ -327,17 +350,17 @@
                 <div class="ai-feature-header">
                   <span class="ai-feature-icon">📝</span>
                   <div class="ai-feature-info">
-                    <span class="ai-feature-name">书签摘要生成</span>
-                    <span class="ai-feature-desc">生成书签内容摘要</span>
+                    <span class="ai-feature-name" data-i18n="ai_feature_summary">书签摘要生成</span>
+                    <span class="ai-feature-desc" data-i18n="ai_feature_summary_desc">生成书签内容摘要</span>
                   </div>
                 </div>
                 <div class="ai-feature-actions">
                   <label class="ai-feature-switch">
                     <input type="checkbox" id="aiGenerateSummary" class="ai-checkbox" />
-                    <span class="ai-switch-label">手动生成摘要</span>
+                    <span class="ai-switch-label" data-i18n="ai_feature_summary_manual">手动生成摘要</span>
                     <div class="ai-toggle-switch"></div>
                   </label>
-                  <button type="button" class="ai-edit-prompt-btn" data-prompt="generateSummary" title="编辑提示词">
+                  <button type="button" class="ai-edit-prompt-btn" data-prompt="generateSummary" data-i18n-attr="title:ai_prompt_edit_title" title="编辑提示词">
                     <i class="fa fa-pencil"></i>
                   </button>
                 </div>
@@ -348,17 +371,17 @@
                 <div class="ai-feature-header">
                   <span class="ai-feature-icon">🔍</span>
                   <div class="ai-feature-info">
-                    <span class="ai-feature-name">智能搜索增强</span>
-                    <span class="ai-feature-desc">理解搜索意图，返回更精准结果</span>
+                    <span class="ai-feature-name" data-i18n="ai_feature_search">智能搜索增强</span>
+                    <span class="ai-feature-desc" data-i18n="ai_feature_search_desc">理解搜索意图，返回更精准结果</span>
                   </div>
                 </div>
                 <div class="ai-feature-actions">
                   <label class="ai-feature-switch">
                     <input type="checkbox" id="aiSmartSearch" class="ai-checkbox" />
-                    <span class="ai-switch-label">启用智能搜索</span>
+                    <span class="ai-switch-label" data-i18n="ai_feature_search_enable">启用智能搜索</span>
                     <div class="ai-toggle-switch"></div>
                   </label>
-                  <button type="button" class="ai-edit-prompt-btn" data-prompt="smartSearch" title="编辑提示词">
+                  <button type="button" class="ai-edit-prompt-btn" data-prompt="smartSearch" data-i18n-attr="title:ai_prompt_edit_title" title="编辑提示词">
                     <i class="fa fa-pencil"></i>
                   </button>
                 </div>
@@ -370,85 +393,82 @@
 
       <!-- 搜索与筛选 -->
       <section id="search" class="settings-section">
-        <h2>搜索与筛选</h2>
+        <h2 data-i18n="settings_nav_search_filter">搜索与筛选</h2>
         <div class="section-content placeholder">
           <div class="placeholder-icon">
             <i class="fa fa-search"></i>
           </div>
-          <h3>即将推出</h3>
-          <p>搜索配置、标签管理、搜索建议等功能正在开发中...</p>
+          <h3 data-i18n="placeholder_coming_soon">即将推出</h3>
+          <p data-i18n="placeholder_search_config">搜索配置、标签管理、搜索建议等功能正在开发中...</p>
         </div>
       </section>
 
       <!-- 分组管理 -->
       <section id="groups" class="settings-section">
-        <h2>分组管理</h2>
+        <h2 data-i18n="settings_nav_groups">分组管理</h2>
         <div class="section-content">
-          <!-- 工具栏 -->
           <div class="bookmark-toolbar">
             <div class="toolbar-left">
-              <p class="batch-text">管理自定义分组（自动分组不可删除）</p>
+              <p class="batch-text" data-i18n="settings_groups_desc">管理自定义分组（自动分组不可删除）</p>
             </div>
             <div class="toolbar-right">
               <button id="addGroupBtn" class="toolbar-btn">
-                <span>新建分组</span>
+                <span data-i18n="settings_groups_create">新建分组</span>
               </button>
             </div>
           </div>
-          
-          <!-- 分组列表 -->
+
           <div id="groupsList" class="groups-list">
-            <!-- 分组列表项将在这里渲染 -->
           </div>
         </div>
       </section>
 
       <!-- 隐私与安全 -->
       <section id="privacy" class="settings-section">
-        <h2>隐私与安全</h2>
+        <h2 data-i18n="settings_nav_privacy">隐私与安全</h2>
         <div class="section-content placeholder">
           <div class="placeholder-icon">
             <i class="fa fa-shield"></i>
           </div>
-          <h3>即将推出</h3>
-          <p>加密存储、自动锁定、无痕模式等功能正在开发中...</p>
+          <h3 data-i18n="placeholder_coming_soon">即将推出</h3>
+          <p data-i18n="placeholder_privacy">加密存储、自动锁定、无痕模式等功能正在开发中...</p>
         </div>
       </section>
 
       <!-- 快捷操作 -->
       <section id="shortcuts" class="settings-section">
-        <h2>快捷操作</h2>
+        <h2 data-i18n="settings_nav_shortcuts">快捷操作</h2>
         <div class="section-content placeholder">
           <div class="placeholder-icon">
             <i class="fa fa-keyboard-o"></i>
           </div>
-          <h3>即将推出</h3>
-          <p>快捷键自定义、鼠标手势、批量操作等功能正在开发中...</p>
+          <h3 data-i18n="placeholder_coming_soon">即将推出</h3>
+          <p data-i18n="placeholder_shortcuts">快捷键自定义、鼠标手势、批量操作等功能正在开发中...</p>
         </div>
       </section>
 
       <!-- 关于 -->
       <section id="about" class="settings-section">
-        <h2>关于</h2>
+        <h2 data-i18n="settings_nav_about">关于</h2>
         <div class="section-content about-content">
           <div class="about-logo">
-            <img src="icons/logo.png" alt="书签白板" />
-            <h3>书签白板</h3>
+            <img src="icons/logo.png" data-i18n-attr="alt:about_title" alt="书签白板" />
+            <h3 data-i18n="about_title">书签白板</h3>
           </div>
-          <p class="version">版本 v3.2.7</p>
-          <p class="description">隐私优先的本地书签管理工具</p>
+          <p class="version" data-i18n="about_version">版本 v3.2.7</p>
+          <p class="description" data-i18n="about_desc">隐私优先的本地书签管理工具</p>
           <div class="about-links">
             <a href="https://github.com/YinHeng89/bookmark-board" target="_blank" class="about-link">
               <i class="fa fa-github"></i>
-              <span>GitHub</span>
+              <span data-i18n="about_github">GitHub</span>
             </a>
             <a href="https://github.com/YinHeng89/bookmark-board/blob/main/GUIDE.md" target="_blank" class="about-link">
               <i class="fa fa-book"></i>
-              <span>使用文档</span>
+              <span data-i18n="about_docs">使用文档</span>
             </a>
             <a href="https://github.com/YinHeng89/bookmark-board/issues" target="_blank" class="about-link">
               <i class="fa fa-bug"></i>
-              <span>反馈问题</span>
+              <span data-i18n="about_feedback">反馈问题</span>
             </a>
           </div>
         </div>
@@ -460,24 +480,25 @@
   <div class="modal-overlay" id="promptModal">
     <div class="modal-container modal-small">
       <div class="modal-header">
-        <h3 class="modal-title">编辑提示词</h3>
+        <h3 class="modal-title" data-i18n="ai_prompt_edit_title">编辑提示词</h3>
         <button class="modal-close" id="closePromptModal">&times;</button>
       </div>
       <div class="modal-body">
         <div class="prompt-edit-info">
           <p class="prompt-edit-function" id="promptFunctionName"></p>
-          <p class="prompt-edit-warning">⚠️ 修改提示词可能影响 AI 输出质量，建议谨慎修改</p>
+          <p class="prompt-edit-warning" data-i18n="ai_prompt_edit_warning">⚠️ 修改提示词可能影响 AI 输出质量，建议谨慎修改</p>
         </div>
-        <textarea class="prompt-textarea" id="promptTextarea" rows="10" placeholder="输入提示词..."></textarea>
+        <textarea class="prompt-textarea" id="promptTextarea" rows="10" data-i18n-attr="placeholder:ai_prompt_input_placeholder" placeholder="输入提示词..."></textarea>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" id="resetPromptBtn">恢复默认</button>
-        <button class="btn" id="cancelPromptBtn">取消</button>
-        <button class="btn btn-primary" id="savePromptBtn">保存</button>
+        <button class="btn btn-secondary" id="resetPromptBtn" data-i18n="ai_prompt_reset">恢复默认</button>
+        <button class="btn" id="cancelPromptBtn" data-i18n="cancel">取消</button>
+        <button class="btn btn-primary" id="savePromptBtn" data-i18n="save">保存</button>
       </div>
     </div>
   </div>
 
+  <script src="js/modules/i18n.js"></script>
   <script src="js/ai-service.js"></script>
   <script src="js/settings.js"></script>
 </body>
