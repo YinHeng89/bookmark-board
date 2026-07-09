@@ -313,6 +313,14 @@ function setupEventListeners() {
       if (tab) {
         activeGroupFilter = tab.dataset.group;
         chrome.storage.local.set({ groupFilter: activeGroupFilter });
+
+        // 在置顶/最近视图时点击分组 → 自动切到「所有书签」
+        if (currentView !== 'all') {
+          currentView = 'all';
+          chrome.storage.local.set({ viewPreference: currentView });
+          setActiveViewTab();
+        }
+
         renderGroups();
         renderLinks();
       }
@@ -351,8 +359,8 @@ async function addLinkFromUrl(url, draggedTitle = null) {
 function getFilteredLinks() {
   let filtered = dataManager.links;
   
-  // 置顶视图忽略分组筛选，始终显示所有置顶书签
-  if (currentView !== 'pinned' && activeGroupFilter !== 'all') {
+  // 按分组筛选
+  if (activeGroupFilter !== 'all') {
     if (activeGroupFilter.startsWith('auto_')) {
       const domain = activeGroupFilter.replace('auto_', '');
       filtered = filtered.filter(link => dataManager.getLinkDomain(link) === domain);
