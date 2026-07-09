@@ -225,7 +225,7 @@
 
   "about_title": { "message": "书签白板" },
   "about_desc": { "message": "隐私优先的本地书签管理工具" },
-  "about_version": { "message": "版本 v3.2.9" },
+  "about_version": { "message": "版本 v3.2.10" },
   "about_github": { "message": "GitHub" },
   "about_docs": { "message": "使用文档" },
   "about_feedback": { "message": "反馈问题" },

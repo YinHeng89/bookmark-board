@@ -225,7 +225,7 @@
 
   "about_title": { "message": "Bookmark Board" },
   "about_desc": { "message": "Privacy-first local bookmark manager" },
-  "about_version": { "message": "Version v3.2.9" },
+  "about_version": { "message": "Version v3.2.10" },
   "about_github": { "message": "GitHub" },
   "about_docs": { "message": "Documentation" },
   "about_feedback": { "message": "Report Issue" },

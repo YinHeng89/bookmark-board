@@ -8,6 +8,48 @@ class GroupManager {
     this.data = dataManager;
     this.modal = modalManager;
     this.toast = toastManager;
+    // 右键菜单状态
+    this._currentMenu = null;
+    this._closeHandler = null;
+  }
+
+  /**
+   * 关闭当前菜单并清理所有监听器
+   */
+  _closeMenu() {
+    if (this._closeHandler) {
+      document.removeEventListener('click', this._closeHandler, true);
+      this._closeHandler = null;
+    }
+    if (this._currentMenu) {
+      this._currentMenu.remove();
+      this._currentMenu = null;
+    }
+  }
+
+  /**
+   * 创建新菜单（自动关闭旧菜单并清理监听器）
+   * @returns {HTMLElement} menu 元素
+   */
+  _createMenu() {
+    this._closeMenu();
+    const menu = document.createElement('div');
+    menu.className = 'group-select-menu';
+    this._currentMenu = menu;
+
+    // 全局关闭监听器（捕获阶段，避免 stopPropagation 干扰）
+    this._closeHandler = (e) => {
+      if (!menu.contains(e.target)) {
+        this._closeMenu();
+      }
+    };
+
+    // 延迟绑定，避免当前右键/点击事件立即触发关闭
+    setTimeout(() => {
+      document.addEventListener('click', this._closeHandler, true);
+    }, 0);
+
+    return menu;
   }
 
   /**
@@ -107,11 +149,7 @@ class GroupManager {
    * 显示分组右键菜单
    */
   showGroupContextMenu(group, x, y, onAction) {
-    const existingMenu = document.querySelector('.group-select-menu');
-    if (existingMenu) existingMenu.remove();
-    
-    const menu = document.createElement('div');
-    menu.className = 'group-select-menu';
+    const menu = this._createMenu();
     
     // 标题
     const title = document.createElement('div');
@@ -131,8 +169,8 @@ class GroupManager {
       <span>${I18n.t('group_menu_edit')}</span>
     `;
     editItem.addEventListener('click', () => {
+      this._closeMenu();
       this.editGroup(group.id, onAction);
-      menu.remove();
     });
     menu.appendChild(editItem);
     
@@ -146,8 +184,8 @@ class GroupManager {
         <span>${I18n.t('group_menu_delete')}</span>
       `;
       deleteItem.addEventListener('click', () => {
+        this._closeMenu();
         this.deleteGroup(group.id, 'all', onAction);
-        menu.remove();
       });
       menu.appendChild(deleteItem);
     }
@@ -156,28 +194,13 @@ class GroupManager {
     menu.style.top = Math.min(y, window.innerHeight - 200) + 'px';
     
     document.body.appendChild(menu);
-    
-    const closeMenu = (e) => {
-      if (!menu.contains(e.target)) {
-        menu.remove();
-        document.removeEventListener('click', closeMenu);
-      }
-    };
-    
-    setTimeout(() => {
-      document.addEventListener('click', closeMenu);
-    }, 0);
   }
 
   /**
    * 显示书签右键菜单
    */
   showBookmarkContextMenu(link, x, y, onAction, onAIOptimize, bookmarkOps) {
-    const existingMenu = document.querySelector('.group-select-menu');
-    if (existingMenu) existingMenu.remove();
-    
-    const menu = document.createElement('div');
-    menu.className = 'group-select-menu';
+    const menu = this._createMenu();
     
     // 标题
     const title = document.createElement('div');
@@ -201,7 +224,7 @@ class GroupManager {
       this.data.save();
       onAction?.();
       this.toast.show(link.pinned ? I18n.t('card_menu_pinned') : I18n.t('card_menu_unpinned'));
-      menu.remove();
+      this._closeMenu();
     });
     menu.appendChild(pinItem);
     
@@ -213,7 +236,7 @@ class GroupManager {
       <span>${I18n.t('card_menu_edit')}</span>
     `;
     editItem.addEventListener('click', () => {
-      menu.remove();
+      this._closeMenu();
       if (bookmarkOps) {
         bookmarkOps.editCard(link, onAction);
       }
@@ -250,9 +273,7 @@ class GroupManager {
         this.data.save();
         onAction?.();
         this.toast.show(I18n.t('card_menu_group_updated'));
-        item.classList.toggle('selected');
-        const icon = item.querySelector('i');
-        icon.className = link.groups.includes(group.id) ? 'fa fa-check-circle' : 'fa fa-circle-o';
+        this._closeMenu();
       });
       submenu.appendChild(item);
     });
@@ -292,7 +313,7 @@ class GroupManager {
       <span>${I18n.t('card_menu_ai_optimize')}</span>
     `;
     aiItem.addEventListener('click', async () => {
-      menu.remove();
+      this._closeMenu();
       await onAIOptimize?.(link);
     });
     menu.appendChild(aiItem);
@@ -306,7 +327,7 @@ class GroupManager {
       <span>${I18n.t('card_menu_delete')}</span>
     `;
     deleteItem.addEventListener('click', () => {
-      menu.remove();
+      this._closeMenu();
       if (bookmarkOps) {
         bookmarkOps.deleteCard(link, onAction);
       }
@@ -317,17 +338,6 @@ class GroupManager {
     menu.style.top = Math.min(y, window.innerHeight - 400) + 'px';
     
     document.body.appendChild(menu);
-    
-    const closeMenu = (e) => {
-      if (!menu.contains(e.target)) {
-        menu.remove();
-        document.removeEventListener('click', closeMenu);
-      }
-    };
-    
-    setTimeout(() => {
-      document.addEventListener('click', closeMenu);
-    }, 0);
   }
 }
 
