@@ -208,6 +208,17 @@
           </div>
 
           <div class="data-section">
+            <h3 data-i18n="data_import_chrome_title">导入 Chrome 书签</h3>
+            <p class="data-desc" data-i18n="data_import_chrome_desc">从 Chrome 浏览器导出的书签文件（HTML 格式）导入，将追加书签和分组，不会覆盖已有数据。
+            <br><small data-i18n="data_import_chrome_howto">如何导出：Chrome → 书签管理器 → 三点菜单 → 导出书签</small></p>
+            <button id="importChromeBookmarksBtn" class="data-btn data-btn-secondary">
+              <i class="fa fa-chrome"></i>
+              <span data-i18n="data_import_chrome_btn">从 Chrome 导入</span>
+            </button>
+            <input type="file" id="chromeBookmarkFileInput" accept=".html,.htm" style="display: none;" />
+          </div>
+
+          <div class="data-section">
             <h3 data-i18n="data_stats_title">数据统计</h3>
             <div class="data-stats">
               <div class="stat-item">
@@ -455,7 +466,7 @@
             <img src="icons/logo.png" data-i18n-attr="alt:about_title" alt="书签白板" />
             <h3 data-i18n="about_title">书签白板</h3>
           </div>
-          <p class="version" data-i18n="about_version">版本 v3.2.8</p>
+          <p class="version" data-i18n="about_version">版本 v3.2.9</p>
           <p class="description" data-i18n="about_desc">隐私优先的本地书签管理工具</p>
           <div class="about-links">
             <a href="https://github.com/YinHeng89/bookmark-board" target="_blank" class="about-link">

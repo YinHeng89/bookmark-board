@@ -82,11 +82,18 @@ update_version() {
   # 4. js/settings.js（导出数据版本标记）
   "${SED_INLINE[@]}" "s/$current_version/$new_version/g" "$SCRIPT_DIR/js/settings.js"
 
+  # 5. _locales/zh_CN/messages.json（关于页面中文版本号）
+  "${SED_INLINE[@]}" "s/$current_version/$new_version/g" "$SCRIPT_DIR/_locales/zh_CN/messages.json"
+
+  # 6. _locales/en/messages.json（关于页面英文版本号）
+  "${SED_INLINE[@]}" "s/$current_version/$new_version/g" "$SCRIPT_DIR/_locales/en/messages.json"
+
   echo -e "${GREEN}✓ 版本号: $current_version → $new_version"
   echo -e "  • manifest.json"
   echo -e "  • new-tab.html（Logo / CSS缓存）"
   echo -e "  • settings.html（关于页面）"
-  echo -e "  • js/settings.js（导出数据）${NC}"
+  echo -e "  • js/settings.js（导出数据）"
+  echo -e "  • _locales/zh_CN + en/messages.json（关于页面 i18n）${NC}"
 }
 
 # ── 打包发布 ──────────────────────────────────────────
@@ -184,7 +191,7 @@ main() {
   echo ""
 
   # 确认
-  read -p "确认发布 v$version？(Y/n) " -n 1 -r
+  read -p "确认发布 v$version (Y/n) " -n 1 -r
   echo
   if [[ $REPLY =~ ^[Nn]$ ]]; then
     echo -e "${YELLOW}已取消发布${NC}"

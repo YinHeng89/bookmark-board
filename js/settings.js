@@ -12,6 +12,8 @@ let addGroupBtn = null;
 let exportDataBtn = null;
 let importDataBtn = null;
 let importFileInput = null;
+let chromeBookmarkBtn = null;         // Chrome 书签导入按钮
+let chromeBookmarkFileInput = null;  // Chrome 书签文件选择
 
 // AI 相关 DOM 元素
 let aiProvider = null;
@@ -63,7 +65,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   exportDataBtn = document.getElementById('exportDataBtn');
   importDataBtn = document.getElementById('importDataBtn');
   importFileInput = document.getElementById('importFileInput');
-  
+  chromeBookmarkBtn = document.getElementById('importChromeBookmarksBtn');
+  chromeBookmarkFileInput = document.getElementById('chromeBookmarkFileInput');
+
   // 初始化 AI DOM 元素
   aiProvider = document.getElementById('aiProvider');
   aiApiUrl = document.getElementById('aiApiUrl');
@@ -1072,6 +1076,16 @@ function setupDataManagement() {
   if (importFileInput) {
     importFileInput.addEventListener('change', handleImportFile);
   }
+
+  // Chrome 书签导入
+  if (chromeBookmarkBtn) {
+    chromeBookmarkBtn.addEventListener('click', () => {
+      chromeBookmarkFileInput.click();
+    });
+  }
+  if (chromeBookmarkFileInput) {
+    chromeBookmarkFileInput.addEventListener('change', handleChromeBookmarksImport);
+  }
 }
 
 // 更新数据统计
@@ -1095,7 +1109,7 @@ async function exportData() {
     
     // 收集所有数据
     const exportObj = {
-      version: '3.2.8',
+      version: '3.2.9',
       exportDate: new Date().toISOString(),
       links: links,
       groups: groups,
@@ -1127,6 +1141,169 @@ async function exportData() {
   } catch (error) {
     console.error('导出数据失败:', error);
     showToast(I18n.t('data_export_failed', error.message));
+  }
+}
+
+// ── Chrome 书签解析器（Netscape 格式） ─────────────────
+/**
+ * 解析 Chrome 导出的书签 HTML 文件
+ * @param {string} html - 书签 HTML 内容
+ * @returns {{ bookmarks: Array<{url:string, title:string, addDate:number, group:string}>, folderNames: Set<string> }}
+ */
+function parseChromeBookmarks(html) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+
+  const bookmarks = [];
+  const folderNames = new Set();
+
+  // Chrome 书签文件标准结构: <DL><DT><H3>文件夹名</H3><DL><DT><A HREF="...">书签</A>
+  // 递归遍历
+  function traverse(dlElement, groupName) {
+    if (!dlElement || !dlElement.children) return;
+
+    for (let i = 0; i < dlElement.children.length; i++) {
+      const child = dlElement.children[i];
+      if (child.tagName !== 'DT') continue;
+
+      const h3 = child.querySelector('h3');
+      const link = child.querySelector('a');
+
+      if (h3) {
+        // 文件夹节点
+        const name = h3.textContent.trim();
+        folderNames.add(name);
+
+        // 查找子书签
+        const subDl = child.querySelector('dl');
+        if (subDl) {
+          traverse(subDl, name);
+        }
+      } else if (link) {
+        // 书签节点
+        const href = link.getAttribute('href');
+        const title = link.textContent.trim();
+        const addDate = link.getAttribute('ADD_DATE');
+
+        if (href && title) {
+          bookmarks.push({
+            url: href,
+            title: title,
+            addDate: addDate ? parseInt(addDate) * 1000 : Date.now(), // 秒 → 毫秒
+            group: groupName || '' // 空串 = 未分组
+          });
+        }
+      }
+    }
+  }
+
+  // 从根 DL 开始遍历
+  const rootDl = doc.querySelector('dl');
+  if (rootDl) {
+    traverse(rootDl, '');
+  }
+
+  return { bookmarks, folderNames };
+}
+
+// ── 从 Chrome 书签文件导入 ─────────────────────────────
+
+async function handleChromeBookmarksImport(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  // 重置 input 以便重新选择同一个文件
+  event.target.value = '';
+
+  try {
+    showToast(I18n.t('data_import_chrome_reading'));
+
+    const html = await file.text();
+    const { bookmarks: importedBookmarks, folderNames } = parseChromeBookmarks(html);
+
+    if (importedBookmarks.length === 0) {
+      showToast(I18n.t('data_import_chrome_empty'));
+      return;
+    }
+
+    // 计算统计信息
+    const existingUrls = new Set(links.map(l => l.url));
+    const newBookmarks = importedBookmarks.filter(b => !existingUrls.has(b.url));
+    const skippedCount = importedBookmarks.length - newBookmarks.length;
+
+    // 确认弹窗（多语言）
+    let confirmMsg = I18n.t('data_import_chrome_found',
+      String(importedBookmarks.length), String(folderNames.size));
+    if (skippedCount > 0) {
+      confirmMsg += '\n' + I18n.t('data_import_chrome_skipped', String(skippedCount));
+    }
+    confirmMsg += '\n' + I18n.t('data_import_chrome_appending', String(newBookmarks.length));
+    confirmMsg += '\n\n' + I18n.t('data_import_chrome_continue');
+
+    showConfirmModal(I18n.t('data_import_chrome_confirm_title'), confirmMsg, async () => {
+      try {
+        showToast(I18n.t('data_import_chrome_importing'));
+
+        // 1. 创建/查找分组
+        const groupMap = {}; // { folderName: groupId }
+        for (const g of groups) {
+          groupMap[g.name] = g.id;
+        }
+
+        const newGroups = [];
+        for (const name of folderNames) {
+          if (!groupMap[name] && name) {
+            const newGroup = {
+              id: 'group_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+              name: name,
+              createdAt: Date.now()
+            };
+            groupMap[name] = newGroup.id;
+            newGroups.push(newGroup);
+          }
+        }
+
+        // 2. 创建新书签
+        for (const b of newBookmarks) {
+          let domain = '';
+          try { domain = new URL(b.url).hostname; } catch(e) {}
+
+          const newLink = {
+            url: b.url,
+            title: b.title,
+            icon: domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=64` : 'default-icon.png',
+            createdAt: b.addDate,
+            groups: b.group && groupMap[b.group] ? [groupMap[b.group]] : [],
+            pinned: false,
+            clickCount: 0,
+            lastAccessed: null
+          };
+          links.unshift(newLink);
+        }
+
+        // 3. 合并分组
+        groups = [...groups, ...newGroups];
+
+        // 4. 保存
+        chrome.storage.local.set({ links, groups }, () => {
+          if (chrome.runtime.lastError) {
+            showToast(I18n.t('data_import_chrome_save_failed', chrome.runtime.lastError.message));
+            return;
+          }
+
+          showToast(I18n.t('data_import_chrome_success',
+            String(newBookmarks.length), String(newGroups.length)));
+          updateDataStats();
+          renderLinks();
+        });
+      } catch (err) {
+        console.error('导入 Chrome 书签失败:', err);
+        showToast(I18n.t('data_import_chrome_save_failed', err.message));
+      }
+    });
+  } catch (err) {
+    console.error('解析书签文件失败:', err);
+    showToast(I18n.t('data_import_chrome_parse_failed'));
   }
 }
 

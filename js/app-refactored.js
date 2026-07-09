@@ -117,9 +117,44 @@ function loadData() {
   });
   
   dataManager.loadData(() => {
-    renderGroups();
-    renderLinks();
+    // 一次性读取所有用户偏好，避免多次渲染造成抖动
+    chrome.storage.local.get(['viewPreference', 'groupFilter', 'sortPreference'], (result) => {
+      // 1. 视图偏好
+      if (result.viewPreference) {
+        currentView = result.viewPreference;
+      } else {
+        const hasPinned = dataManager.links.some(link => link.pinned);
+        currentView = hasPinned ? 'pinned' : 'all';
+      }
+
+      // 2. 分组筛选偏好
+      if (result.groupFilter) {
+        activeGroupFilter = result.groupFilter;
+      }
+
+      // 3. 排序偏好
+      if (result.sortPreference) {
+        sortBy = result.sortPreference;
+        const sortSelect = document.getElementById('sortSelect');
+        if (sortSelect) sortSelect.value = sortBy;
+      }
+
+      // 一次性渲染（无抖动！）
+      setActiveViewTab();
+      renderGroups();
+      renderLinks();
+    });
   });
+}
+
+/**
+ * 设置当前视图对应的高亮 tab
+ */
+function setActiveViewTab() {
+  const viewTabs = document.querySelectorAll('.view-tab');
+  viewTabs.forEach(t => t.classList.remove('active'));
+  const activeTab = document.querySelector(`.view-tab[data-view="${currentView}"]`);
+  if (activeTab) activeTab.classList.add('active');
 }
 
 // ========== 事件监听 ==========
@@ -172,6 +207,7 @@ function setupEventListeners() {
   if (sortSelect) {
     sortSelect.addEventListener('change', (e) => {
       sortBy = e.target.value;
+      chrome.storage.local.set({ sortPreference: sortBy });
       renderLinks();
     });
   }
@@ -276,6 +312,7 @@ function setupEventListeners() {
       const tab = e.target.closest('.group-tab');
       if (tab) {
         activeGroupFilter = tab.dataset.group;
+        chrome.storage.local.set({ groupFilter: activeGroupFilter });
         renderGroups();
         renderLinks();
       }
@@ -296,6 +333,8 @@ function setupEventListeners() {
       viewTabs.forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
       currentView = tab.dataset.view;
+      // 持久化用户选择
+      chrome.storage.local.set({ viewPreference: currentView });
       renderSections();
     });
   });
@@ -312,8 +351,8 @@ async function addLinkFromUrl(url, draggedTitle = null) {
 function getFilteredLinks() {
   let filtered = dataManager.links;
   
-  // 按分组筛选
-  if (activeGroupFilter !== 'all') {
+  // 置顶视图忽略分组筛选，始终显示所有置顶书签
+  if (currentView !== 'pinned' && activeGroupFilter !== 'all') {
     if (activeGroupFilter.startsWith('auto_')) {
       const domain = activeGroupFilter.replace('auto_', '');
       filtered = filtered.filter(link => dataManager.getLinkDomain(link) === domain);
@@ -362,9 +401,6 @@ function getFilteredLinks() {
   
   // 排序
   filtered = [...filtered].sort((a, b) => {
-    if (a.pinned && !b.pinned) return -1;
-    if (!a.pinned && b.pinned) return 1;
-    
     const [field, order] = sortBy.split('-');
     
     if (field === 'createdAt') {

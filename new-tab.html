@@ -19,7 +19,7 @@
   </style>
 
   <link href="css/font-awesome.min.css" rel="stylesheet" />
-  <link href="css/main.css?v=3.2.8" rel="stylesheet" />
+  <link href="css/main.css?v=3.2.9" rel="stylesheet" />
 </head>
 
 <body>
@@ -29,7 +29,7 @@
       <div class="logo">
         <img src="icons/logo.png" data-i18n-attr="alt:app_name" alt="书签白板" class="logo-icon" />
         <div class="logo-content">
-          <h1 class="logo-text"><span data-i18n="app_name">书签白板</span> <span class="logo-version">v3.2.8</span></h1>
+          <h1 class="logo-text"><span data-i18n="app_name">书签白板</span> <span class="logo-version">v3.2.9</span></h1>
           <p class="logo-subtitle" data-i18n="app_subtitle">隐私优先的本地书签管理工具</p>
         </div>
       </div>
@@ -82,7 +82,7 @@
       <div id="groupsFilter" class="groups-filter">
         <div class="groups-wrapper">
           <div class="groups-container">
-            <button class="group-tab active" data-group="all">
+            <button class="group-tab" data-group="all">
               <i class="fa fa-th"></i>
               <span data-i18n="group_tab_all">全部分组</span>
             </button>
@@ -105,15 +105,15 @@
       <!-- Tab 切换和排序 -->
       <div class="view-controls">
         <div id="viewTabs" class="view-tabs">
-          <button class="view-tab active" data-view="all">
-            <i class="fa fa-bookmark"></i>
-            <span data-i18n="view_tab_all">所有书签</span>
-            <span id="allCount" class="tab-count">0</span>
-          </button>
           <button class="view-tab" data-view="pinned">
             <i class="fa fa-thumb-tack"></i>
             <span data-i18n="view_tab_pinned">置顶</span>
             <span id="pinnedCount" class="tab-count">0</span>
+          </button>
+          <button class="view-tab" data-view="all">
+            <i class="fa fa-bookmark"></i>
+            <span data-i18n="view_tab_all">所有书签</span>
+            <span id="allCount" class="tab-count">0</span>
           </button>
           <button class="view-tab" data-view="recent">
             <i class="fa fa-clock-o"></i>

@@ -65,10 +65,14 @@ class I18n {
     }
     // 其次使用 chrome.i18n API（扩展环境）
     else if (typeof chrome !== 'undefined' && chrome.i18n && chrome.i18n.getMessage) {
-      msg = chrome.i18n.getMessage(key) || key;
+      // 关键修复：必须把 substitutions 传给 chrome.i18n.getMessage
+      // 否则 $1/$2 会被 Chrome 替换为空字符串
+      msg = chrome.i18n.getMessage(key, substitutions) || key;
+      // chrome.i18n 已处理替换，直接返回
+      return msg;
     }
 
-    // 参数替换 $1, $2, ...
+    // 参数替换 $1, $2, ...（仅处理 _overrideMessages 和 fallback 路径）
     if (substitutions.length > 0) {
       substitutions.forEach((sub, i) => {
         msg = msg.replace(new RegExp('\\$' + (i + 1), 'g'), String(sub));

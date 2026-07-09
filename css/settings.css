@@ -554,6 +554,17 @@
   box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
 }
 
+.data-btn-secondary {
+  background: linear-gradient(135deg, #4285F4, #34A853);
+  color: white;
+}
+
+.data-btn-secondary:hover {
+  background: linear-gradient(135deg, #3367D6, #2E7D32);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(66, 133, 244, 0.3);
+}
+
 .data-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
