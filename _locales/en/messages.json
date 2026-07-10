@@ -33,6 +33,7 @@
 
   "view_tab_all": { "message": "All Bookmarks" },
   "view_tab_pinned": { "message": "Pinned" },
+  "view_tab_ungrouped": { "message": "Ungrouped" },
   "view_tab_recent": { "message": "Recent" },
 
   "sort_label": { "message": "Sort: " },
@@ -225,7 +226,7 @@
 
   "about_title": { "message": "Bookmark Board" },
   "about_desc": { "message": "Privacy-first local bookmark manager" },
-  "about_version": { "message": "Version v3.2.11" },
+  "about_version": { "message": "Version v3.2.7" },
   "about_github": { "message": "GitHub" },
   "about_docs": { "message": "Documentation" },
   "about_feedback": { "message": "Report Issue" },

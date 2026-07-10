@@ -7,27 +7,24 @@
 const AI_PROVIDERS = {
   custom: {
     name: '自定义 API',
-    i18nKey: 'ai_provider_custom',
     defaultUrl: 'http://localhost:8000',
     needApiKey: false,
-    supportAutoModel: true,
-    chatEndpoint: '/v1/chat/completions',
-    modelsEndpoint: '/v1/models'
+    supportAutoModel: true,  // 支持自动获取模型列表
+    chatEndpoint: '/v1/chat/completions',  // 聊天接口路径
+    modelsEndpoint: '/v1/models'  // 模型列表接口路径
   },
   lmstudio: {
     name: 'LM Studio',
-    i18nKey: 'ai_provider_lmstudio',
     defaultUrl: 'http://localhost:1234',
     needApiKey: false,
     supportAutoModel: true,
     chatEndpoint: '/v1/chat/completions',
     modelsEndpoint: '/v1/models',
-    defaultModel: ''
+    defaultModel: ''  // 由用户自行选择
   },
   openai: {
     name: 'OpenAI',
-    i18nKey: 'ai_provider_openai',
-    defaultUrl: 'https://api.openai.com/v1',
+    defaultUrl: 'https://api.openai.com/v1',  // ✅ 官方基础 URL
     needApiKey: true,
     defaultModel: 'gpt-4o',
     chatEndpoint: '/chat/completions',
@@ -35,27 +32,24 @@ const AI_PROVIDERS = {
   },
   anthropic: {
     name: 'Anthropic',
-    i18nKey: 'ai_provider_anthropic',
-    defaultUrl: 'https://api.anthropic.com',
+    defaultUrl: 'https://api.anthropic.com',  // ✅ 官方基础 URL（不带 /v1）
     needApiKey: true,
     defaultModel: 'claude-3-5-sonnet-20241022',
     chatEndpoint: '/v1/messages',
-    modelsEndpoint: null
+    modelsEndpoint: null  // Anthropic 不支持模型列表 API
   },
   aliyun: {
     name: '阿里云',
-    i18nKey: 'ai_provider_aliyun',
-    defaultUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+    defaultUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',  // ✅ OpenAI 兼容接口
     needApiKey: true,
     defaultModel: 'qwen-max',
-    chatEndpoint: '/chat/completions',
-    modelsEndpoint: '/models',
+    chatEndpoint: '/chat/completions',  // OpenAI 兼容端点
+    modelsEndpoint: '/models',  // OpenAI 兼容接口支持获取模型列表
     supportAutoModel: true
   },
   zhipu: {
     name: '智谱 AI',
-    i18nKey: 'ai_provider_zhipu',
-    defaultUrl: 'https://open.bigmodel.cn/api/paas/v4',
+    defaultUrl: 'https://open.bigmodel.cn/api/paas/v4',  // ✅ 官方基础 URL
     needApiKey: true,
     defaultModel: 'glm-4',
     chatEndpoint: '/chat/completions',
@@ -63,8 +57,7 @@ const AI_PROVIDERS = {
   },
   baidu: {
     name: '百度文心',
-    i18nKey: 'ai_provider_baidu',
-    defaultUrl: 'https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop',
+    defaultUrl: 'https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop',  // ✅ 官方基础 URL
     needApiKey: true,
     defaultModel: 'ernie-bot-4',
     chatEndpoint: '/chat/completions',
@@ -72,8 +65,7 @@ const AI_PROVIDERS = {
   },
   tencent: {
     name: '腾讯混元',
-    i18nKey: 'ai_provider_tencent',
-    defaultUrl: 'https://hunyuan.tencentcloudapi.com',
+    defaultUrl: 'https://hunyuan.tencentcloudapi.com',  // ✅ 官方基础 URL
     needApiKey: true,
     defaultModel: 'hunyuan-standard',
     chatEndpoint: '/',
@@ -81,8 +73,7 @@ const AI_PROVIDERS = {
   },
   moonshot: {
     name: '月之暗面',
-    i18nKey: 'ai_provider_moonshot',
-    defaultUrl: 'https://api.moonshot.cn/v1',
+    defaultUrl: 'https://api.moonshot.cn/v1',  // ✅ 官方基础 URL
     needApiKey: true,
     defaultModel: 'moonshot-v1-8k',
     chatEndpoint: '/chat/completions',
@@ -90,13 +81,12 @@ const AI_PROVIDERS = {
   },
   google: {
     name: 'Google',
-    i18nKey: 'ai_provider_google',
-    defaultUrl: 'https://generativelanguage.googleapis.com/v1beta',
+    defaultUrl: 'https://generativelanguage.googleapis.com/v1beta',  // ✅ 官方基础 URL
     needApiKey: true,
-    defaultModel: 'gemini-1.5-pro',
-    chatEndpoint: '/models/',
+    defaultModel: 'gemini-1.5-pro',  // gemini-pro 已弃用
+    chatEndpoint: '/models/',  // 前缀，实际 endpoint 动态拼接模型名
     modelsEndpoint: '/models',
-    supportAutoModel: true
+    supportAutoModel: true  // Google 支持获取模型列表
   }
 };
 
@@ -107,9 +97,13 @@ class AIService {
     this.config = settings.config || {};
   }
 
+  /**
+   * 从推理内容中提取最终答案
+   */
   extractFinalAnswer(reasoning) {
     if (!reasoning) return '';
     
+    // 1. 尝试找最后的结论标记
     const conclusionMarkers = [
       /最终答案[：:](.+)$/m,
       /结论[：:](.+)$/m,
@@ -126,23 +120,31 @@ class AIService {
       }
     }
     
+    // 2. 尝试找引号中的内容
     const quoteMatch = reasoning.match(/["'""']['"]([^"'""']+)["'""']/g);
     if (quoteMatch && quoteMatch.length > 0) {
+      // 取最后一个引号内容
       const lastQuote = quoteMatch[quoteMatch.length - 1];
       return lastQuote.replace(/["'"""']/g, '').trim();
     }
     
+    // 3. 按句子分割，取最后 1-2 句
     const sentences = reasoning.split(/[。！？\n]+/).filter(s => s.trim());
     if (sentences.length > 0) {
+      // 取最后 1-2 句
       return sentences.slice(-2).join('。').trim();
     }
     
     return reasoning.trim();
   }
   
+  /**
+   * 清理 AI 输出内容
+   */
   cleanAIOutput(content) {
     if (!content) return '';
     
+    // 1. 移除常见的思考标签
     const thinkPatterns = [
       /<think>.*?<\/think>/gs,
       /<thinking>.*?<\/thinking>/gs,
@@ -156,12 +158,19 @@ class AIService {
       content = content.replace(pattern, '');
     }
     
+    // 2. 移除多余的空格和换行
     content = content.replace(/\s+/g, ' ').trim();
+    
+    // 3. 移除开头和结尾的标点符号
     content = content.replace(/^[，。！？、；："'"""'\s]+/, '');
     content = content.replace(/[，。！？、；："'"""'\s]+$/, '');
     
+    // 4. 对于标题优化，限制长度（最多 50 字）
+    // 对于分组建议，限制长度（最多 10 字）
+    // 这里做通用处理：如果超过 50 字，取前 50 字
     if (content.length > 50) {
       content = content.substring(0, 50).trim();
+      // 确保不在单词中间截断
       const lastSpace = content.lastIndexOf(' ');
       if (lastSpace > 30) {
         content = content.substring(0, lastSpace);
@@ -171,10 +180,14 @@ class AIService {
     return content;
   }
 
+  /**
+   * 测试 API 连接
+   */
   async testConnection() {
     try {
       const provider = AI_PROVIDERS[this.provider];
       
+      // 简单测试：发送一个测试请求
       const response = await this.callAPI('你好，请回复"连接成功"');
       
       if (response && response.content) {
@@ -197,6 +210,9 @@ class AIService {
     }
   }
 
+  /**
+   * 获取可用模型列表
+   */
   async fetchModels() {
     try {
       const provider = AI_PROVIDERS[this.provider];
@@ -207,22 +223,30 @@ class AIService {
         return [];
       }
       
+      // 检查是否支持自动获取模型
       if (!provider.supportAutoModel || !provider.modelsEndpoint) {
         console.warn('该供应商不支持自动获取模型列表');
         return [];
       }
       
+      // 移除末尾的斜杠
       const cleanBaseUrl = baseUrl.replace(/\/$/, '');
+      
+      // 构建模型列表接口 URL
       let modelsUrl = `${cleanBaseUrl}${provider.modelsEndpoint}`;
       
+      // Google 的 API Key 需要放在 URL 查询参数中
       if (this.provider === 'google' && this.config.apiKey) {
         modelsUrl += `?key=${encodeURIComponent(this.config.apiKey)}`;
       }
+      
+      console.log('获取模型列表:', this.provider === 'google' ? modelsUrl.replace(this.config.apiKey, '***') : modelsUrl);
       
       const headers = {
         'Content-Type': 'application/json'
       };
       
+      // 非 Google 供应商使用 Authorization header
       if (this.provider !== 'google' && this.config.apiKey) {
         headers['Authorization'] = `Bearer ${this.config.apiKey}`;
       }
@@ -239,17 +263,25 @@ class AIService {
       
       const data = await response.json();
       
+      // Google Gemini 格式: { models: [{ name: "models/gemini-pro", ... }] }
       if (this.provider === 'google' && data.models && Array.isArray(data.models)) {
         return data.models
-          .map(model => model.name ? model.name.replace(/^models\//, '') : null)
+          .map(model => {
+            // 移除 "models/" 前缀
+            return model.name ? model.name.replace(/^models\//, '') : null;
+          })
           .filter(name => name && !name.includes('/versions/'));
       }
       
+      // 解析模型列表（其他供应商格式）
       if (data.data && Array.isArray(data.data)) {
+        // OpenAI 格式
         return data.data.map(model => model.id);
       } else if (Array.isArray(data)) {
+        // 直接是数组
         return data;
       } else if (data.models && Array.isArray(data.models)) {
+        // models 字段
         return data.models;
       }
       
@@ -260,8 +292,12 @@ class AIService {
     }
   }
 
+  /**
+   * 统一 API 调用接口
+   */
   async callAPI(prompt) {
     const startTime = Date.now();
+    const provider = AI_PROVIDERS[this.provider];
     
     let response;
     
@@ -280,6 +316,7 @@ class AIService {
         response = await this.callGoogleAPI(prompt);
         break;
       default:
+        // 其他供应商使用通用格式
         response = await this.callGenericAPI(prompt);
     }
     
@@ -291,6 +328,9 @@ class AIService {
     };
   }
 
+  /**
+   * 自定义 API（自建服务）
+   */
   async callCustomAPI(prompt) {
     const provider = AI_PROVIDERS[this.provider];
     const baseUrl = this.config.apiUrl || provider.defaultUrl;
@@ -299,9 +339,19 @@ class AIService {
       throw new Error('API 地址未配置');
     }
     
+    // 移除末尾的斜杠
     const cleanBaseUrl = baseUrl.replace(/\/$/, '');
+    
+    // 拼接聊天完成接口路径
     const chatEndpoint = provider.chatEndpoint || '/v1/chat/completions';
     const apiUrl = `${cleanBaseUrl}${chatEndpoint}`;
+    
+    console.log('调用 AI API:', apiUrl);
+    console.log('请求参数:', {
+      model: this.config.model,
+      messages: [{ role: 'user', content: prompt.substring(0, 100) + '...' }],
+      stream: false
+    });
     
     const response = await fetch(apiUrl, {
       method: 'POST',
@@ -312,11 +362,13 @@ class AIService {
       body: JSON.stringify({
         model: this.config.model,
         messages: [{ role: 'user', content: prompt }],
-        stream: false,
-        max_tokens: 100,
-        temperature: 0.3
+        stream: false,  // 禁用流式响应，等待完整响应
+        max_tokens: 100,  // 限制最大生成 token 数，加快响应
+        temperature: 0.3  // 降低随机性，使输出更稳定
       })
     });
+    
+    console.log('API 响应状态:', response.status);
     
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -324,29 +376,44 @@ class AIService {
     
     const data = await response.json();
     
+    // 调试：打印返回数据
+    console.log('AI 响应数据:', data);
+    
+    // 适配不同的返回格式
     const choice = data.choices?.[0];
     const message = choice?.message || {};
     
+    // 只使用 content，不使用 reasoning_content（那是思考过程）
     let content = message.content || '';
     
+    // 如果 content 为空，尝试使用 reasoning_content 并提取最后一句
     if (!content) {
       const reasoning = message.reasoning_content || message.reasoning || '';
       if (reasoning) {
+        // 尝试从推理内容中提取最终答案
         content = this.extractFinalAnswer(reasoning);
+        console.log('从 reasoning_content 提取:', content);
       }
     }
     
+    // 如果没有 content，尝试其他格式
     if (!content) {
       content = data.content || data.text || data.response || JSON.stringify(data);
     }
     
+    // 清理内容：移除思考标签、多余空格、截断过长内容
     content = this.cleanAIOutput(content);
+    
+    console.log('提取的内容:', content);
     
     return {
       content: content
     };
   }
 
+  /**
+   * OpenAI API
+   */
   async callOpenAI(prompt) {
     const provider = AI_PROVIDERS.openai;
     const baseUrl = this.config.apiUrl || provider.defaultUrl;
@@ -357,8 +424,11 @@ class AIService {
       throw new Error('OpenAI 需要 API Key');
     }
     
+    // 移除末尾的斜杠，拼接聊天端点
     const cleanBaseUrl = baseUrl.replace(/\/$/, '');
     const apiUrl = `${cleanBaseUrl}${provider.chatEndpoint}`;
+    
+    console.log('调用 OpenAI API:', apiUrl);
     
     const response = await fetch(apiUrl, {
       method: 'POST',
@@ -383,6 +453,9 @@ class AIService {
     };
   }
 
+  /**
+   * Anthropic API
+   */
   async callAnthropic(prompt) {
     const provider = AI_PROVIDERS.anthropic;
     const baseUrl = this.config.apiUrl || provider.defaultUrl;
@@ -393,8 +466,11 @@ class AIService {
       throw new Error('Anthropic 需要 API Key');
     }
     
+    // 移除末尾的斜杠，拼接聊天端点
     const cleanBaseUrl = baseUrl.replace(/\/$/, '');
     const apiUrl = `${cleanBaseUrl}${provider.chatEndpoint}`;
+    
+    console.log('调用 Anthropic API:', apiUrl);
     
     const response = await fetch(apiUrl, {
       method: 'POST',
@@ -421,6 +497,10 @@ class AIService {
     };
   }
 
+  /**
+   * Google Gemini API
+   * 注意：Google Gemini 的认证方式、请求体、响应格式都与其他供应商不同
+   */
   async callGoogleAPI(prompt) {
     const provider = AI_PROVIDERS.google;
     const baseUrl = this.config.apiUrl || provider.defaultUrl;
@@ -435,10 +515,17 @@ class AIService {
       throw new Error('API 地址未配置');
     }
 
+    // 移除末尾的斜杠
     const cleanBaseUrl = baseUrl.replace(/\/$/, '');
+
+    // Google Gemini 的 endpoint 随模型变化：/models/{model}:generateContent
+    // API Key 必须放在 URL 查询参数中（而非 Authorization 头）
     const chatEndpoint = `/models/${model}:generateContent`;
     const apiUrl = `${cleanBaseUrl}${chatEndpoint}?key=${encodeURIComponent(apiKey)}`;
 
+    console.log('调用 Google Gemini API:', apiUrl.replace(apiKey, '***'));
+
+    // Gemini 请求体格式: { contents: [{ parts: [{ text: "..." }] }] }
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
@@ -452,6 +539,7 @@ class AIService {
     });
 
     if (!response.ok) {
+      // 尝试读取 Google 的错误信息
       let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
       try {
         const errorData = await response.json();
@@ -466,6 +554,7 @@ class AIService {
 
     const data = await response.json();
 
+    // Gemini 响应格式: { candidates: [{ content: { parts: [{ text: "..." }] } }] }
     let content = '';
     if (data.candidates && data.candidates.length > 0) {
       const candidate = data.candidates[0];
@@ -474,13 +563,19 @@ class AIService {
       }
     }
 
+    // 清理内容
     content = this.cleanAIOutput(content);
+
+    console.log('Google Gemini 响应内容:', content);
 
     return {
       content: content
     };
   }
 
+  /**
+   * 通用 API 调用（其他供应商）
+   */
   async callGenericAPI(prompt) {
     const provider = AI_PROVIDERS[this.provider];
     const baseUrl = this.config.apiUrl || provider.defaultUrl;
@@ -495,9 +590,12 @@ class AIService {
       throw new Error('API 地址未配置');
     }
     
+    // 移除末尾的斜杠，拼接聊天端点
     const cleanBaseUrl = baseUrl.replace(/\/$/, '');
     const chatEndpoint = provider.chatEndpoint || '/v1/chat/completions';
     const apiUrl = `${cleanBaseUrl}${chatEndpoint}`;
+    
+    console.log(`调用 ${provider.name} API:`, apiUrl);
     
     const headers = {
       'Content-Type': 'application/json'
@@ -513,7 +611,7 @@ class AIService {
       body: JSON.stringify({
         model,
         messages: [{ role: 'user', content: prompt }],
-        stream: false
+        stream: false  // 禁用流式响应
       })
     });
     
@@ -523,6 +621,7 @@ class AIService {
     
     const data = await response.json();
     
+    // 尝试多种返回格式
     return {
       content: data.choices?.[0]?.message?.content || 
                data.content?.[0]?.text ||
@@ -532,11 +631,15 @@ class AIService {
     };
   }
 
+  /**
+   * 智能标题优化
+   */
   async optimizeTitle(title, url) {
+    // 使用配置的提示词或默认提示词
     let prompt = this.settings.prompts?.titleOptimization ||
       `<task>
 优化标题
-:</task>
+</task>
 
 <input>
 <title>{title}</title>
@@ -558,6 +661,7 @@ class AIService {
 
 <output></output>`;
     
+    // 替换模板变量
     prompt = prompt
       .replace(/{title}/g, title)
       .replace(/{url}/g, url)
@@ -568,16 +672,20 @@ class AIService {
     return response.content.trim();
   }
 
+  /**
+   * 智能分组建议
+   */
   async suggestCategory(url, title, existingGroups = []) {
     const domain = new URL(url).hostname.replace('www.', '');
     const groupsText = existingGroups.length > 0 
       ? `现有分组：${existingGroups.join('、')}`
       : '当前没有分组，请推荐一个新的分组名称。';
     
+    // 使用配置的提示词或默认提示词
     let prompt = this.settings.prompts?.categorySuggestion ||
       `<task>
 智能书签分类
-:</task>
+</task>
 
 <input>
 <title>{title}</title>
@@ -600,6 +708,7 @@ class AIService {
 
 <output></output>`;
     
+    // 替换模板变量
     prompt = prompt
       .replace(/{title}/g, title)
       .replace(/{url}/g, url)
@@ -610,6 +719,9 @@ class AIService {
     return response.content.trim();
   }
 
+  /**
+   * 智能标签生成
+   */
   async generateTags(url, title) {
     const prompt = `你是一个标签生成专家。请为以下书签生成相关标签。
 
@@ -629,6 +741,9 @@ class AIService {
     return response.content.trim();
   }
 
+  /**
+   * 生成书签摘要
+   */
   async generateSummary(url, title) {
     const prompt = `你是一个内容摘要专家。请为以下书签生成简短摘要。
 
@@ -645,6 +760,9 @@ class AIService {
     return response.content.trim();
   }
 
+  /**
+   * 检测重复书签
+   */
   async detectDuplicates(newBookmark, existingBookmarks) {
     const prompt = `你是一个数据质量检测专家。请检测以下书签是否与现有书签重复。
 

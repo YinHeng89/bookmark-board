@@ -33,6 +33,7 @@
 
   "view_tab_all": { "message": "所有书签" },
   "view_tab_pinned": { "message": "置顶" },
+  "view_tab_ungrouped": { "message": "未分组" },
   "view_tab_recent": { "message": "最近添加" },
 
   "sort_label": { "message": "排序：" },
@@ -225,7 +226,7 @@
 
   "about_title": { "message": "书签白板" },
   "about_desc": { "message": "隐私优先的本地书签管理工具" },
-  "about_version": { "message": "版本 v3.2.11" },
+  "about_version": { "message": "版本 v3.2.7" },
   "about_github": { "message": "GitHub" },
   "about_docs": { "message": "使用文档" },
   "about_feedback": { "message": "反馈问题" },

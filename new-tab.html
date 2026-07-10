@@ -19,7 +19,7 @@
   </style>
 
   <link href="css/font-awesome.min.css" rel="stylesheet" />
-  <link href="css/main.css?v=3.2.11" rel="stylesheet" />
+  <link href="css/main.css?v=3.2.12" rel="stylesheet" />
 </head>
 
 <body>
@@ -29,7 +29,7 @@
       <div class="logo">
         <img src="icons/logo.png" data-i18n-attr="alt:app_name" alt="书签白板" class="logo-icon" />
         <div class="logo-content">
-          <h1 class="logo-text"><span data-i18n="app_name">书签白板</span> <span class="logo-version">v3.2.11</span></h1>
+          <h1 class="logo-text"><span data-i18n="app_name">书签白板</span> <span class="logo-version">v3.2.12</span></h1>
           <p class="logo-subtitle" data-i18n="app_subtitle">隐私优先的本地书签管理工具</p>
         </div>
       </div>
@@ -37,6 +37,7 @@
       <div class="header-actions">
         <!-- 搜索框（桌面端） -->
         <div class="search-box">
+          <i class="fa fa-search search-icon"></i>
           <input
             type="text"
             id="search"
@@ -44,6 +45,14 @@
             data-i18n-attr="placeholder:header_search_placeholder"
             placeholder="搜索书签... 支持 #标签 @域名 !分组"
           />
+          <button id="searchClearBtn" class="search-clear-btn" style="display:none;" title="清除">
+            <i class="fa fa-times"></i>
+          </button>
+        </div>
+
+        <!-- 排序 -->
+        <div class="sort-controls">
+          <select id="sortSelect" class="sort-select"></select>
         </div>
 
         <!-- 移动端搜索按钮 -->
@@ -78,14 +87,31 @@
   <!-- 主内容区 -->
   <main class="main">
     <div class="container">
-      <!-- 分组筛选区 -->
+      <!-- 分组筛选区 + 排序 -->
       <div id="groupsFilter" class="groups-filter">
         <div class="groups-wrapper">
           <div class="groups-container">
-            <button class="group-tab" data-group="all">
+            <button class="group-tab group-tab-fixed active" data-group="all">
               <i class="fa fa-th"></i>
-              <span data-i18n="group_tab_all">全部分组</span>
+              <span data-i18n="view_tab_all">所有书签</span>
+              <span id="allCount" class="tab-count">0</span>
             </button>
+            <button class="group-tab group-tab-fixed" data-group="pinned">
+              <i class="fa fa-thumb-tack"></i>
+              <span data-i18n="view_tab_pinned">置顶</span>
+              <span id="pinnedCount" class="tab-count">0</span>
+            </button>
+            <button class="group-tab group-tab-fixed" data-group="ungrouped">
+              <i class="fa fa-folder-o"></i>
+              <span data-i18n="view_tab_ungrouped">未分组</span>
+              <span id="ungroupedCount" class="tab-count">0</span>
+            </button>
+            <button class="group-tab group-tab-fixed" data-group="recent">
+              <i class="fa fa-clock-o"></i>
+              <span data-i18n="view_tab_recent">最近添加</span>
+              <span id="recentCount" class="tab-count">0</span>
+            </button>
+            <span class="group-tab-divider"></span>
             <!-- 动态生成分组标签 -->
             <button id="addGroupBtn" class="add-group-btn" data-i18n-attr="title:group_tab_create" title="新建分组">
               <i class="fa fa-plus"></i>
@@ -100,33 +126,6 @@
         <button id="hideTip" class="tip-close" data-i18n-attr="title:tip_bar_hide" title="隐藏提示">
           <i class="fa fa-times"></i>
         </button>
-      </div>
-
-      <!-- Tab 切换和排序 -->
-      <div class="view-controls">
-        <div id="viewTabs" class="view-tabs">
-          <button class="view-tab" data-view="pinned">
-            <i class="fa fa-thumb-tack"></i>
-            <span data-i18n="view_tab_pinned">置顶</span>
-            <span id="pinnedCount" class="tab-count">0</span>
-          </button>
-          <button class="view-tab" data-view="all">
-            <i class="fa fa-bookmark"></i>
-            <span data-i18n="view_tab_all">所有书签</span>
-            <span id="allCount" class="tab-count">0</span>
-          </button>
-          <button class="view-tab" data-view="recent">
-            <i class="fa fa-clock-o"></i>
-            <span data-i18n="view_tab_recent">最近添加</span>
-            <span id="recentCount" class="tab-count">0</span>
-          </button>
-        </div>
-
-        <div class="sort-controls">
-          <label class="sort-label" data-i18n="sort_label">排序：</label>
-          <select id="sortSelect" class="sort-select">
-          </select>
-        </div>
       </div>
 
       <!-- 书签展示区 -->
@@ -149,24 +148,6 @@
             </button>
           </div>
           <input type="file" id="importEmptyFileInput" accept=".json" style="display: none;" />
-        </div>
-
-        <!-- 置顶分区空状态 -->
-        <div id="emptyStatePinned" class="empty-state empty-state-info hidden">
-          <div class="empty-icon-wrapper">
-            <i class="fa fa-thumb-tack empty-icon"></i>
-          </div>
-          <h3 class="empty-title" data-i18n="empty_pinned_title">暂无置顶书签</h3>
-          <p class="empty-text" data-i18n="empty_pinned_text">右键点击书签卡片，选择"置顶此书签"即可在这里看到</p>
-        </div>
-
-        <!-- 最近添加分区空状态 -->
-        <div id="emptyStateRecent" class="empty-state empty-state-info hidden">
-          <div class="empty-icon-wrapper">
-            <i class="fa fa-clock-o empty-icon"></i>
-          </div>
-          <h3 class="empty-title" data-i18n="empty_recent_title">暂无最近添加</h3>
-          <p class="empty-text" data-i18n="empty_recent_text">最近 7 天内添加的书签会显示在这里</p>
         </div>
       </div>
     </div>

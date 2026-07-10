@@ -10,8 +10,6 @@
 // ========== DOM 元素 ==========
 const board = document.getElementById('board');
 const emptyState = document.getElementById('emptyState');
-const emptyStatePinned = document.getElementById('emptyStatePinned');
-const emptyStateRecent = document.getElementById('emptyStateRecent');
 const searchInput = document.getElementById('search');
 const mobileSearchInput = document.getElementById('mobileSearchInput');
 const mobileSearchBtn = document.getElementById('mobileSearchBtn');
@@ -26,7 +24,6 @@ const addManualBtn = document.getElementById('addManualBtn');
 let filterText = '';
 let activeGroupFilter = 'all';
 let sortBy = 'createdAt-desc';
-let currentView = 'all';
 
 // ========== 初始化 ==========
 loadTheme();
@@ -117,44 +114,25 @@ function loadData() {
   });
   
   dataManager.loadData(() => {
-    // 一次性读取所有用户偏好，避免多次渲染造成抖动
-    chrome.storage.local.get(['viewPreference', 'groupFilter', 'sortPreference'], (result) => {
-      // 1. 视图偏好
-      if (result.viewPreference) {
-        currentView = result.viewPreference;
-      } else {
-        const hasPinned = dataManager.links.some(link => link.pinned);
-        currentView = hasPinned ? 'pinned' : 'all';
-      }
-
-      // 2. 分组筛选偏好
+    // 一次性读取用户偏好，避免多次渲染造成抖动
+    chrome.storage.local.get(['groupFilter', 'sortPreference'], (result) => {
+      // 分组筛选偏好
       if (result.groupFilter) {
         activeGroupFilter = result.groupFilter;
       }
 
-      // 3. 排序偏好
+      // 排序偏好
       if (result.sortPreference) {
         sortBy = result.sortPreference;
         const sortSelect = document.getElementById('sortSelect');
         if (sortSelect) sortSelect.value = sortBy;
       }
 
-      // 一次性渲染（无抖动！）
-      setActiveViewTab();
+      // 一次性渲染
       renderGroups();
       renderLinks();
     });
   });
-}
-
-/**
- * 设置当前视图对应的高亮 tab
- */
-function setActiveViewTab() {
-  const viewTabs = document.querySelectorAll('.view-tab');
-  viewTabs.forEach(t => t.classList.remove('active'));
-  const activeTab = document.querySelector(`.view-tab[data-view="${currentView}"]`);
-  if (activeTab) activeTab.classList.add('active');
 }
 
 // ========== 事件监听 ==========
@@ -192,13 +170,40 @@ function setupEventListeners() {
   });
 
   // 搜索事件
+  const searchClearBtn = document.getElementById('searchClearBtn');
+
   searchInput.addEventListener('input', (e) => {
     filterText = e.target.value.toLowerCase();
+    if (searchClearBtn) {
+      searchClearBtn.style.display = filterText ? 'block' : 'none';
+    }
     renderLinks();
   });
 
+  searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && filterText) {
+      searchInput.value = '';
+      filterText = '';
+      if (searchClearBtn) searchClearBtn.style.display = 'none';
+      renderLinks();
+    }
+  });
+
+  if (searchClearBtn) {
+    searchClearBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      filterText = '';
+      searchClearBtn.style.display = 'none';
+      searchInput.focus();
+      renderLinks();
+    });
+  }
+
   mobileSearchInput.addEventListener('input', (e) => {
     filterText = e.target.value.toLowerCase();
+    if (searchClearBtn) {
+      searchClearBtn.style.display = filterText ? 'block' : 'none';
+    }
     renderLinks();
   });
   
@@ -313,14 +318,6 @@ function setupEventListeners() {
       if (tab) {
         activeGroupFilter = tab.dataset.group;
         chrome.storage.local.set({ groupFilter: activeGroupFilter });
-
-        // 在置顶/最近视图时点击分组 → 自动切到「所有书签」
-        if (currentView !== 'all') {
-          currentView = 'all';
-          chrome.storage.local.set({ viewPreference: currentView });
-          setActiveViewTab();
-        }
-
         renderGroups();
         renderLinks();
       }
@@ -334,18 +331,6 @@ function setupEventListeners() {
     });
   }
   
-  // Tab 切换事件
-  const viewTabs = document.querySelectorAll('.view-tab');
-  viewTabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      viewTabs.forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      currentView = tab.dataset.view;
-      // 持久化用户选择
-      chrome.storage.local.set({ viewPreference: currentView });
-      renderSections();
-    });
-  });
 }
 
 // ========== 数据操作 ==========
@@ -358,9 +343,22 @@ async function addLinkFromUrl(url, draggedTitle = null) {
 // ========== UI 渲染 ==========
 function getFilteredLinks() {
   let filtered = dataManager.links;
-  
-  // 按分组筛选
-  if (activeGroupFilter !== 'all') {
+
+  // 特殊分组：置顶
+  if (activeGroupFilter === 'pinned') {
+    filtered = filtered.filter(link => link.pinned);
+  }
+  // 特殊分组：未分组（没有任何分组的书签）
+  else if (activeGroupFilter === 'ungrouped') {
+    filtered = filtered.filter(link => !link.groups || link.groups.length === 0);
+  }
+  // 特殊分组：最近添加（7天内）
+  else if (activeGroupFilter === 'recent') {
+    const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+    filtered = filtered.filter(link => link.createdAt > sevenDaysAgo);
+  }
+  // 普通分组筛选
+  else if (activeGroupFilter !== 'all') {
     if (activeGroupFilter.startsWith('auto_')) {
       const domain = activeGroupFilter.replace('auto_', '');
       filtered = filtered.filter(link => dataManager.getLinkDomain(link) === domain);
@@ -444,8 +442,31 @@ function renderGroups() {
   );
 }
 
+/**
+ * 更新固定分组的 Badge 计数（全局数据，不受当前筛选影响）
+ */
+function updateBadgeCounts() {
+  const total = dataManager.links.length;
+  const pinnedTotal = dataManager.links.filter(l => l.pinned).length;
+  const ungroupedTotal = dataManager.links.filter(l => !l.groups || l.groups.length === 0).length;
+  const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+  const recentTotal = dataManager.links.filter(l => 
+    !l.pinned && l.createdAt && l.createdAt > sevenDaysAgo
+  ).length;
+
+  const allCount = document.getElementById('allCount');
+  const pinnedCount = document.getElementById('pinnedCount');
+  const ungroupedCount = document.getElementById('ungroupedCount');
+  const recentCount = document.getElementById('recentCount');
+  if (allCount) allCount.textContent = total;
+  if (pinnedCount) pinnedCount.textContent = pinnedTotal;
+  if (ungroupedCount) ungroupedCount.textContent = ungroupedTotal;
+  if (recentCount) recentCount.textContent = recentTotal;
+}
+
 function renderSections() {
   const filteredLinks = getFilteredLinks();
+  updateBadgeCounts();
   
   uiRenderer.renderBookmarkCards(
     board,
@@ -469,10 +490,7 @@ function renderSections() {
           bookmarkOps  // 传入 bookmarkOps 实例
         );
       },
-      emptyStateElement: emptyState,
-      emptyStatePinnedElement: emptyStatePinned,
-      emptyStateRecentElement: emptyStateRecent,
-      currentView: currentView
+      emptyStateElement: emptyState
     }
   );
   

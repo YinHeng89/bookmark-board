@@ -15,18 +15,33 @@ class UIRenderer {
     const container = document.querySelector(containerSelector);
     if (!container) return;
     
-    // 保留"全部"标签，移除其他
+    // 保留固定分组和分隔线
     const allTab = container.querySelector('[data-group="all"]');
+    const pinnedTab = container.querySelector('[data-group="pinned"]');
+    const ungroupedTab = container.querySelector('[data-group="ungrouped"]');
+    const recentTab = container.querySelector('[data-group="recent"]');
+    const divider = container.querySelector('.group-tab-divider');
     container.innerHTML = '';
+    
+    // 恢复固定分组
     if (allTab) {
+      allTab.className = 'group-tab group-tab-fixed' + (activeGroupFilter === 'all' ? ' active' : '');
       container.appendChild(allTab);
-    } else {
-      // 如果"全部"标签不存在，创建它
-      const allTabNew = document.createElement('button');
-      allTabNew.className = 'group-tab' + (activeGroupFilter === 'all' ? ' active' : '');
-      allTabNew.dataset.group = 'all';
-      allTabNew.innerHTML = '<i class="fa fa-th"></i><span>' + I18n.t('group_tab_all') + '</span>';
-      container.appendChild(allTabNew);
+    }
+    if (pinnedTab) {
+      pinnedTab.className = 'group-tab group-tab-fixed' + (activeGroupFilter === 'pinned' ? ' active' : '');
+      container.appendChild(pinnedTab);
+    }
+    if (ungroupedTab) {
+      ungroupedTab.className = 'group-tab group-tab-fixed' + (activeGroupFilter === 'ungrouped' ? ' active' : '');
+      container.appendChild(ungroupedTab);
+    }
+    if (recentTab) {
+      recentTab.className = 'group-tab group-tab-fixed' + (activeGroupFilter === 'recent' ? ' active' : '');
+      container.appendChild(recentTab);
+    }
+    if (divider) {
+      container.appendChild(divider);
     }
     
     // 自动生成分组
@@ -76,12 +91,6 @@ class UIRenderer {
     addGroupBtn.title = I18n.t('group_tab_create');
     addGroupBtn.innerHTML = '<i class="fa fa-plus"></i>';
     container.appendChild(addGroupBtn);
-    
-    // 更新"全部"标签的激活状态
-    const currentAllTab = container.querySelector('[data-group="all"]');
-    if (currentAllTab) {
-      currentAllTab.className = 'group-tab' + (activeGroupFilter === 'all' ? ' active' : '');
-    }
   }
 
   /**
@@ -91,62 +100,21 @@ class UIRenderer {
     const { 
       onCardClick, 
       onCardContextMenu,
-      emptyStateElement,
-      emptyStatePinnedElement,
-      emptyStateRecentElement,
-      currentView = 'all'
+      emptyStateElement
     } = options;
 
-    // 统计
-    const pinnedLinks = links.filter(link => link.pinned);
-    const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
-    const recentLinks = links.filter(link => 
-      !link.pinned && link.createdAt && link.createdAt > sevenDaysAgo
-    );
-    
-    // 更新计数
-    const allCount = document.getElementById('allCount');
-    const pinnedCount = document.getElementById('pinnedCount');
-    const recentCount = document.getElementById('recentCount');
-    
-    if (allCount) allCount.textContent = links.length;
-    if (pinnedCount) pinnedCount.textContent = pinnedLinks.length;
-    if (recentCount) recentCount.textContent = recentLinks.length;
-    
-    // 根据当前视图过滤
-    let displayLinks = links;
-    if (currentView === 'pinned') {
-      displayLinks = pinnedLinks;
-    } else if (currentView === 'recent') {
-      displayLinks = recentLinks;
-    }
-    
-    // 清空现有卡片（保留所有空状态）
+    // 清空现有卡片（保留空状态）
     Array.from(boardEl.children).forEach(child => {
-      if (child !== emptyStateElement && 
-          child !== emptyStatePinnedElement && 
-          child !== emptyStateRecentElement) {
+      if (child !== emptyStateElement) {
         child.remove();
       }
     });
-    
-    // 根据当前视图显示/隐藏对应的空状态
-    if (currentView === 'pinned') {
-      emptyStateElement?.classList.add('hidden');
-      emptyStateRecentElement?.classList.add('hidden');
-      emptyStatePinnedElement?.classList.toggle('hidden', displayLinks.length > 0);
-    } else if (currentView === 'recent') {
-      emptyStateElement?.classList.add('hidden');
-      emptyStatePinnedElement?.classList.add('hidden');
-      emptyStateRecentElement?.classList.toggle('hidden', displayLinks.length > 0);
-    } else {
-      emptyStatePinnedElement?.classList.add('hidden');
-      emptyStateRecentElement?.classList.add('hidden');
-      emptyStateElement?.classList.toggle('hidden', displayLinks.length > 0);
-    }
-    
-    // 添加卡片
-    displayLinks.forEach(link => {
+
+    // 显示/隐藏空状态
+    emptyStateElement?.classList.toggle('hidden', links.length > 0);
+
+    // 添加卡片（数据已由 getFilteredLinks 筛选和排序）
+    links.forEach(link => {
       const card = this.createBookmarkCard(link, {
         onCardClick,
         onCardContextMenu

@@ -8,27 +8,27 @@ chrome.runtime.onInstalled.addListener(() => {
   // 页面右键菜单 - 添加当前页面
   chrome.contextMenus.create({
     id: 'addToBookmarkBoard',
-    title: chrome.i18n.getMessage('context_menu_add_page') || '添加到书签白板',
+    title: '添加到书签白板',
     contexts: ['page'],
     documentUrlPatterns: ['http://*/*', 'https://*/*']
   });
-
+  
   // 链接右键菜单 - 添加链接
   chrome.contextMenus.create({
     id: 'addLinkToBookmarkBoard',
-    title: chrome.i18n.getMessage('context_menu_add_link') || '添加链接到书签白板',
+    title: '添加链接到书签白板',
     contexts: ['link'],
     documentUrlPatterns: ['http://*/*', 'https://*/*']
   });
-
+  
   // 打开侧边栏
   chrome.contextMenus.create({
     id: 'openSidebar',
-    title: chrome.i18n.getMessage('context_menu_open_sidebar') || '打开书签白板侧边栏',
+    title: '打开书签白板侧边栏',
     contexts: ['page'],
     documentUrlPatterns: ['http://*/*', 'https://*/*']
   });
-
+  
   // 启用侧边栏
   chrome.sidePanel.setOptions({
     enabled: true,
@@ -43,17 +43,17 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     chrome.sidePanel.open({ tabId: tab.id });
     return;
   }
-
+  
   if (info.menuItemId === 'addToBookmarkBoard') {
     // 添加当前页面 - 直接在 background.js 中处理 AI 优化
     addBookmarkWithAI(tab.url, tab.title, tab.favIconUrl, tab.id);
   }
-
+  
   if (info.menuItemId === 'addLinkToBookmarkBoard') {
     // 添加链接 - 直接在 background.js 中处理 AI 优化
     const linkUrl = info.linkUrl;
     const linkTitle = info.selectionText || info.linkText || '';
-
+    
     // 获取链接的 favicon
     let faviconUrl = '';
     try {
@@ -62,19 +62,10 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     } catch (e) {
       console.error('URL 解析失败:', e);
     }
-
+    
     addBookmarkWithAI(linkUrl, linkTitle, faviconUrl, tab.id);
   }
 });
-
-// 辅助：获取 i18n 消息（Service Worker 直接调用）
-function i18n(key, ...subs) {
-  let msg = chrome.i18n.getMessage(key) || key;
-  subs.forEach((s, i) => {
-    msg = msg.replace(new RegExp('\\$' + (i + 1), 'g'), String(s));
-  });
-  return msg;
-}
 
 // 添加书签（带 AI 优化）
 async function addBookmarkWithAI(url, title, icon, tabId) {
@@ -84,10 +75,10 @@ async function addBookmarkWithAI(url, title, icon, tabId) {
       const urlObj = new URL(url);
       title = urlObj.hostname.replace(/^www\./, '');
     } catch (e) {
-      title = i18n('unnamed');
+      title = '未命名';
     }
   }
-
+  
   const link = {
     url: url,
     title: title,
@@ -146,18 +137,18 @@ async function addBookmarkWithAI(url, title, icon, tabId) {
           chatEndpoint: '/models/'  // 前缀，实际 endpoint 动态拼接模型名
         }
       };
-
+      
       const isGoogle = aiSettings.provider === 'google';
       const provider = AI_CONFIG[aiSettings.provider] || AI_CONFIG.custom;
       const baseUrl = aiSettings.config.apiUrl || provider.defaultUrl;
       const cleanBaseUrl = baseUrl.replace(/\/$/, '');
-
+      
       // Google Gemini 的 API Key 放在 URL 查询参数中，其余供应商用 Bearer header
       let apiUrl;
       const headers = {
         'Content-Type': 'application/json'
       };
-
+      
       if (isGoogle) {
         const apiKey = aiSettings.config.apiKey || '';
         const model = aiSettings.config.model || 'gemini-1.5-pro';
@@ -169,16 +160,16 @@ async function addBookmarkWithAI(url, title, icon, tabId) {
           headers['Authorization'] = `Bearer ${aiSettings.config.apiKey}`;
         }
       }
-
+      
       const autoTasks = [];
-
+      
       // 自动标题优化
       if (aiSettings.features.titleOptimization?.auto) {
         // 使用配置的提示词或默认提示词
-        let titlePrompt = aiSettings.prompts?.titleOptimization ||
+        let titlePrompt = aiSettings.prompts?.titleOptimization || 
           `<task>
 优化标题
-:</task>
+</task>
 
 <input>
 <title>{title}</title>
@@ -199,20 +190,20 @@ async function addBookmarkWithAI(url, title, icon, tabId) {
 </rules>
 
 <output></output>`;
-
+        
         // 替换模板变量
         titlePrompt = titlePrompt
           .replace(/{title}/g, link.title)
           .replace(/{url}/g, link.url)
           .replace(/{domain}/g, new URL(link.url).hostname)
           .replace(/{groupsText}/g, '');
-
+        
         autoTasks.push(
           fetch(apiUrl, {
             method: 'POST',
             headers,
             body: JSON.stringify(
-              isGoogle
+              isGoogle 
                 ? { contents: [{ parts: [{ text: titlePrompt }] }] }
                 : {
                     model: aiSettings.config.model,
@@ -238,7 +229,7 @@ async function addBookmarkWithAI(url, title, icon, tabId) {
           .catch(err => console.error('自动标题优化失败:', err))
         );
       }
-
+      
       // 自动分类建议
       if (aiSettings.features.categorySuggestion?.auto) {
         // 读取现有分组
@@ -247,15 +238,15 @@ async function addBookmarkWithAI(url, title, icon, tabId) {
             resolve(result.groups || []);
           });
         });
-
+        
         const groupNames = groups.map(g => g.name || g).filter(Boolean);
         const groupsText = groupNames.length > 0 ? `现有分组：${groupNames.join('、')}` : '当前没有分组，请推荐一个新的分组名称。';
-
+        
         // 使用配置的提示词或默认提示词
-        let categoryPrompt = aiSettings.prompts?.categorySuggestion ||
+        let categoryPrompt = aiSettings.prompts?.categorySuggestion || 
           `<task>
 智能书签分类
-:</task>
+</task>
 
 <input>
 <title>{title}</title>
@@ -277,20 +268,20 @@ async function addBookmarkWithAI(url, title, icon, tabId) {
 </rules>
 
 <output></output>`;
-
+        
         // 替换模板变量
         categoryPrompt = categoryPrompt
           .replace(/{title}/g, link.title)
           .replace(/{url}/g, link.url)
           .replace(/{domain}/g, new URL(link.url).hostname)
           .replace(/{groupsText}/g, groupsText);
-
+        
         autoTasks.push(
           fetch(apiUrl, {
             method: 'POST',
             headers,
             body: JSON.stringify(
-              isGoogle
+              isGoogle 
                 ? { contents: [{ parts: [{ text: categoryPrompt }] }] }
                 : {
                     model: aiSettings.config.model,
@@ -312,12 +303,12 @@ async function addBookmarkWithAI(url, title, icon, tabId) {
                 suggestedGroup !== 'null' &&
                 suggestedGroup !== '无重复' &&
                 suggestedGroup !== '') {
-
+              
               const groupName = suggestedGroup;
-
+              
               // 查找或创建分组
               let targetGroup = groups.find(g => g.name === groupName);
-
+              
               if (!targetGroup) {
                 targetGroup = {
                   id: 'group_' + Date.now(),
@@ -325,11 +316,11 @@ async function addBookmarkWithAI(url, title, icon, tabId) {
                 };
                 groups.push(targetGroup);
                 console.log('✅ 创建新分组:', groupName);
-
+                
                 // 保存分组
                 chrome.storage.local.set({ groups });
               }
-
+              
               // 添加书签到分组
               if (!link.groups) link.groups = [];
               if (!link.groups.includes(targetGroup.id)) {
@@ -341,7 +332,7 @@ async function addBookmarkWithAI(url, title, icon, tabId) {
           .catch(err => console.error('自动分类建议失败:', err))
         );
       }
-
+      
       // 等待 AI 优化完成
       if (autoTasks.length > 0) {
         await Promise.allSettled(autoTasks);
@@ -354,14 +345,14 @@ async function addBookmarkWithAI(url, title, icon, tabId) {
   // 存储到 chrome.storage.local
   chrome.storage.local.get(['links'], (result) => {
     const links = result.links || [];
-
+    
     // 检查是否已存在
     if (links.some(l => l.url === link.url)) {
       // 在当前页面显示通知
-      showNotification(tabId, i18n('context_menu_notification_exists'), 'warning');
+      showNotification(tabId, '该链接已存在', 'warning');
       return;
     }
-
+    
     // 添加新书签
     links.unshift(link);
     chrome.storage.local.set({ links }, () => {
@@ -369,11 +360,11 @@ async function addBookmarkWithAI(url, title, icon, tabId) {
       chrome.runtime.sendMessage({ action: 'refreshData' }).catch(() => {
         // 忽略错误：如果没有打开书签白板页面，这是正常的
       });
-
+      
       // 在当前页面显示成功通知
-      const aiTag = (aiSettings && aiSettings.features &&
+      const aiTag = (aiSettings && aiSettings.features && 
         (aiSettings.features.titleOptimization?.auto || aiSettings.features.categorySuggestion?.auto)) ? ' (AI 优化)' : '';
-      showNotification(tabId, i18n('context_menu_notification_added', link.title + aiTag), 'success');
+      showNotification(tabId, `已添加书签: ${link.title}${aiTag}`, 'success');
     });
   });
 }
@@ -386,10 +377,10 @@ function addBookmark(url, title, icon, tabId) {
       const urlObj = new URL(url);
       title = urlObj.hostname.replace(/^www\./, '');
     } catch (e) {
-      title = i18n('unnamed');
+      title = '未命名';
     }
   }
-
+  
   const link = {
     url: url,
     title: title,
@@ -401,19 +392,19 @@ function addBookmark(url, title, icon, tabId) {
   // 存储到 chrome.storage.local
   chrome.storage.local.get(['links'], (result) => {
     const links = result.links || [];
-
+    
     // 检查是否已存在
     if (links.some(l => l.url === link.url)) {
       // 在当前页面显示通知
-      showNotification(tabId, i18n('context_menu_notification_exists'), 'warning');
+      showNotification(tabId, '该链接已存在', 'warning');
       return;
     }
-
+    
     // 添加新书签
     links.unshift(link);
     chrome.storage.local.set({ links }, () => {
       // 在当前页面显示成功通知
-      showNotification(tabId, i18n('context_menu_notification_added', link.title), 'success');
+      showNotification(tabId, `已添加书签: ${link.title}`, 'success');
     });
   });
 }
@@ -430,7 +421,7 @@ function showNotification(tabId, message, type = 'success') {
       const bgColor = isSuccess ? 'white' : '#FEF3C7';
       const iconClass = isSuccess ? 'fa-check-circle' : 'fa-exclamation-circle';
       const iconColor = isSuccess ? '#4F46E5' : '#F59E0B';
-
+      
       toast.style.cssText = `
         position: fixed;
         top: 1rem;
@@ -449,20 +440,20 @@ function showNotification(tabId, message, type = 'success') {
         align-items: center;
         gap: 0.5rem;
       `;
-
+      
       // 添加图标
       const icon = document.createElement('i');
       icon.className = `fa ${iconClass}`;
       icon.style.color = iconColor;
       toast.appendChild(icon);
-
+      
       // 添加文字
       const text = document.createElement('span');
       text.textContent = msg;
       toast.appendChild(text);
-
+      
       document.body.appendChild(toast);
-
+      
       // 3秒后自动消失
       setTimeout(() => {
         toast.style.opacity = '0';

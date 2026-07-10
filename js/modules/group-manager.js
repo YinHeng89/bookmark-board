@@ -191,7 +191,7 @@ class GroupManager {
     }
     
     menu.style.left = Math.min(x, window.innerWidth - 220) + 'px';
-    menu.style.top = Math.min(y, window.innerHeight - 200) + 'px';
+    menu.style.top = Math.max(4, Math.min(y, window.innerHeight - 160)) + 'px';
     
     document.body.appendChild(menu);
   }
@@ -295,9 +295,23 @@ class GroupManager {
         groupMenuItem.classList.remove('selected');
       } else {
         const itemRect = groupMenuItem.getBoundingClientRect();
+        const submenuHeight = Math.min(this.data.groups.length * 36 + 16, 400); // 估算高度
         submenu.style.display = 'block';
-        submenu.style.left = (itemRect.right + 10) + 'px';
-        submenu.style.top = itemRect.top + 'px';
+
+        // 水平：右侧空间不足则放左侧
+        if (itemRect.right + 190 > window.innerWidth) {
+          submenu.style.left = Math.max(4, itemRect.left - 190) + 'px';
+        } else {
+          submenu.style.left = (itemRect.right + 10) + 'px';
+        }
+
+        // 垂直：下方空间不足则往上移
+        if (itemRect.top + submenuHeight > window.innerHeight) {
+          submenu.style.top = Math.max(4, window.innerHeight - submenuHeight - 10) + 'px';
+        } else {
+          submenu.style.top = Math.max(4, itemRect.top) + 'px';
+        }
+
         groupMenuItem.classList.add('selected');
       }
     });
@@ -335,7 +349,8 @@ class GroupManager {
     menu.appendChild(deleteItem);
     
     menu.style.left = Math.min(x, window.innerWidth - 220) + 'px';
-    menu.style.top = Math.min(y, window.innerHeight - 400) + 'px';
+    // 菜单高度约 300px，超出底部时上移，但保持尽量贴近光标
+    menu.style.top = Math.max(4, Math.min(y, window.innerHeight - 310)) + 'px';
     
     document.body.appendChild(menu);
   }
